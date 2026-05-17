@@ -1,0 +1,5 @@
+{
+  "build_command": "npm run build",
+  "build_output_directory": "out",
+  "root_directory": ""
+}

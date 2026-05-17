@@ -1,0 +1,27 @@
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "https://managamvania.mrix.ai"
+additional_redirect_urls = ["http://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = false   # no user auth needed for this app
+
+[storage]
+enabled = true
+
+[functions]
+# Edge functions (if needed for RSVP email notifications)
