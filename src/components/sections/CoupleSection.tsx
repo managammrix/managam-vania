@@ -11,7 +11,8 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--forest-deep)',textAlign:'center',marginBottom:10}}>{tr.couple_heading}</h2>
         <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:52}}>{tr.couple_sub}</p>
 
-        <div style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:'0 36px',alignItems:'start'}}>
+        <style>{`@media(max-width:620px){.couple-grid{grid-template-columns:1fr!important;}.couple-sep{display:none!important;}}`}</style>
+        <div className="couple-grid" style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:'0 36px',alignItems:'start'}}>
           {/* Managam */}
           <div className="reveal reveal-d2" style={card}>
             <div style={{width:76,height:76,borderRadius:'50%',background:'var(--forest)',margin:'0 auto 18px',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Cinzel,serif',fontSize:26,color:'var(--cream)'}}>M</div>
@@ -27,7 +28,7 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
           </div>
 
           {/* Separator */}
-          <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,paddingTop:36}}>
+          <div className="couple-sep" style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,paddingTop:36}}>
             <div style={{width:'0.5px',height:56,background:'var(--cream-deep)'}}/>
             <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:32,fontStyle:'italic',color:'var(--gold)'}}>&amp;</div>
             <div style={{width:'0.5px',height:56,background:'var(--cream-deep)'}}/>

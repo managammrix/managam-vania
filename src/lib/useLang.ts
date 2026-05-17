@@ -4,7 +4,7 @@ import { t, Lang, Translations } from './translations'
 
 export function useLang() {
   const [lang, setLangState] = useState<Lang>('id')
-  const tr: Translations = t[lang]
+  const tr = t[lang] as Translations
 
   const setLang = useCallback((l: Lang) => setLangState(l), [])
 

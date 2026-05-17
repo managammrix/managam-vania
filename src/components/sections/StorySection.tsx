@@ -2,7 +2,9 @@
 import { Translations } from '@/lib/translations'
 import { useReveal } from '../useReveal'
 
-const milestones = [
+type Milestone = { date: string; titleKey: keyof Translations; detailKey: keyof Translations; highlight?: boolean }
+
+const milestones: Milestone[] = [
   { date:'2.10.2022',   titleKey:'m1_title', detailKey:'m1_detail' },
   { date:'21.06.2023',  titleKey:'m2_title', detailKey:'m2_detail' },
   { date:'11.05.2024',  titleKey:'m3_title', detailKey:'m3_detail' },
@@ -11,7 +13,7 @@ const milestones = [
   { date:'21.06.2025',  titleKey:'m6_title', detailKey:'m6_detail' },
   { date:'24.12.2025',  titleKey:'m7_title', detailKey:'m7_detail' },
   { date:'20.06\n2026', titleKey:'m8_title', detailKey:'m8_detail', highlight: true },
-] as const
+]
 
 export default function StorySection({ tr }: { tr: Translations }) {
   const ref = useReveal()

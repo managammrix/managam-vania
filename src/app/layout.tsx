@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import '@/styles/globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://managamvania.mrix.ai'),
   title: 'Managam & Vania — 20.06.2026',
   description: 'Undangan Pernikahan Managam Raja Silalahi & Vania — 20 Juni 2026. #BuildingMANAGAMVANturesWithGod',
   openGraph: {

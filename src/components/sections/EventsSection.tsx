@@ -11,7 +11,8 @@ export default function EventsSection({ tr }: { tr: Translations }) {
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--forest-deep)',textAlign:'center',marginBottom:10}}>{tr.events_heading}</h2>
         <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:48}}>{tr.events_sub}</p>
 
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+        <style>{`@media(max-width:600px){.events-grid{grid-template-columns:1fr!important;}}`}</style>
+        <div className="events-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
           {/* Ceremony */}
           <div className="reveal reveal-d2" style={card}>
             <span style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--gold)',marginBottom:12,display:'block'}}>{tr.sat_label}</span>

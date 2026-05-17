@@ -16,7 +16,7 @@ import WishesSection from '@/components/sections/WishesSection'
 import GallerySection from '@/components/sections/GallerySection'
 import ClosingSection from '@/components/sections/ClosingSection'
 
-export const SECTIONS = [
+const SECTIONS = [
   'cover','story','couple','events','rsvp','gift','wishes','gallery','closing'
 ] as const
 
