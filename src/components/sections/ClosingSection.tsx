@@ -53,6 +53,15 @@ export default function ClosingSection({ tr }: { tr: Translations }) {
 
         <span className="reveal reveal-d2" style={{fontFamily:'Cinzel,serif',fontSize:12,letterSpacing:1.5,color:'var(--gold)',marginBottom:40,display:'block'}}>#BuildingMANAGAMVANturesWithGod</span>
 
+        <div className="reveal reveal-d2" style={{margin:'32px auto',textAlign:'center',maxWidth:460}}>
+          <p style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(17px,3vw,24px)',fontStyle:'italic',fontWeight:300,color:'var(--cream-warm)',lineHeight:1.85,marginBottom:10}}>
+            &ldquo;I press on toward the goal for the prize
+            of the upward call of God in Christ Jesus.&rdquo;
+          </p>
+          <span style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:3,color:'var(--gold)',display:'block',marginBottom:4}}>PHILIPPIANS 3:14</span>
+          <span style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--sage-light)',display:'block'}}>— Managam</span>
+        </div>
+
         <div className="reveal reveal-d3" style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
           <button onClick={addToCalendar} style={btnPrimary}>{tr.save_date}</button>
           <a href="#rsvp" style={btn}>{tr.rsvp_cta}</a>

@@ -20,10 +20,6 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
             <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:12}}>S.Kom., M.Sc.</div>
             <div style={{marginBottom:18,textAlign:'center'}}>
               <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:3}}>HAGGAI 1:9</div>
-              <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:6}}>PHILIPPIANS 3:14</div>
-              <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:12,fontStyle:'italic',color:'var(--sage)'}}>
-                &ldquo;I press on toward the goal for the prize<br/>of the upward call of God in Christ Jesus.&rdquo;
-              </div>
             </div>
             <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.9}}>
               {tr.son_of}<br/>

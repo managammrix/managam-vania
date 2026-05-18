@@ -20,6 +20,7 @@ export default function AudioPlayer({ play }: Props) {
     if (!audio) return
     audio.volume = 0
     audio.loop = true
+    audio.currentTime = 0.85
     const playPromise = audio.play()
     if (playPromise !== undefined) {
       playPromise.then(() => {
@@ -42,6 +43,7 @@ export default function AudioPlayer({ play }: Props) {
     const audio = audioRef.current
     if (!audio) return
     if (!started) {
+      audio.currentTime = 0.85
       audio.volume = 0.35
       audio.loop = true
       audio.play().then(() => setStarted(true)).catch(() => {})
