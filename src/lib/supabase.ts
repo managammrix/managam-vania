@@ -51,15 +51,26 @@ export async function addWish(author: string, message: string) {
 
 // ── Gallery ───────────────────────────────────────────────────────
 export async function fetchGalleryPhotos(): Promise<PhotoRow[]> {
-  const { data, error } = await supabase.storage
-    .from('prewedding')
-    .list('', { limit: 18, sortBy: { column: 'name', order: 'asc' } })
-  if (error) throw error
-  return (data ?? [])
-    .filter(f => /\.(jpg|jpeg|png|webp|avif)$/i.test(f.name))
-    .slice(0, 18)
-    .map(f => ({
-      name: f.name,
-      url: supabase.storage.from('prewedding').getPublicUrl(f.name).data.publicUrl,
-    }))
+  try {
+    console.log('[gallery] supabaseUrl:', supabaseUrl)
+    const { data, error } = await supabase.storage
+      .from('prewedding')
+      .list('', { limit: 100, sortBy: { column: 'name', order: 'asc' } })
+    console.log('[gallery] raw .list() response — data:', data, '| error:', error)
+    if (error) {
+      console.error('[gallery] fetch error:', error.message)
+      return []
+    }
+    const filtered = (data ?? []).filter(f => /\.(jpg|jpeg|png|webp|avif)$/i.test(f.name))
+    console.log('[gallery] after extension filter:', filtered.map(f => f.name))
+    const result = filtered.slice(0, 18).map(f => {
+      const url = supabase.storage.from('prewedding').getPublicUrl(f.name).data.publicUrl
+      console.log('[gallery] url:', url)
+      return { name: f.name, url }
+    })
+    return result
+  } catch (e) {
+    console.error('[gallery] fetch exception:', e)
+    return []
+  }
 }

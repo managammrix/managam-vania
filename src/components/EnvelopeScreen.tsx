@@ -1,5 +1,4 @@
 'use client'
-import { LOGO_SRC } from '@/lib/logo'
 import { Translations } from '@/lib/translations'
 
 interface Props { opened: boolean; onOpen: () => void; tr: Translations }
@@ -19,7 +18,7 @@ export default function EnvelopeScreen({ opened, onOpen, tr }: Props) {
         .env-wrapper{position:relative;width:300px;height:200px;perspective:600px;}
         .env-body{position:absolute;bottom:0;width:300px;height:168px;background:var(--cream);border-radius:4px 4px 14px 14px;box-shadow:0 24px 64px rgba(0,0,0,0.55);overflow:hidden;}
         .env-liner{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;}
-        .env-flap{position:absolute;top:0;left:0;width:0;height:0;border-left:150px solid transparent;border-right:150px solid transparent;border-top:105px solid var(--cream-warm);transform-origin:top center;transform:rotateX(0deg);transition:transform 0.65s cubic-bezier(.4,0,.2,1);z-index:3;}
+        .env-flap{position:absolute;top:0;left:0;width:0;height:0;border-left:150px solid transparent;border-right:150px solid transparent;border-top:105px solid var(--cream-warm);transform-origin:top center;transform:rotateX(0deg);transition:transform 0.65s cubic-bezier(.4,0,.2,1);z-index:3;will-change:transform;}
         .env-wrapper:hover .env-flap{transform:rotateX(-175deg);}
         .card-peek{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:110px;height:110px;border-radius:50%;background:var(--parchment);display:flex;align-items:center;justify-content:center;z-index:1;transition:transform 0.65s cubic-bezier(.4,0,.2,1) 0.25s;box-shadow:0 4px 20px rgba(0,0,0,0.15);overflow:hidden;}
         .env-wrapper:hover .card-peek{transform:translateX(-50%) translateY(-52px);}
@@ -42,7 +41,7 @@ export default function EnvelopeScreen({ opened, onOpen, tr }: Props) {
         <div className="env-flap"/>
         <div className="card-peek">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_SRC} alt="M&V" />
+          <img src="/mv-logo.jpg" alt="M&V" />
         </div>
       </div>
       <div className="open-hint">{tr.click_open}</div>

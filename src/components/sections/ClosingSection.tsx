@@ -1,5 +1,4 @@
 'use client'
-import { LOGO_SRC } from '@/lib/logo'
 import { Translations } from '@/lib/translations'
 import { useReveal } from '../useReveal'
 
@@ -39,7 +38,7 @@ export default function ClosingSection({ tr }: { tr: Translations }) {
         {/* Logo circle seal */}
         <div className="reveal" style={{width:110,height:110,borderRadius:'50%',border:'1px solid var(--gold)',margin:'0 auto 32px',overflow:'hidden',background:'var(--parchment)',display:'flex',alignItems:'center',justifyContent:'center'}}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_SRC} alt="M&V" style={{width:'100%',height:'100%',objectFit:'cover',mixBlendMode:'multiply'}}/>
+          <img src="/mv-logo.jpg" alt="M&V" style={{width:'100%',height:'100%',objectFit:'cover',mixBlendMode:'multiply'}}/>
         </div>
 
         <p className="reveal reveal-d1" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(19px,3.5vw,28px)',fontStyle:'italic',fontWeight:300,color:'var(--cream-warm)',lineHeight:1.75,marginBottom:32}}>
@@ -51,6 +50,13 @@ export default function ClosingSection({ tr }: { tr: Translations }) {
           And every day I live with perfect divine love,<br/>
           for it is you.&rdquo;
         </p>
+
+        <div className="reveal reveal-d2" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(15px,2.5vw,20px)',fontStyle:'italic',color:'var(--gold-light)',textAlign:'center',margin:'32px auto',maxWidth:420,lineHeight:1.85}}>
+          &ldquo;For I know the plans I have for you, declares the Lord —<br/>
+          plans to prosper you and not to harm you,<br/>
+          plans to give you hope and a future.&rdquo;
+          <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:3,color:'var(--sage-light)',fontStyle:'normal',marginTop:10}}>JEREMIAH 29:11</div>
+        </div>
 
         <span className="reveal reveal-d2" style={{fontFamily:'Cinzel,serif',fontSize:12,letterSpacing:1.5,color:'var(--gold)',marginBottom:40,display:'block'}}>#BuildingMANAGAMVANturesWithGod</span>
 

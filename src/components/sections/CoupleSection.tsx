@@ -17,7 +17,14 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
           <div className="reveal reveal-d2" style={card}>
             <div style={{width:76,height:76,borderRadius:'50%',background:'var(--forest)',margin:'0 auto 18px',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Cinzel,serif',fontSize:26,color:'var(--cream)'}}>M</div>
             <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:24,fontStyle:'italic',color:'var(--forest-deep)',marginBottom:4}}>Managam Raja Silalahi</div>
-            <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:18}}>S.Kom., M.Sc.</div>
+            <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:12}}>S.Kom., M.Sc.</div>
+            <div style={{marginBottom:18,textAlign:'center'}}>
+              <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:3}}>HAGGAI 1:9</div>
+              <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:6}}>PHILIPPIANS 3:14</div>
+              <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:12,fontStyle:'italic',color:'var(--sage)'}}>
+                &ldquo;I press on toward the goal for the prize<br/>of the upward call of God in Christ Jesus.&rdquo;
+              </div>
+            </div>
             <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.9}}>
               {tr.son_of}<br/>
               <strong>Bapak Saut Silalahi</strong><br/>
@@ -38,10 +45,16 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
           <div className="reveal reveal-d3" style={card}>
             <div style={{width:76,height:76,borderRadius:'50%',background:'var(--sage)',margin:'0 auto 18px',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Cinzel,serif',fontSize:26,color:'var(--cream)'}}>V</div>
             <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:24,fontStyle:'italic',color:'var(--forest-deep)',marginBottom:4}}>Vania</div>
-            <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:18}}>S.Psi.</div>
+            <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:12}}>S.Psi.</div>
+            <div style={{marginBottom:18,textAlign:'center'}}>
+              <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:6}}>ECCLESIASTES 3:1</div>
+              <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:12,fontStyle:'italic',color:'var(--sage)'}}>
+                &ldquo;There is a time for everything, and a season<br/>for every activity under the heavens.&rdquo;
+              </div>
+            </div>
             <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.9}}>
               {tr.daughter_of}<br/>
-              <strong>Bapak Fredi (Tee Tjien Hian), S.Th.</strong><br/>
+              <strong>Bapak Pdt. Fredi (Tee Tjien Hian), S.Th.</strong><br/>
               &amp; <strong>Ibu Tan Tjoen Nio</strong>
             </div>
             <a href="https://instagram.com/vaniatee26" target="_blank" rel="noopener noreferrer"

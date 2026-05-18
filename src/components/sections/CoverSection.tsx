@@ -1,5 +1,4 @@
 'use client'
-import { LOGO_SRC } from '@/lib/logo'
 import { Translations } from '@/lib/translations'
 import { useReveal } from '../useReveal'
 
@@ -33,12 +32,16 @@ export default function CoverSection({ tr }: { tr: Translations }) {
         {/* Logo — perfect circle */}
         <div className="reveal reveal-d1" style={{width:180,height:180,borderRadius:'50%',overflow:'hidden',margin:'0 auto 24px',border:'1.5px solid var(--forest)',background:'transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_SRC} alt="Monogram M&V" style={{width:'100%',height:'100%',objectFit:'cover',mixBlendMode:'multiply'}}/>
+          <img src="/mv-logo.jpg" alt="Monogram M&V" style={{width:'100%',height:'100%',objectFit:'cover',mixBlendMode:'multiply'}}/>
         </div>
         <h1 className="reveal reveal-d2" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(34px,8vw,56px)',fontWeight:300,fontStyle:'italic',color:'var(--forest-deep)',lineHeight:1.1,marginBottom:16}}>
           Managam<br/><span style={{fontSize:'0.65em',color:'var(--gold)'}}>&amp;</span><br/>Vania
         </h1>
         <div className="reveal reveal-d3" style={{fontFamily:'Cinzel,serif',fontSize:'clamp(24px,5vw,40px)',color:'var(--forest)',letterSpacing:5,margin:'18px 0 10px'}}>20 · 06 · 2026</div>
+        <div className="reveal reveal-d3" style={{fontFamily:'Cormorant Garamond,serif',fontSize:13,fontStyle:'italic',color:'var(--sage)',textAlign:'center',marginBottom:16}}>
+          &ldquo;A cord of three strands is not quickly broken.&rdquo;
+          <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,marginTop:5,color:'var(--sage)',fontStyle:'normal'}}>ECCLESIASTES 4:12</div>
+        </div>
         <p className="reveal reveal-d3" style={{fontSize:14,color:'var(--sage)',fontStyle:'italic',marginBottom:36,lineHeight:1.7}}>
           &ldquo;He who has been faithful<br/>so on will always remain faithful&rdquo;
         </p>

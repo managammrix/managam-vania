@@ -4,15 +4,9 @@ import { Translations } from '@/lib/translations'
 import { fetchWishes, addWish, WishRow } from '@/lib/supabase'
 import { useReveal } from '../useReveal'
 
-const seedWishes: WishRow[] = [
-  { author:'Keluarga Besar Silalahi', message:'Kiranya Tuhan memberkati pernikahan Managam & Vania. Semoga kalian selalu setia dan bertumbuh bersama dalam kasih Tuhan. 🙏' },
-  { author:'Timothy & Rachel', message:"So happy for both of you! May God's love be the foundation of your beautiful journey together. #BuildingMANAGAMVANturesWithGod" },
-  { author:'Freni Situmorang', message:'Selamat menempuh hidup baru! Semoga selalu dalam lindungan dan berkat Tuhan. Bahagia selalu ya Kak Managam dan Kak Vania 💚' },
-]
-
 export default function WishesSection({ tr }: { tr: Translations }) {
   const ref = useReveal()
-  const [wishes, setWishes] = useState<WishRow[]>(seedWishes)
+  const [wishes, setWishes] = useState<WishRow[]>([])
   const [author, setAuthor] = useState('')
   const [message, setMessage] = useState('')
 

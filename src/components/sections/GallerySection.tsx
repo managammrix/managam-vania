@@ -39,12 +39,14 @@ export default function GallerySection({ tr }: { tr: Translations }) {
   const [photos, setPhotos] = useState<(PhotoRow|null)[]>(Array(18).fill(null))
 
   useEffect(()=>{
+    console.log('[gallery] useEffect fired')
     fetchGalleryPhotos().then(data=>{
+      console.log('[gallery] photos received:', data.length, data)
       if(data.length){
         const filled = Array(18).fill(null).map((_,i)=>data[i]??null)
         setPhotos(filled)
       }
-    }).catch(()=>{})
+    })
   },[])
 
   return (
@@ -55,7 +57,7 @@ export default function GallerySection({ tr }: { tr: Translations }) {
 
         <style>{`
           .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:48px;}
-          .g-item{background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);overflow:hidden;cursor:pointer;transition:transform 0.3s,opacity 0.3s;aspect-ratio:1;display:flex;align-items:center;justify-content:center;}
+          .g-item{background:var(--cream-warm);border:0.5px solid rgba(255,255,255,0.1);overflow:hidden;cursor:pointer;transition:transform 0.3s,opacity 0.3s;aspect-ratio:1;display:flex;align-items:center;justify-content:center;}
           .g-item:hover{transform:scale(0.97);opacity:0.88;}
           .g-item img{width:100%;height:100%;object-fit:cover;display:block;}
           .g-item.hero{grid-column:span 2;grid-row:span 2;}
@@ -76,7 +78,7 @@ export default function GallerySection({ tr }: { tr: Translations }) {
             <div key={i} className={`g-item ${SLOT_CLASSES[i]}`}>
               {photo ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo.url} alt={`Foto pra-nikah ${i+1}`} loading="lazy"/>
+                <img src={photo.url} alt={`Foto pra-nikah ${i+1}`} loading={i < 4 ? 'eager' : 'lazy'} {...(i < 4 ? { fetchPriority: 'high' } : {})}/>
               ) : (
                 <div className="g-ph"><PlaceholderIcon/><span>{String(i+1).padStart(2,'0')}</span></div>
               )}
