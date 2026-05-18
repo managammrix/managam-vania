@@ -38,6 +38,8 @@ export const t = {
     thanksgiving_title: 'Ibadah Ucapan Syukur',
     congregation: 'BERSAMA JEMAAT & KELUARGA',
     open_maps: 'BUKA DI MAPS ↗',
+    attire_label: 'TEMA WARNA',
+    attire_text: 'Kami mengundang Anda untuk hadir dengan nuansa hijau sage, krem, atau warna bumi — selaras dengan tema pernikahan kami. Bukan keharusan, namun akan sangat indah.',
     // RSVP
     rsvp_heading: 'Konfirmasi Kehadiran',
     rsvp_sub: 'SEBELUM 1 JUNI 2026',
@@ -116,6 +118,8 @@ export const t = {
     thanksgiving_title: 'Thanksgiving Service',
     congregation: 'WITH CONGREGATION & FAMILY',
     open_maps: 'OPEN IN MAPS ↗',
+    attire_label: 'COLOUR THEME',
+    attire_text: 'We warmly invite you to dress in sage green, cream, or earth tones — in harmony with our wedding palette. Not a requirement, but it would be beautiful.',
     rsvp_heading: 'Will You Join Us?',
     rsvp_sub: 'BEFORE 1 JUNE 2026',
     rsvp_name: 'FULL NAME',

@@ -27,13 +27,6 @@ export default function StorySection({ tr }: { tr: Translations }) {
           Di dalam kesatuan-Nya yang sempurna, kami dipersatukan dalam<br/>
           Pernikahan Kudus.&rdquo;
         </p>
-        <div className="reveal reveal-d2" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(18px,3vw,26px)',fontStyle:'italic',color:'var(--gold-light)',textAlign:'center',margin:'32px 0',lineHeight:1.85}}>
-          &ldquo;The steadfast love of the Lord never ceases,<br/>
-          his mercies never come to an end;<br/>
-          they are new every morning.<br/>
-          Great is your faithfulness.&rdquo;
-          <div style={{fontFamily:'Cinzel,serif',fontSize:11,letterSpacing:3,color:'var(--sage-light)',fontStyle:'normal',marginTop:10}}>LAMENTATIONS 3:22–23</div>
-        </div>
         <div className="reveal reveal-d2" style={{width:1,height:56,background:'var(--gold)',margin:'0 auto 36px',opacity:0.55}}/>
 
         <div className="reveal reveal-d2" style={{maxWidth:540,margin:'0 auto',textAlign:'left',position:'relative'}}>

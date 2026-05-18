@@ -28,6 +28,17 @@ export default function EventsSection({ tr }: { tr: Translations }) {
             </div>
             <a href="https://maps.app.goo.gl/m5Xqevs1F16KMh6j8" target="_blank" rel="noopener noreferrer"
               style={{display:'inline-block',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'9px 18px',textDecoration:'none'}}>{tr.open_maps}</a>
+            <div style={{marginTop:16,paddingTop:16,borderTop:'0.5px solid var(--cream-deep)'}}>
+              <span style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--sage)',display:'block',marginBottom:6}}>{tr.attire_label}</span>
+              <p style={{fontSize:13,color:'var(--ink-soft)',lineHeight:1.7,fontStyle:'italic'}}>{tr.attire_text}</p>
+              <div style={{display:'flex',gap:8,marginTop:12}}>
+                <div style={{width:20,height:20,borderRadius:'50%',background:'#2d5a3d',flexShrink:0}}/>
+                <div style={{width:20,height:20,borderRadius:'50%',background:'#6b8f71',flexShrink:0}}/>
+                <div style={{width:20,height:20,borderRadius:'50%',background:'#ede5d4',border:'0.5px solid var(--cream-deep)',flexShrink:0}}/>
+                <div style={{width:20,height:20,borderRadius:'50%',background:'#d9cdb8',flexShrink:0}}/>
+                <div style={{width:20,height:20,borderRadius:'50%',background:'#b8965a',flexShrink:0}}/>
+              </div>
+            </div>
           </div>
 
           {/* Thanksgiving */}

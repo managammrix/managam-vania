@@ -38,10 +38,6 @@ export default function CoverSection({ tr }: { tr: Translations }) {
           Managam<br/><span style={{fontSize:'0.65em',color:'var(--gold)'}}>&amp;</span><br/>Vania
         </h1>
         <div className="reveal reveal-d3" style={{fontFamily:'Cinzel,serif',fontSize:'clamp(24px,5vw,40px)',color:'var(--forest)',letterSpacing:5,margin:'18px 0 10px'}}>20 · 06 · 2026</div>
-        <div className="reveal reveal-d3" style={{fontFamily:'Cormorant Garamond,serif',fontSize:13,fontStyle:'italic',color:'var(--sage)',textAlign:'center',marginBottom:16}}>
-          &ldquo;A cord of three strands is not quickly broken.&rdquo;
-          <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,marginTop:5,color:'var(--sage)',fontStyle:'normal'}}>ECCLESIASTES 4:12</div>
-        </div>
         <p className="reveal reveal-d3" style={{fontSize:14,color:'var(--sage)',fontStyle:'italic',marginBottom:36,lineHeight:1.7}}>
           &ldquo;He who has been faithful<br/>so on will always remain faithful&rdquo;
         </p>

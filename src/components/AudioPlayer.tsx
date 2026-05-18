@@ -7,6 +7,12 @@ export default function AudioPlayer({ play }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [muted, setMuted] = useState(false)
   const [started, setStarted] = useState(false)
+  const [showLabel, setShowLabel] = useState(true)
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowLabel(false), 3000)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (!play || started) return
@@ -57,31 +63,44 @@ export default function AudioPlayer({ play }: Props) {
       {/* Recommended: Goodness of God instrumental, ~5min,
           normalized to -14 LUFS, exported as MP3 192kbps */}
       <audio ref={audioRef} src="/bgm.mp3" preload="none" />
-      <button
-        onClick={toggle}
-        title={muted || !started ? 'Play music' : 'Mute music'}
-        style={{
-          position: 'fixed',
-          bottom: 64,
-          left: 20,
-          zIndex: 300,
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          background: 'rgba(30,61,42,0.85)',
-          border: '0.5px solid rgba(255,255,255,0.2)',
-          color: 'white',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backdropFilter: 'blur(4px)',
-          fontSize: 16,
-          transition: 'all 0.2s',
-        }}
-      >
-        {muted || !started ? '♪' : '♫'}
-      </button>
+      <div style={{position:'fixed',bottom:80,left:20,zIndex:300,display:'flex',alignItems:'center'}}>
+        <button
+          onClick={toggle}
+          title={muted || !started ? 'Play music' : 'Mute music'}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            background: 'rgba(30,61,42,0.85)',
+            border: '0.5px solid rgba(255,255,255,0.2)',
+            color: 'white',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(4px)',
+            fontSize: 16,
+            transition: 'all 0.2s',
+            flexShrink: 0,
+          }}
+        >
+          {muted || !started ? '♪' : '♫'}
+        </button>
+        {showLabel && (
+          <span style={{
+            position: 'absolute',
+            left: 48,
+            fontFamily: 'Cinzel,serif',
+            fontSize: 10,
+            letterSpacing: 2,
+            color: 'rgba(255,255,255,0.75)',
+            whiteSpace: 'nowrap',
+            animation: 'fadeOutLabel 3s ease forwards',
+          }}>
+            MUSIC ON
+          </span>
+        )}
+      </div>
     </>
   )
 }
