@@ -19,7 +19,10 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
             <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:24,fontStyle:'italic',color:'var(--forest-deep)',marginBottom:4}}>Managam Raja Silalahi</div>
             <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:12}}>S.Kom., M.Sc.</div>
             <div style={{marginBottom:18,textAlign:'center'}}>
-              <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:3}}>HAGGAI 1:9</div>
+              <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:6}}>HAGGAI 1:9</div>
+              <p style={{fontFamily:'Cormorant Garamond,serif',fontSize:12,fontStyle:'italic',color:'var(--sage)',lineHeight:1.6,marginBottom:8}}>
+                &ldquo;You expected much, but it came to little. Why? Because my house lies in ruins while each of you runs to your own house.&rdquo;
+              </p>
             </div>
             <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.9}}>
               {tr.son_of}<br/>
@@ -27,7 +30,7 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
               &amp; <strong>Ibu Erna Sitinjak, S.K.M.</strong>
             </div>
             <a href="https://instagram.com/managamsilalahi" target="_blank" rel="noopener noreferrer"
-              style={{display:'inline-block',marginTop:14,fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'7px 16px',textDecoration:'none'}}>@ INSTAGRAM ↗</a>
+              style={{display:'inline-flex',alignItems:'center',marginTop:14,fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'13px 16px',minHeight:44,textDecoration:'none'}}>@ INSTAGRAM ↗</a>
           </div>
 
           {/* Separator */}
@@ -54,7 +57,7 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
               &amp; <strong>Ibu Tan Tjoen Nio</strong>
             </div>
             <a href="https://instagram.com/vaniatee26" target="_blank" rel="noopener noreferrer"
-              style={{display:'inline-block',marginTop:14,fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'7px 16px',textDecoration:'none'}}>@ INSTAGRAM ↗</a>
+              style={{display:'inline-flex',alignItems:'center',marginTop:14,fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'13px 16px',minHeight:44,textDecoration:'none'}}>@ INSTAGRAM ↗</a>
           </div>
         </div>
       </div>

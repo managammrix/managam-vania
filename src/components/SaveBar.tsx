@@ -14,7 +14,9 @@ export default function SaveBar({ tr }: { tr: Translations }) {
   }
 
   return (
-    <div style={{
+    <>
+    <style>{`@media(max-width:430px){.save-bar-wrapper{padding:10px 16px!important;gap:10px!important;}}`}</style>
+    <div className="save-bar-wrapper" style={{
       position:'fixed',bottom:0,left:0,right:0,background:'var(--forest-deep)',
       display:'flex',alignItems:'center',justifyContent:'center',gap:18,
       padding:'13px 24px',zIndex:200,
@@ -22,7 +24,7 @@ export default function SaveBar({ tr }: { tr: Translations }) {
       transition:'transform 0.4s ease',
       borderTop:'0.5px solid rgba(255,255,255,0.08)',
     }}>
-      <span style={{fontFamily:'Cormorant Garamond,serif',fontSize:16,fontStyle:'italic',color:'var(--cream-warm)'}}>
+      <span style={{fontFamily:'Cormorant Garamond,serif',fontSize:13,fontStyle:'italic',color:'var(--cream-warm)',whiteSpace:'nowrap',letterSpacing:0}}>
         Managam &amp; Vania · 20 Juni 2026
       </span>
       <button onClick={addToCalendar} style={{
@@ -32,8 +34,10 @@ export default function SaveBar({ tr }: { tr: Translations }) {
       }}>{tr.save_date}</button>
       <button onClick={() => setShow(false)} style={{
         background:'none',border:'none',color:'var(--sage-light)',
-        cursor:'pointer',fontSize:20,lineHeight:1,padding:4,
+        cursor:'pointer',fontSize:20,lineHeight:1,
+        minWidth:44,minHeight:44,display:'flex',alignItems:'center',justifyContent:'center',
       }}>×</button>
     </div>
+    </>
   )
 }

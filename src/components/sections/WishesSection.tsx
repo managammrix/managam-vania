@@ -28,15 +28,17 @@ export default function WishesSection({ tr }: { tr: Translations }) {
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--cream)',textAlign:'center',marginBottom:10}}>{tr.wishes_heading}</h2>
         <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage-light)',textAlign:'center',marginBottom:0}}>{tr.wishes_sub}</p>
 
-        <div className="reveal reveal-d2" style={{marginTop:36,display:'flex',gap:10,flexWrap:'wrap'}}>
+        <div className="reveal reveal-d2 wish-form" style={{marginTop:36,display:'flex',gap:10,flexWrap:'wrap'}}>
           <input value={author} onChange={e=>setAuthor(e.target.value)}
             placeholder={tr.wishes_name_ph}
+            className="wish-name-input"
             style={{width:150,flexShrink:0,background:'rgba(255,255,255,0.07)',border:'0.5px solid rgba(255,255,255,0.14)',padding:'13px 16px',fontFamily:'EB Garamond,serif',fontSize:16,color:'var(--cream)',outline:'none'}}/>
           <input value={message} onChange={e=>setMessage(e.target.value)}
             onKeyDown={e=>e.key==='Enter'&&send()}
             placeholder={tr.wishes_text_ph}
             style={{flex:1,minWidth:200,background:'rgba(255,255,255,0.07)',border:'0.5px solid rgba(255,255,255,0.14)',padding:'13px 16px',fontFamily:'EB Garamond,serif',fontSize:16,color:'var(--cream)',outline:'none'}}/>
           <button onClick={send}
+            className="wish-send"
             style={{background:'var(--gold)',border:'none',padding:'13px 22px',fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:3,color:'var(--forest-deep)',cursor:'pointer',flexShrink:0}}>{tr.wishes_send}</button>
         </div>
 

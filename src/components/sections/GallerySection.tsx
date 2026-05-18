@@ -70,7 +70,7 @@ export default function GallerySection({ tr }: { tr: Translations }) {
           />
           <button
             onClick={() => setLightbox(null)}
-            style={{position:'absolute',top:24,right:24,background:'none',border:'none',color:'white',fontSize:32,cursor:'pointer',lineHeight:1,fontFamily:'Cinzel,serif'}}
+            style={{position:'absolute',top:24,right:24,background:'none',border:'none',color:'white',fontSize:24,cursor:'pointer',lineHeight:1,fontFamily:'Cinzel,serif',minWidth:44,minHeight:44,display:'flex',alignItems:'center',justifyContent:'center'}}
           >×</button>
         </div>
       )}

@@ -53,7 +53,7 @@ export default function CoverSection({ tr }: { tr: Translations }) {
           &ldquo;He who has been faithful<br/>so on will always remain faithful&rdquo;
         </p>
         <a className="reveal reveal-d4" href="#story"
-          style={{display:'inline-block',fontFamily:'Cinzel,serif',fontSize:11,letterSpacing:4,color:'var(--sage)',border:'0.5px solid var(--sage-light)',padding:'11px 28px',cursor:'pointer',transition:'all 0.3s',textDecoration:'none'}}
+          style={{display:'inline-flex',alignItems:'center',fontFamily:'Cinzel,serif',fontSize:11,letterSpacing:4,color:'var(--sage)',border:'0.5px solid var(--sage-light)',padding:'14px 28px',minHeight:44,cursor:'pointer',transition:'all 0.3s',textDecoration:'none'}}
           onMouseEnter={e=>{(e.target as HTMLElement).style.cssText+='background:var(--forest);color:var(--cream);border-color:var(--forest);'}}
           onMouseLeave={e=>{const el=e.target as HTMLElement;el.style.background='';el.style.color='var(--sage)';el.style.borderColor='var(--sage-light)'}}
         >{tr.open_invitation}</a>

@@ -41,3 +41,18 @@ section { min-height: 100vh; position: relative; overflow: hidden; }
   70%  { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* Touch targets & mobile layout */
+.rsvp-attendance-group { display: flex; gap: 16px; }
+@media (max-width: 430px) {
+  .rsvp-attendance-group { flex-direction: column; }
+  .rsvp-attendance-group label { width: 100%; }
+  #events .section-sub { font-size: 9px; letter-spacing: 2px; }
+}
+
+@media (max-width: 640px) {
+  #wishes .wish-form { flex-direction: column; }
+  #wishes .wish-name-input { width: 100% !important; flex: unset !important; }
+  #wishes .wish-send { width: 100%; min-height: 44px; }
+  #story { padding: 48px 24px; }
+}

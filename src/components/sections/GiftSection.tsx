@@ -36,7 +36,7 @@ export default function GiftSection({ tr }: { tr: Translations }) {
               <div style={{fontFamily:'Cinzel,serif',fontSize:15,color:'var(--ink)',letterSpacing:1,margin:'10px 0',wordBreak:'break-all',lineHeight:1.4}}>{acc.number}</div>
               <div style={{fontSize:12,color:'var(--sage)',marginBottom:14}}>{acc.name}</div>
               <button onClick={()=>copy(acc.number)}
-                style={{border:'0.5px solid var(--cream-deep)',padding:'7px 14px',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color: copied===acc.number?'var(--cream)':'var(--sage)',background: copied===acc.number?'var(--forest)':'none',cursor:'pointer',width:'100%',transition:'all 0.3s'}}>
+                style={{border:'0.5px solid var(--cream-deep)',padding:'13px 14px',minHeight:44,fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color: copied===acc.number?'var(--cream)':'var(--sage)',background: copied===acc.number?'var(--forest)':'none',cursor:'pointer',width:'100%',transition:'all 0.3s'}}>
                 {copied===acc.number ? tr.gift_copied : tr.gift_copy}
               </button>
             </div>

@@ -14,7 +14,7 @@ export default function LangToggle({ lang, setLang }: Props) {
           key={l}
           onClick={() => setLang(l)}
           style={{
-            padding:'7px 14px',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,
+            padding:'13px 14px',minHeight:44,fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,
             cursor:'pointer',border:'none',
             background: lang===l ? 'var(--gold)' : 'rgba(30,61,42,0.85)',
             color: lang===l ? 'var(--forest-deep)' : 'rgba(255,255,255,0.5)',

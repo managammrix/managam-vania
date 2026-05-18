@@ -28,14 +28,19 @@ export default function NavDots({ sections }: Props) {
       {sections.map((id, i) => (
         <div
           key={id}
+          role="button"
+          tabIndex={0}
           onClick={() => document.getElementById(id)?.scrollIntoView({behavior:'smooth'})}
-          style={{
-            width:6,height:6,borderRadius:'50%',cursor:'pointer',transition:'all 0.3s',
+          onKeyDown={(e) => e.key==='Enter' && document.getElementById(sections[i])?.scrollIntoView({behavior:'smooth'})}
+          style={{padding:19,margin:-19,position:'relative',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
+        >
+          <div style={{
+            width:6,height:6,borderRadius:'50%',transition:'all 0.3s',
             background: active===i ? 'var(--forest)' : 'var(--sage)',
             opacity: active===i ? 1 : 0.35,
             transform: active===i ? 'scale(1.5)' : 'scale(1)',
-          }}
-        />
+          }}/>
+        </div>
       ))}
     </nav>
   )

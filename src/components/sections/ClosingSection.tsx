@@ -18,7 +18,7 @@ export default function ClosingSection({ tr }: { tr: Translations }) {
     else navigator.clipboard.writeText(window.location.href).then(()=>alert(tr.link_copied))
   }
 
-  const btn: React.CSSProperties = {fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:3,padding:'12px 22px',border:'0.5px solid rgba(255,255,255,0.25)',color:'var(--cream)',textDecoration:'none',cursor:'pointer',background:'none',transition:'all 0.3s'}
+  const btn: React.CSSProperties = {fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:3,padding:'15px 22px',minHeight:44,display:'inline-flex',alignItems:'center',border:'0.5px solid rgba(255,255,255,0.25)',color:'var(--cream)',textDecoration:'none',cursor:'pointer',background:'none',transition:'all 0.3s'}
   const btnPrimary: React.CSSProperties = {...btn,background:'var(--gold)',color:'var(--forest-deep)',border:'0.5px solid var(--gold)'}
 
   return (

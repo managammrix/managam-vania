@@ -9,7 +9,7 @@ export default function EventsSection({ tr }: { tr: Translations }) {
     <section id="events" ref={ref} style={{background:'var(--cream-warm)',padding:'80px 40px',display:'flex',alignItems:'center',justifyContent:'center'}}>
       <div style={{maxWidth:680,width:'100%'}}>
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--forest-deep)',textAlign:'center',marginBottom:10}}>{tr.events_heading}</h2>
-        <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:48}}>{tr.events_sub}</p>
+        <p className="reveal reveal-d1 section-sub" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:48}}>{tr.events_sub}</p>
 
         <style>{`@media(max-width:600px){.events-grid{grid-template-columns:1fr!important;}}`}</style>
         <div className="events-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
@@ -27,7 +27,7 @@ export default function EventsSection({ tr }: { tr: Translations }) {
               Jakarta Barat 11470
             </div>
             <a href="https://maps.app.goo.gl/m5Xqevs1F16KMh6j8" target="_blank" rel="noopener noreferrer"
-              style={{display:'inline-block',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'9px 18px',textDecoration:'none'}}>{tr.open_maps}</a>
+              style={{display:'inline-flex',alignItems:'center',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'15px 18px',minHeight:44,textDecoration:'none'}}>{tr.open_maps}</a>
             <div style={{marginTop:16,paddingTop:16,borderTop:'0.5px solid var(--cream-deep)'}}>
               <span style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--sage)',display:'block',marginBottom:6}}>{tr.attire_label}</span>
               <p style={{fontSize:13,color:'var(--ink-soft)',lineHeight:1.7,fontStyle:'italic'}}>{tr.attire_text}</p>
@@ -54,7 +54,7 @@ export default function EventsSection({ tr }: { tr: Translations }) {
               Jawa Tengah 52264
             </div>
             <a href="https://maps.app.goo.gl/TjH32PzdXaAGXJJQ8" target="_blank" rel="noopener noreferrer"
-              style={{display:'inline-block',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'9px 18px',textDecoration:'none'}}>{tr.open_maps}</a>
+              style={{display:'inline-flex',alignItems:'center',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'15px 18px',minHeight:44,textDecoration:'none'}}>{tr.open_maps}</a>
           </div>
         </div>
       </div>
