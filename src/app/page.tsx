@@ -15,6 +15,7 @@ import GiftSection from '@/components/sections/GiftSection'
 import WishesSection from '@/components/sections/WishesSection'
 import GallerySection from '@/components/sections/GallerySection'
 import ClosingSection from '@/components/sections/ClosingSection'
+import AudioPlayer from '@/components/AudioPlayer'
 
 const SECTIONS = [
   'cover','story','couple','events','rsvp','gift','wishes','gallery','closing'
@@ -29,6 +30,7 @@ export default function Home() {
       <EnvelopeScreen opened={opened} onOpen={() => setOpened(true)} tr={tr} />
       {opened && (
         <>
+          <AudioPlayer play={opened} />
           <LangToggle lang={lang} setLang={(l: Lang) => setLang(l)} />
           <NavDots sections={SECTIONS as unknown as string[]} />
           <SaveBar tr={tr} />
