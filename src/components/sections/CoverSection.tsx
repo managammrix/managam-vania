@@ -6,6 +6,17 @@ export default function CoverSection({ tr }: { tr: Translations }) {
   const ref = useReveal()
   return (
     <section id="cover" ref={ref} style={{background:'var(--parchment)',display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center'}}>
+      {/* hero background */}
+      <div style={{position:'absolute',inset:0,zIndex:1,overflow:'hidden'}}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://bawnvpgjpueqdebjqcjp.supabase.co/storage/v1/object/public/prewedding/03.jpg"
+          alt="Managam & Vania"
+          style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',opacity:0.12,mixBlendMode:'multiply'}}
+          loading="eager"
+          fetchPriority="high"
+        />
+      </div>
       {/* botanical corners */}
       <svg style={{position:'absolute',top:-10,left:-10,width:260,height:260,pointerEvents:'none',opacity:0.14}} viewBox="0 0 260 260">
         <g fill="none" stroke="#2d5a3d" strokeWidth="0.9">
