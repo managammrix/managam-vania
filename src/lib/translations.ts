@@ -104,7 +104,7 @@ export const t = {
     m7_detail: '"Let\'s do this." The decision made in faith, love, and joy.',
     m8_title: 'Holy Matrimony ✦',
     m8_detail: 'The day it all becomes one — before God, family & friends.',
-    couple_heading: 'The Groom & Bride',
+    couple_heading: 'The Groom & The Bride',
     couple_sub: 'TOGETHER WITH THEIR FAMILIES',
     son_of: 'Son of',
     daughter_of: 'Daughter of',
