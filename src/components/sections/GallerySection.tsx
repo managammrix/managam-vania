@@ -37,27 +37,52 @@ const PlaceholderIcon = () => (
 export default function GallerySection({ tr }: { tr: Translations }) {
   const ref = useReveal()
   const [photos, setPhotos] = useState<(PhotoRow|null)[]>(Array(18).fill(null))
+  const [lightbox, setLightbox] = useState<string|null>(null)
 
-  useEffect(()=>{
-    console.log('[gallery] useEffect fired')
-    fetchGalleryPhotos().then(data=>{
-      console.log('[gallery] photos received:', data.length, data)
-      if(data.length){
-        const filled = Array(18).fill(null).map((_,i)=>data[i]??null)
-        setPhotos(filled)
+  useEffect(() => {
+    fetchGalleryPhotos().then(data => {
+      if (data.length) {
+        setPhotos(Array(18).fill(null).map((_, i) => data[i] ?? null))
       }
     })
-  },[])
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   return (
     <section id="gallery" ref={ref} style={{background:'var(--forest-deep)',padding:'80px 40px',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',cursor:'zoom-out'}}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightbox}
+            alt="Pre-wedding photo"
+            style={{maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',borderRadius:4}}
+          />
+          <button
+            onClick={() => setLightbox(null)}
+            style={{position:'absolute',top:24,right:24,background:'none',border:'none',color:'white',fontSize:32,cursor:'pointer',lineHeight:1,fontFamily:'Cinzel,serif'}}
+          >×</button>
+        </div>
+      )}
+
       <div style={{maxWidth:760,width:'100%'}}>
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--cream-warm)',textAlign:'center',marginBottom:10}}>{tr.gallery_heading}</h2>
         <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage-light)',textAlign:'center',marginBottom:0}}>{tr.gallery_sub}</p>
 
         <style>{`
           .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:48px;}
-          .g-item{background:var(--cream-warm);border:0.5px solid rgba(255,255,255,0.1);overflow:hidden;cursor:pointer;transition:transform 0.3s,opacity 0.3s;aspect-ratio:1;display:flex;align-items:center;justify-content:center;}
+          .g-item{background:var(--cream-warm);border:0.5px solid rgba(255,255,255,0.1);overflow:hidden;cursor:zoom-in;transition:transform 0.3s,opacity 0.3s;aspect-ratio:1;display:flex;align-items:center;justify-content:center;}
+          .g-item.empty{cursor:default;}
           .g-item:hover{transform:scale(0.97);opacity:0.88;}
           .g-item img{width:100%;height:100%;object-fit:cover;display:block;}
           .g-item.hero{grid-column:span 2;grid-row:span 2;}
@@ -74,16 +99,28 @@ export default function GallerySection({ tr }: { tr: Translations }) {
         `}</style>
 
         <div className="gallery-grid reveal reveal-d2">
-          {photos.map((photo, i) => (
-            <div key={i} className={`g-item ${SLOT_CLASSES[i]}`}>
-              {photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={photo.url} alt={`Foto pra-nikah ${i+1}`} loading={i < 4 ? 'eager' : 'lazy'} {...(i < 4 ? { fetchPriority: 'high' } : {})}/>
-              ) : (
-                <div className="g-ph"><PlaceholderIcon/><span>{String(i+1).padStart(2,'0')}</span></div>
-              )}
-            </div>
-          ))}
+          {SLOT_CLASSES.map((cls, i) => {
+            const photo = photos[i]
+            return (
+              <div
+                key={i}
+                className={`g-item ${cls}${!photo ? ' empty' : ''}`}
+                onClick={() => photo && setLightbox(photo.url)}
+              >
+                {photo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photo.url}
+                    alt={`Foto pra-nikah ${i + 1}`}
+                    loading={i < 4 ? 'eager' : 'lazy'}
+                    {...(i < 4 ? { fetchPriority: 'high' } : {})}
+                  />
+                ) : (
+                  <div className="g-ph"><PlaceholderIcon/><span>{String(i + 1).padStart(2, '0')}</span></div>
+                )}
+              </div>
+            )
+          })}
         </div>
 
         <div className="reveal reveal-d3" style={{textAlign:'center',marginTop:28}}>
