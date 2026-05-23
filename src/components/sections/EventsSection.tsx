@@ -11,8 +11,7 @@ export default function EventsSection({ tr }: { tr: Translations }) {
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--forest-deep)',textAlign:'center',marginBottom:10}}>{tr.events_heading}</h2>
         <p className="reveal reveal-d1 section-sub" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:48}}>{tr.events_sub}</p>
 
-        <style>{`@media(max-width:600px){.events-grid{grid-template-columns:1fr!important;}}`}</style>
-        <div className="events-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+        <div className="events-grid" style={{display:'grid',gridTemplateColumns:'1fr',gap:24,maxWidth:440,margin:'0 auto'}}>
           {/* Ceremony */}
           <div className="reveal reveal-d2" style={card}>
             <span style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--gold)',marginBottom:12,display:'block'}}>{tr.sat_label}</span>
@@ -41,26 +40,6 @@ export default function EventsSection({ tr }: { tr: Translations }) {
             </div>
           </div>
 
-          {/* Thanksgiving */}
-          <div className="reveal reveal-d3" style={card}>
-            <span style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--gold)',marginBottom:12,display:'block'}}>{tr.sun_label}</span>
-            <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:26,fontStyle:'italic',color:'var(--forest-deep)',marginBottom:16,lineHeight:1.2}}>{tr.thanksgiving_title}</div>
-            <span className="event-card-time" style={{fontFamily:'Cinzel,serif',fontSize:13,letterSpacing:2,color:'var(--forest)',marginBottom:8,display:'block'}}>
-              {tr.thanksgiving_time}
-            </span>
-            <span style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--sage)',display:'block',marginBottom:14}}>
-              {tr.congregation}
-            </span>
-            <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.75,marginBottom:20}}>
-              GPPS Imanuel Kersana<br/>
-              Jl. Raya No. 04, RT.01/RW.01<br/>
-              Ciampel Kulon, Ciampel<br/>
-              Kec. Kersana, Kabupaten Brebes<br/>
-              Jawa Tengah 52264
-            </div>
-            <a href="https://maps.app.goo.gl/TjH32PzdXaAGXJJQ8" target="_blank" rel="noopener noreferrer"
-              style={{display:'inline-flex',alignItems:'center',fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--forest)',border:'0.5px solid var(--forest)',padding:'15px 18px',minHeight:44,textDecoration:'none'}}>{tr.open_maps}</a>
-          </div>
         </div>
       </div>
     </section>
