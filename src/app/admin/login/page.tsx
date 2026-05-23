@@ -3,41 +3,59 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SESSION_KEY } from '@/lib/adminAuth'
 
-const CORRECT_PIN = 'MV20062026'
+const PIN_LENGTH = 10
 
 export default function AdminLogin() {
   const router = useRouter()
   const [pin, setPin] = useState('')
   const [error, setError] = useState(false)
   const [shake, setShake] = useState(false)
+  const [verifying, setVerifying] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined' &&
-        sessionStorage.getItem(SESSION_KEY) === 'true') {
+        sessionStorage.getItem(SESSION_KEY)) {
       router.replace('/admin')
       return
     }
     inputRef.current?.focus()
   }, [router])
 
-  const attempt = (value: string) => {
-    setPin(value)
-    setError(false)
-    if (value.length < CORRECT_PIN.length) return
-    if (value === CORRECT_PIN) {
-      sessionStorage.setItem(SESSION_KEY, 'true')
-      router.replace('/admin')
-    } else {
-      setShake(true)
-      setError(true)
-      setPin('')
-      setTimeout(() => setShake(false), 600)
-      inputRef.current?.focus()
-    }
+  const fail = () => {
+    setShake(true)
+    setError(true)
+    setPin('')
+    setTimeout(() => setShake(false), 600)
+    inputRef.current?.focus()
   }
 
-  const dots = CORRECT_PIN.length
+  const attempt = async (value: string) => {
+    setPin(value)
+    setError(false)
+    if (value.length < PIN_LENGTH || verifying) return
+    setVerifying(true)
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Secret': value,
+        },
+        body: JSON.stringify({ action: 'verify' }),
+      })
+      if (res.ok) {
+        sessionStorage.setItem(SESSION_KEY, value)
+        router.replace('/admin')
+      } else {
+        fail()
+      }
+    } catch {
+      fail()
+    } finally {
+      setVerifying(false)
+    }
+  }
 
   return (
     <div style={{
@@ -100,7 +118,7 @@ export default function AdminLogin() {
             marginBottom:32,
           }}
         >
-          {Array.from({length:dots}).map((_,i) => (
+          {Array.from({length:PIN_LENGTH}).map((_,i) => (
             <div key={i} style={{
               width:12,
               height:12,
@@ -118,7 +136,7 @@ export default function AdminLogin() {
           type="password"
           inputMode="text"
           value={pin}
-          maxLength={CORRECT_PIN.length}
+          maxLength={PIN_LENGTH}
           onChange={e => attempt(e.target.value)}
           style={{
             position:'absolute',
@@ -141,7 +159,8 @@ export default function AdminLogin() {
             marginBottom:8,
           }}
         >
-          {error ? 'PIN SALAH — COBA LAGI' : 'MASUKKAN PIN'}
+          {verifying ? 'MEMVERIFIKASI...' :
+           error ? 'PIN SALAH — COBA LAGI' : 'MASUKKAN PIN'}
         </div>
 
         <div style={{

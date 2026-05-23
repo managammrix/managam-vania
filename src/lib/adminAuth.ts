@@ -8,7 +8,7 @@ export function useAdminAuth() {
   const router = useRouter()
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (sessionStorage.getItem(SESSION_KEY) !== 'true') {
+    if (!sessionStorage.getItem(SESSION_KEY)) {
       router.replace('/admin/login')
     }
   }, [router])

@@ -70,50 +70,65 @@ export async function addWish(author: string, message: string) {
   if (error) throw error
 }
 
-// ── Admin: Invitees ───────────────────────────────────────────────
+// ── Admin proxy ───────────────────────────────────────────────────
+// All admin writes route through /api/admin (Cloudflare Pages Function)
+// which holds the service_role key and validates ADMIN_SECRET.
+async function adminCall<T = unknown>(
+  action: string,
+  payload?: Record<string, unknown>
+): Promise<T> {
+  const secret = typeof window !== 'undefined'
+    ? sessionStorage.getItem('mv_admin_auth')
+    : null
+  const res = await fetch('/api/admin', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Admin-Secret': secret ?? '',
+    },
+    body: JSON.stringify({ action, payload }),
+  })
+  if (res.status === 401) {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('mv_admin_auth')
+      window.location.href = '/admin/login'
+    }
+    throw new Error('Unauthorized')
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error(err.error || `Admin call failed: ${res.status}`)
+  }
+  const { data } = await res.json()
+  return data as T
+}
+
 export async function fetchInvitees(): Promise<InviteeRow[]> {
-  const { data, error } = await supabase
-    .from('invitees')
-    .select('*')
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return data ?? []
+  return (await adminCall<InviteeRow[] | null>('list_invitees')) ?? []
 }
 
 export async function upsertInvitee(invitee: InviteeRow) {
-  const { error } = await supabase.from('invitees').upsert(invitee)
-  if (error) throw error
+  await adminCall('upsert_invitee', invitee as unknown as Record<string, unknown>)
 }
 
 export async function deleteInvitee(id: string) {
-  const { error } = await supabase.from('invitees').delete().eq('id', id)
-  if (error) throw error
+  await adminCall('delete_invitee', { id })
 }
 
-// ── Admin: Wishes moderation ──────────────────────────────────────
 export async function fetchAllWishes(): Promise<WishRow[]> {
-  const { data, error } = await supabase
-    .from('wishes')
-    .select('*')
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return data ?? []
+  return (await adminCall<WishRow[] | null>('list_all_wishes')) ?? []
 }
 
 export async function updateWishApproval(id: string, approved: boolean) {
-  const { error } = await supabase.from('wishes').update({ approved }).eq('id', id)
-  if (error) throw error
+  await adminCall('update_wish_approval', { id, approved })
 }
 
 export async function deleteWish(id: string) {
-  const { error } = await supabase.from('wishes').delete().eq('id', id)
-  if (error) throw error
+  await adminCall('delete_wish', { id })
 }
 
-// ── Admin: Message log ────────────────────────────────────────────
 export async function logMessage(log: Omit<MessageLogRow, 'id' | 'sent_at'>) {
-  const { error } = await supabase.from('message_log').insert(log)
-  if (error) throw error
+  await adminCall('log_message', log as unknown as Record<string, unknown>)
 }
 
 // ── Gallery ───────────────────────────────────────────────────────

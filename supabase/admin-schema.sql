@@ -1,4 +1,10 @@
--- Invitees
+-- ══════════════════════════════════════════════════════════════════
+-- Admin tables — anon has NO access. All writes go through the
+-- Cloudflare Pages Function at /api/admin which holds the
+-- service_role key and validates ADMIN_SECRET server-side.
+-- ══════════════════════════════════════════════════════════════════
+
+-- ── INVITEES ──────────────────────────────────────────────────────
 create table if not exists public.invitees (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz default now(),
@@ -10,37 +16,34 @@ create table if not exists public.invitees (
   notes text
 );
 
--- RLS: anon can read/write invitees (PIN-gated client-side)
 alter table public.invitees enable row level security;
-create policy "Public access on invitees"
-  on public.invitees for all
-  to anon
-  using (true)
-  with check (true);
 
--- Add approved column to wishes
+-- Drop any previously-installed permissive policies
+drop policy if exists "Public access on invitees" on public.invitees;
+drop policy if exists "Auth users only on invitees" on public.invitees;
+-- No policies means anon gets denied. service_role bypasses RLS.
+
+-- ── WISHES — add approved + lock down admin ops ───────────────────
 alter table public.wishes
   add column if not exists approved boolean default true;
 
--- Update wishes RLS: anon can read approved + update/delete (PIN-gated client-side)
-drop policy if exists "Allow public read on wishes"
-  on public.wishes;
+-- Public site needs SELECT(approved) + INSERT. Admin ops go via proxy.
+drop policy if exists "Allow public read on wishes" on public.wishes;
+drop policy if exists "Allow public read approved wishes" on public.wishes;
+drop policy if exists "Auth users read all wishes" on public.wishes;
+drop policy if exists "Auth users update wishes" on public.wishes;
+drop policy if exists "Auth users delete wishes" on public.wishes;
+drop policy if exists "Public update wishes" on public.wishes;
+drop policy if exists "Public delete wishes" on public.wishes;
+
 create policy "Allow public read approved wishes"
   on public.wishes for select
   to anon
   using (approved = true);
 
-create policy "Public update wishes"
-  on public.wishes for update
-  to anon
-  using (true);
+-- (Public insert policy from base schema.sql remains)
 
-create policy "Public delete wishes"
-  on public.wishes for delete
-  to anon
-  using (true);
-
--- Message log
+-- ── MESSAGE LOG ───────────────────────────────────────────────────
 create table if not exists public.message_log (
   id uuid primary key default gen_random_uuid(),
   sent_at timestamptz default now(),
@@ -51,8 +54,7 @@ create table if not exists public.message_log (
 );
 
 alter table public.message_log enable row level security;
-create policy "Public access on message_log"
-  on public.message_log for all
-  to anon
-  using (true)
-  with check (true);
+
+drop policy if exists "Public access on message_log" on public.message_log;
+drop policy if exists "Auth users only on message_log" on public.message_log;
+-- No policies → anon denied. service_role bypasses RLS.

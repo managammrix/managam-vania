@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { fetchInvitees, fetchAllWishes } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
 
 interface Stats {
@@ -23,13 +23,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const load = async () => {
-      const [invitees, wishes] = await Promise.all([
-        supabase.from('invitees').select('*'),
-        supabase.from('wishes').select('*'),
+      const [inv, wsh] = await Promise.all([
+        fetchInvitees().catch(() => []),
+        fetchAllWishes().catch(() => []),
       ])
-
-      const inv = invitees.data ?? []
-      const wsh = wishes.data ?? []
 
       setStats({
         total_invitees: inv.length,
