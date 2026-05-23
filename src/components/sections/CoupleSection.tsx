@@ -51,7 +51,7 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
                 style={{
                   width:'100%', height:'100%',
                   objectFit:'cover',
-                  objectPosition:'center 40%',
+                  objectPosition:'60% 35%',
                   display:'block',
                 }}
               />
