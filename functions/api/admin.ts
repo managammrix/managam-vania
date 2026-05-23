@@ -102,6 +102,9 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
           body: JSON.stringify(payload),
         })
         break
+      case 'list_message_log':
+        res = await fetch(`${base}/message_log?select=message,sent_at&order=sent_at.desc`, { headers })
+        break
       default:
         return json({ error: `Unknown action: ${action}` }, 400)
     }

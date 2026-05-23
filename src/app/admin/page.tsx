@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { fetchInvitees, fetchAllWishes } from '@/lib/supabase'
+import { fetchInvitees, fetchAllWishes, fetchMessageLog } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
 
 interface Stats {
@@ -13,6 +13,8 @@ interface Stats {
   wishes_pending: number
   honored_count: number
   total_seats: number
+  reminder_sent: boolean
+  h7_sent: boolean
 }
 
 export default function AdminDashboard() {
@@ -22,13 +24,15 @@ export default function AdminDashboard() {
     attending:0, not_attending:0, pending:0,
     wishes_total:0, wishes_pending:0,
     honored_count:0, total_seats:0,
+    reminder_sent:false, h7_sent:false,
   })
 
   useEffect(() => {
     const load = async () => {
-      const [inv, wsh] = await Promise.all([
+      const [inv, wsh, logs] = await Promise.all([
         fetchInvitees().catch(() => []),
         fetchAllWishes().catch(() => []),
+        fetchMessageLog().catch(() => []),
       ])
 
       setStats({
@@ -49,6 +53,12 @@ export default function AdminDashboard() {
         total_seats: inv.filter(i =>
           i.attending !== false
         ).reduce((sum, i) => sum + (i.guests ?? 1), 0),
+        reminder_sent: logs.some(l =>
+          l.message?.includes('/u/reminder')
+        ),
+        h7_sent: logs.some(l =>
+          l.message?.includes('/u/h7')
+        ),
       })
     }
     load()
@@ -125,14 +135,14 @@ export default function AdminDashboard() {
             date: '7 Juni 2026 · 09:00 WIB',
             target: 'Tamu belum RSVP',
             template: 'Reminder RSVP (Sedang)',
-            fired: new Date() > new Date('2026-06-07T02:00:00Z'),
+            fired: stats.reminder_sent,
           },
           {
             name: 'H-7 Blast',
             date: '13 Juni 2026 · 09:00 WIB',
             target: 'Tamu konfirmasi hadir',
             template: 'H-7 (Sedang)',
-            fired: new Date() > new Date('2026-06-13T02:00:00Z'),
+            fired: stats.h7_sent,
           },
         ].map(job => (
           <div key={job.name} style={{

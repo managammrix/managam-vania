@@ -6,7 +6,12 @@
 -- 2. Database → Extensions → enable pg_net (for net.http_post)
 -- 3. Edge Function deployed: supabase functions deploy send-blast
 -- 4. Secrets set: FONNTE_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
--- 5. Replace YOUR_PROJECT_REF below with your actual Supabase ref
+--
+-- Replace YOUR_ANON_KEY with your Supabase anon key from
+-- Dashboard → Settings → API → anon public.
+-- This is safe — the Edge Function validates FONNTE_TOKEN
+-- server-side; the anon key only authenticates the function
+-- invocation itself.
 -- ══════════════════════════════════════════════════════════════════
 
 -- Reminder RSVP: 7 Juni 2026 02:00 UTC = 09:00 WIB
@@ -15,11 +20,8 @@ select cron.schedule(
   '0 2 7 6 *',
   $$
   select net.http_post(
-    url := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/send-blast',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.service_role_key')
-    ),
+    url := 'https://bawnvpgjpueqdebjqcjp.supabase.co/functions/v1/send-blast',
+    headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb,
     body := '{"type":"reminder_rsvp"}'::jsonb
   );
   $$
@@ -31,11 +33,8 @@ select cron.schedule(
   '0 2 13 6 *',
   $$
   select net.http_post(
-    url := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/send-blast',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.service_role_key')
-    ),
+    url := 'https://bawnvpgjpueqdebjqcjp.supabase.co/functions/v1/send-blast',
+    headers := '{"Content-Type":"application/json","Authorization":"Bearer YOUR_ANON_KEY"}'::jsonb,
     body := '{"type":"h7"}'::jsonb
   );
   $$
