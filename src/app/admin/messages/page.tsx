@@ -4,6 +4,7 @@ import { fetchInvitees, logMessage, InviteeRow }
   from '@/lib/supabase'
 import { sendBulkWhatsApp } from '@/lib/fonnte'
 import { useAdminAuth } from '@/lib/adminAuth'
+import { TEMPLATES, Template, TemplateVersion } from '@/lib/templates'
 
 const RECOMMENDED_TEMPLATE: Record<string,string> = {
   pending:  'Undangan Awal',
@@ -12,31 +13,16 @@ const RECOMMENDED_TEMPLATE: Record<string,string> = {
   all:      '',
 }
 
-const TEMPLATES = [
-  {
-    label: 'Undangan Awal',
-    message: `Syalom, {name}! 🌿\n\nPuji Tuhan — Ia yang telah memulai pekerjaan yang baik ini, Ia pula yang menyelesaikannya! 🙌\n\nDengan penuh sukacita dan ucapan syukur atas kesetiaan Tuhan, kami ingin bersaksi:\n\n*Tuhan telah menetapkan waktu-Nya* — dan kami akan melangsungkan Pernikahan Kudus kami:\n\n✝️ *Managam Raja Silalahi, S.Kom., M.Sc.*\n    Putra Bapak Saut Silalahi & Ibu Erna Sitinjak, S.K.M.\n\nbersama\n\n🌸 *Vania, S.Psi.*\n    Putri Bapak Pdt. Fredi (Tee Tjien Hian), S.Th. & Ibu Tan Tjoen Nio\n\n📅 *Sabtu, 20 Juni 2026*\n⛪ GMS Central Park – Hall B\n    Jl. Letjen S. Parman No. Kav. 28, Jakarta Barat\n🕙 Pukul 10:00 – 12:00 WIB\n\nKami mengundang Bapak/Ibu/Saudara/i *{name}* untuk hadir menjadi saksi atas karya Tuhan dalam hidup kami dan turut bersukacita bersama kami pada hari yang penuh berkat ini.\n\n_"For I know the plans I have for you, declares the Lord — plans to prosper you and not to harm you, plans to give you hope and a future."_\n— Jeremiah 29:11\n\nMohon konfirmasi kehadiran:\n🔗 https://managamvania.mrix.ai/u/awal\n\n*#BuildingMANAGAMVANturesWithGod* 🙏\nTuhan Yesus memberkati Bapak/Ibu/Saudara/i!\n\nDengan kasih dalam Kristus,\n*Managam & Vania*`,
-  },
-  {
-    label: 'Reminder RSVP',
-    message: `Syalom, {name}! 🌿\n\nKiranya damai sejahtera Tuhan menyertai Bapak/Ibu/Saudara/i hari ini 🙏\n\nKami mengingatkan dengan penuh kasih bahwa *konfirmasi kehadiran* pernikahan kami ditutup pada *14 Juni 2026*.\n\nKami percaya Tuhan sudah menetapkan siapa yang akan menjadi saksi pada hari bersejarah dalam hidup kami ini 🙌\n\n📅 *Sabtu, 20 Juni 2026 · 10:00 WIB*\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nMohon konfirmasi kehadiran di:\n🔗 https://managamvania.mrix.ai/u/reminder\n\n_"There is a time for everything, and a season for every activity under the heavens."_\n— Ecclesiastes 3:1 🌿\n\nTerima kasih atas doa dan kasih Bapak/Ibu/Saudara/i 🙏\n\n*Tuhan memberkati!*\nManagam & Vania`,
-  },
-  {
-    label: 'H-7',
-    message: `Syalom, {name}! 🌿🎉\n\n*Haleluya — tinggal 7 hari lagi!*\n\nKami bersukacita dan memuliakan Tuhan atas kesetiaan-Nya yang luar biasa dalam perjalanan panjang ini. Ia yang memulai, Ia yang menyelesaikan! 🙌\n\nKami sangat menantikan kehadiran dan doa restu Bapak/Ibu/Saudara/i pada:\n\n📅 *Sabtu, 20 Juni 2026 · 10:00 WIB*\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap undangan:\n🔗 https://managamvania.mrix.ai/u/h7\n\n_"There is a time for everything, and a season for every activity under the heavens."_\n— Ecclesiastes 3:1 🌿\n\nSampai berjumpa di hari yang penuh kemuliaan-Nya!\n*#BuildingMANAGAMVANturesWithGod* 🙏\n\nTuhan Yesus memberkati!\n*Managam & Vania*`,
-  },
-  {
-    label: 'Tamu Kehormatan',
-    message: `Syalom, {name}! 🌿\n\nKiranya kasih karunia dan damai sejahtera Tuhan Yesus Kristus menyertai Bapak/Ibu/Saudara/i 🙏\n\nDengan penuh hormat dan kasih dalam Kristus, kami ingin berbagi kabar sukacita ini:\n\n*Puji Tuhan — Ia telah menuntun perjalanan kami hingga pada hari yang telah Ia tetapkan.*\n\nKami akan melangsungkan Pernikahan Kudus kami pada *Sabtu, 20 Juni 2026* di Jakarta.\n\nKami memahami bahwa jarak dan situasi mungkin tidak memungkinkan kehadiran fisik Bapak/Ibu/Saudara/i — namun kami percaya *doa dan restu Anda adalah kekuatan* bagi kami.\n\nKiranya Anda turut bersukacita bersama kami dari jauh dan mengangkat kami dalam doa 🙌\n\nDetail undangan digital:\n🔗 https://managamvania.mrix.ai/u/hormat\n\n_"I press on toward the goal for the prize of the upward call of God in Christ Jesus."_\n— Philippians 3:14\n\nSalam dalam kasih Kristus Yesus,\n*Managam & Vania*\n*#BuildingMANAGAMVANturesWithGod*`,
-  },
-]
-
 export default function MessagesPage() {
   useAdminAuth()
   const [invitees, setInvitees] = useState<InviteeRow[]>([])
   const [token, setToken] = useState('')
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<Template>(TEMPLATES[0])
+  const [selectedVersion, setSelectedVersion] =
+    useState<TemplateVersion>(TEMPLATES[0].versions[0])
   const [message, setMessage] = useState(
-    TEMPLATES[0].message
+    TEMPLATES[0].versions[0].message
   )
   const [recipientFilter, setRecipientFilter] =
     useState<'all'|'pending'|'confirmed'|'honored'>('all')
@@ -53,6 +39,17 @@ export default function MessagesPage() {
     const saved = localStorage.getItem('fonnte_token')
     if (saved) setToken(saved)
   }, [])
+
+  const selectTemplate = (tmpl: Template) => {
+    setSelectedTemplate(tmpl)
+    setSelectedVersion(tmpl.versions[0])
+    setMessage(tmpl.versions[0].message)
+  }
+
+  const selectVersion = (ver: TemplateVersion) => {
+    setSelectedVersion(ver)
+    setMessage(ver.message)
+  }
 
   const recipients = invitees.filter(i => {
     if (recipientFilter === 'pending')
@@ -128,21 +125,47 @@ export default function MessagesPage() {
           }}>TEMPLATE</div>
           <div style={{
             display:'flex', flexWrap:'wrap', gap:8,
-            marginBottom:20,
           }}>
-            {TEMPLATES.map(t => (
-              <button key={t.label}
-                onClick={() => setMessage(t.message)}
+            {TEMPLATES.map(tmpl => (
+              <button key={tmpl.label}
+                onClick={() => selectTemplate(tmpl)}
                 style={{
                   padding:'6px 14px', borderRadius:6,
                   border:'0.5px solid #d9cdb8',
-                  background: message===t.message
+                  background: selectedTemplate.label===tmpl.label
                     ? '#1e3d2a' : 'white',
-                  color: message===t.message
+                  color: selectedTemplate.label===tmpl.label
                     ? 'white' : '#888',
                   fontSize:12, cursor:'pointer',
-                }}>{t.label}</button>
+                }}>{tmpl.label}</button>
             ))}
+          </div>
+
+          <div style={{
+            display:'flex', gap:6, marginTop:8,
+            marginBottom:16,
+          }}>
+            {selectedTemplate.versions.map(ver => (
+              <button key={ver.label}
+                onClick={() => selectVersion(ver)}
+                style={{
+                  padding:'4px 12px', borderRadius:4,
+                  border:'0.5px solid #d9cdb8',
+                  background: selectedVersion.label===ver.label
+                    ? '#6b8f71' : 'white',
+                  color: selectedVersion.label===ver.label
+                    ? 'white' : '#888',
+                  fontSize:11, cursor:'pointer',
+                  fontFamily:'Cinzel,serif',
+                  letterSpacing:1,
+                }}>{ver.label}</button>
+            ))}
+            <span style={{
+              fontSize:11, color:'#aaa',
+              alignSelf:'center', marginLeft:4,
+            }}>
+              {message.length} karakter
+            </span>
           </div>
 
           <div style={{
@@ -179,18 +202,38 @@ export default function MessagesPage() {
               type="password"
               placeholder="Token dari fonnte.com"
               value={token}
-              onChange={e => setToken(e.target.value)}
+              onChange={e => {
+                setToken(e.target.value)
+                if (e.target.value) {
+                  localStorage.setItem(
+                    'fonnte_token', e.target.value
+                  )
+                }
+              }}
               style={{
                 width:'100%', padding:'10px 12px',
                 border:'0.5px solid #d9cdb8', borderRadius:8,
                 fontSize:14, outline:'none',
               }}
             />
-            <p style={{
-              fontSize:11, color:'#aaa', marginTop:6,
+            <div style={{
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'space-between',
+              marginTop:6,
             }}>
-              Disimpan di browser. Tidak dikirim ke server.
-            </p>
+              <p style={{fontSize:11, color:'#aaa'}}>
+                Disimpan di browser. Tidak dikirim ke server.
+              </p>
+              {token && (
+                <span style={{
+                  fontSize:10,
+                  color:'#2d5a3d',
+                  fontFamily:'Cinzel,serif',
+                  letterSpacing:1,
+                }}>✓ TERSIMPAN</span>
+              )}
+            </div>
           </div>
 
           <div style={{
@@ -232,11 +275,7 @@ export default function MessagesPage() {
 
           {recipientFilter !== 'all' &&
            RECOMMENDED_TEMPLATE[recipientFilter] &&
-           !message.startsWith(
-             TEMPLATES.find(t =>
-               t.label === RECOMMENDED_TEMPLATE[recipientFilter]
-             )?.message.slice(0, 20) ?? '___'
-           ) && (
+           selectedTemplate.label !== RECOMMENDED_TEMPLATE[recipientFilter] && (
             <div style={{
               padding:'12px 16px',
               background:'#fff8ec',
