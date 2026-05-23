@@ -147,6 +147,12 @@ grant execute on function
   public.submit_rsvp_by_ref(text, boolean, integer)
   to anon;
 
+-- Check-in and souvenir tracking columns
+alter table public.invitees
+  add column if not exists checked_in_at timestamptz;
+alter table public.invitees
+  add column if not exists souvenir_claimed boolean default false;
+
 -- ── SETTINGS — global key/value config (e.g. default_max_guests) ─
 create table if not exists public.settings (
   key text primary key,

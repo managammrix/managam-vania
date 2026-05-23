@@ -6,6 +6,7 @@ import {
   InviteeRow,
 } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
+import { downloadQRTicket } from '@/lib/generateQR'
 
 function getStatusBadge(inv: InviteeRow): {
   label: string; bg: string; color: string
@@ -508,6 +509,21 @@ export default function InviteesPage() {
                           fontSize:11, cursor:'pointer',
                           color:'#2d5a3d',
                         }}>Link</button>
+                      {inv.rsvp_status === 'confirmed' && inv.ref && (
+                        <button
+                          onClick={() => downloadQRTicket({
+                            name: inv.name,
+                            ref: inv.ref!,
+                            guests: inv.guests ?? 1,
+                          })}
+                          style={{
+                            padding:'4px 12px',
+                            border:'0.5px solid #d9cdb8',
+                            borderRadius:6, background:'white',
+                            fontSize:11, cursor:'pointer',
+                            color:'#b8965a',
+                          }}>QR</button>
+                      )}
                     </div>
                   </td>
                 </tr>

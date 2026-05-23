@@ -18,6 +18,7 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
   const [guests, setGuests] = useState(1)
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (guestData) {
@@ -43,6 +44,19 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
         await updateInviteeRsvp(guestData.ref, attending, guestCount)
       } catch (err) {
         console.error('[rsvp] invitee update error:', err)
+      }
+    }
+    if (attending && guestData?.ref) {
+      try {
+        const { generateQRTicket } = await import('@/lib/generateQR')
+        const url = await generateQRTicket({
+          name: guestData.name,
+          ref: guestData.ref,
+          guests: guestCount,
+        })
+        setQrDataUrl(url)
+      } catch (err) {
+        console.error('[rsvp] qr generation error:', err)
       }
     }
     setLoading(false)
@@ -197,6 +211,50 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
             }}>
               #BuildingMANAGAMVANturesWithGod
             </p>
+            {qrDataUrl && (
+              <div style={{marginTop:24, textAlign:'center'}}>
+                <p style={{
+                  fontFamily:'Cinzel,serif', fontSize:10,
+                  letterSpacing:3, color:'var(--sage)',
+                  marginBottom:12,
+                }}>TIKET UNDANGAN ANDA</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrDataUrl}
+                  alt="QR Ticket"
+                  style={{
+                    width:280, maxWidth:'100%',
+                    borderRadius:12,
+                    boxShadow:'0 4px 24px rgba(0,0,0,0.1)',
+                    marginBottom:16,
+                  }}
+                />
+                <p style={{
+                  fontSize:12, color:'var(--ink-soft)',
+                  lineHeight:1.6, marginBottom:16,
+                }}>
+                  Screenshot tiket ini dan tunjukkan<br/>
+                  kepada panitia saat tiba di venue.
+                </p>
+                <button
+                  onClick={() => {
+                    const a = document.createElement('a')
+                    a.href = qrDataUrl
+                    a.download = 'tiket-mv2026.png'
+                    a.click()
+                  }}
+                  style={{
+                    padding:'12px 24px',
+                    background:'var(--forest)',
+                    color:'var(--cream)',
+                    border:'none', borderRadius:8,
+                    fontFamily:'Cinzel,serif',
+                    fontSize:10, letterSpacing:2,
+                    cursor:'pointer',
+                  }}
+                >UNDUH TIKET</button>
+              </div>
+            )}
           </div>
         )}
       </div>
