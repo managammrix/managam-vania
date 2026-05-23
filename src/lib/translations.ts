@@ -4,6 +4,7 @@ export const t = {
     // Cover
     wedding_of: 'PERNIKAHAN',
     open_invitation: 'BUKA UNDANGAN',
+    open_invitation_post: 'LIHAT UNDANGAN',
     tagline: '"He who has been faithful so on will always remain faithful"',
     // Story
     our_story: 'PERJALANAN KAMI',
@@ -88,6 +89,7 @@ export const t = {
     lang: 'en',
     wedding_of: 'THE WEDDING OF',
     open_invitation: 'OPEN INVITATION',
+    open_invitation_post: 'VIEW INVITATION',
     tagline: '"He who has been faithful so on will always remain faithful"',
     our_story: 'OUR STORY',
     m1_title: 'First Meeting',

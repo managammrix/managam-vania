@@ -2,7 +2,7 @@
 import { Translations } from '@/lib/translations'
 import { useReveal } from '../useReveal'
 
-export default function CoverSection({ tr }: { tr: Translations }) {
+export default function CoverSection({ tr, isPostWedding = false }: { tr: Translations; isPostWedding?: boolean }) {
   const ref = useReveal()
   return (
     <section id="cover" ref={ref} style={{background:'var(--parchment)',display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center'}}>
@@ -56,7 +56,7 @@ export default function CoverSection({ tr }: { tr: Translations }) {
           style={{display:'inline-flex',alignItems:'center',fontFamily:'Cinzel,serif',fontSize:11,letterSpacing:4,color:'var(--sage)',border:'0.5px solid var(--sage-light)',padding:'14px 28px',minHeight:44,cursor:'pointer',transition:'all 0.3s',textDecoration:'none'}}
           onMouseEnter={e=>{(e.target as HTMLElement).style.cssText+='background:var(--forest);color:var(--cream);border-color:var(--forest);'}}
           onMouseLeave={e=>{const el=e.target as HTMLElement;el.style.background='';el.style.color='var(--sage)';el.style.borderColor='var(--sage-light)'}}
-        >{tr.open_invitation}</a>
+        >{isPostWedding ? tr.open_invitation_post : tr.open_invitation}</a>
       </div>
     </section>
   )

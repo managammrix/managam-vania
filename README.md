@@ -49,6 +49,16 @@ npm run dev
 # Open http://localhost:3000
 ```
 
+### 6. Local dev (admin panel)
+The `/admin` panel calls a Cloudflare Pages Function at `/api/admin`. Pages Functions don't run under `next dev` — use Wrangler to serve the built output instead:
+```bash
+cp .dev.vars.example .dev.vars
+# Fill in real values in .dev.vars (ADMIN_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+npm run build
+npx wrangler pages dev out
+# Admin available at http://localhost:8788/admin
+```
+
 ---
 
 ## Deploy

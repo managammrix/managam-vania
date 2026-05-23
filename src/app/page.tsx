@@ -17,13 +17,16 @@ import GallerySection from '@/components/sections/GallerySection'
 import ClosingSection from '@/components/sections/ClosingSection'
 import AudioPlayer from '@/components/AudioPlayer'
 
-const SECTIONS = [
-  'cover','story','couple','events','rsvp','gift','wishes','gallery','closing'
-] as const
+const WEDDING_DATE = new Date('2026-06-20T10:00:00+07:00')
+
+const ALL_SECTIONS = ['cover','story','couple','events','rsvp','gift','wishes','gallery','closing'] as const
+const POST_SECTIONS = ['cover','story','couple','events','gift','wishes','gallery','closing'] as const
 
 export default function Home() {
   const [opened, setOpened] = useState(false)
   const { lang, setLang, tr } = useLang()
+  const isPostWedding = new Date() > WEDDING_DATE
+  const sections = isPostWedding ? POST_SECTIONS : ALL_SECTIONS
 
   return (
     <>
@@ -32,14 +35,14 @@ export default function Home() {
         <>
           <AudioPlayer play={opened} />
           <LangToggle lang={lang} setLang={(l: Lang) => setLang(l)} />
-          <NavDots sections={SECTIONS as unknown as string[]} />
-          <SaveBar tr={tr} />
+          <NavDots sections={sections as unknown as string[]} />
+          <SaveBar tr={tr} isPostWedding={isPostWedding} />
           <main>
-            <CoverSection tr={tr} />
+            <CoverSection tr={tr} isPostWedding={isPostWedding} />
             <StorySection tr={tr} />
             <CoupleSection tr={tr} />
             <EventsSection tr={tr} />
-            <RsvpSection tr={tr} />
+            {!isPostWedding && <RsvpSection tr={tr} />}
             <GiftSection tr={tr} />
             <WishesSection tr={tr} />
             <GallerySection tr={tr} />

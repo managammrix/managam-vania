@@ -2,9 +2,11 @@
 import { useState, useEffect } from 'react'
 import { Translations } from '@/lib/translations'
 
-export default function SaveBar({ tr }: { tr: Translations }) {
+export default function SaveBar({ tr, isPostWedding = false }: { tr: Translations; isPostWedding?: boolean }) {
   const [show, setShow] = useState(false)
   useEffect(() => { const t = setTimeout(() => setShow(true), 1300); return () => clearTimeout(t) }, [])
+
+  if (isPostWedding) return null
 
   const addToCalendar = () => {
     const title = encodeURIComponent('Pernikahan Managam & Vania')
