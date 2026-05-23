@@ -33,6 +33,13 @@ function HomeContent() {
   const [, setGuestRef] = useState<string | null>(null)
   const [guestData, setGuestData] = useState<InviteeRow | null>(null)
   const [defaultMaxGuests, setDefaultMaxGuests] = useState(2)
+  // Initialize refLoading=true on first render if URL has ?ref= and not
+  // cached, so we don't flash the un-personalized envelope before fetch.
+  const [refLoading, setRefLoading] = useState<boolean>(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (!ref) return false
+    return !sessionStorage.getItem(`guest_${ref}`)
+  })
   const { lang, setLang, tr } = useLang()
   const isPostWedding = new Date() > WEDDING_DATE
   const sections = isPostWedding ? POST_SECTIONS : ALL_SECTIONS
@@ -58,6 +65,7 @@ function HomeContent() {
       } catch {}
     }
 
+    setRefLoading(true)
     fetchInviteeByRef(ref).then(data => {
       if (data) {
         setGuestData(data)
@@ -68,19 +76,54 @@ function HomeContent() {
       }
     }).catch(err => {
       console.error('[ref] fetch error:', err)
+    }).finally(() => {
+      setRefLoading(false)
+      fetchDefaultMaxGuests().then(setDefaultMaxGuests)
     })
-
-    fetchDefaultMaxGuests().then(setDefaultMaxGuests)
   }, [])
 
   return (
     <div>
-      <EnvelopeScreen
-        opened={opened}
-        onOpen={() => setOpened(true)}
-        tr={tr}
-        guestName={guestData?.name ?? null}
-      />
+      {refLoading ? (
+        <div style={{
+          minHeight:'100vh',
+          display:'flex',
+          alignItems:'center',
+          justifyContent:'center',
+          background:'var(--forest)',
+        }}>
+          <div style={{textAlign:'center'}}>
+            <div style={{
+              fontFamily:'Cormorant Garamond,serif',
+              fontSize:22,
+              fontStyle:'italic',
+              color:'var(--cream-warm)',
+              marginBottom:16,
+              opacity:0.8,
+            }}>
+              Managam &amp; Vania
+            </div>
+            <div style={{
+              fontFamily:'Cinzel,serif',
+              fontSize:9,
+              letterSpacing:4,
+              color:'var(--sage-light)',
+              opacity:0.6,
+            }}>
+              20 · 06 · 2026
+            </div>
+          </div>
+        </div>
+      ) : (
+        !opened && (
+          <EnvelopeScreen
+            opened={opened}
+            onOpen={() => setOpened(true)}
+            tr={tr}
+            guestName={guestData?.name ?? null}
+          />
+        )
+      )}
       {opened && (
         <>
           <AudioPlayer play={opened} />
