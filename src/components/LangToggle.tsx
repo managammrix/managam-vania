@@ -5,7 +5,7 @@ interface Props { lang: Lang; setLang: (l: Lang) => void }
 
 export default function LangToggle({ lang, setLang }: Props) {
   return (
-    <div style={{
+    <div suppressHydrationWarning style={{
       position:'fixed',top:20,right:40,zIndex:300,
       display:'flex',border:'0.5px solid rgba(255,255,255,0.25)',overflow:'hidden',
     }}>

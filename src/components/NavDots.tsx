@@ -21,7 +21,7 @@ export default function NavDots({ sections }: Props) {
   }, [sections])
 
   return (
-    <nav style={{
+    <nav suppressHydrationWarning style={{
       position:'fixed',right:18,top:'50%',transform:'translateY(-50%)',
       zIndex:100,display:'flex',flexDirection:'column',gap:10,
     }}>

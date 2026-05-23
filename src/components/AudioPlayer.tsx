@@ -64,8 +64,8 @@ export default function AudioPlayer({ play }: Props) {
       {/* Place your bgm.mp3 file in the public/ folder */}
       {/* Recommended: Goodness of God instrumental, ~5min,
           normalized to -14 LUFS, exported as MP3 192kbps */}
-      <audio ref={audioRef} src="/bgm.mp3" preload="none" />
-      <div style={{position:'fixed',bottom:100,left:20,zIndex:300,display:'flex',alignItems:'center'}}>
+      <audio ref={audioRef} src="/bgm.mp3" preload="none" suppressHydrationWarning />
+      <div suppressHydrationWarning style={{position:'fixed',bottom:100,left:20,zIndex:300,display:'flex',alignItems:'center'}}>
         <button
           onClick={toggle}
           title={muted || !started ? 'Play music' : 'Mute music'}

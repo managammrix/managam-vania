@@ -128,20 +128,13 @@ test.describe('Full ref flow E2E @smoke', () => {
       page.getByText('Bersama ini kami mengundang')
     ).toBeVisible()
 
-    // Log hydration errors but don't fail the test
-    // These are being fixed separately in page.tsx
     const hydrationErrs = errors.filter(e =>
       e.includes('React error #418') ||
       e.includes('React error #423') ||
       e.includes('React error #425')
     )
-    if (hydrationErrs.length > 0) {
-      console.warn('⚠️ Hydration errors detected:',
-        hydrationErrs.length, '(tracked separately)')
-    }
-    // TODO: re-enable once page.tsx fix is deployed
-    // expect(hydrationErrs).toHaveLength(0)
-    console.log('✅ Step 4: Formal greeting shown')
+    expect(hydrationErrs).toHaveLength(0)
+    console.log('✅ Step 4: Formal greeting shown, no hydration errors')
 
     // ─── STEP 5: Open envelope ───────────────
     // Wait for page to fully load with ref data

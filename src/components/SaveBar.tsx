@@ -18,7 +18,7 @@ export default function SaveBar({ tr, isPostWedding = false }: { tr: Translation
   return (
     <>
     <style>{`@media(max-width:430px){.save-bar-wrapper{padding:10px 16px!important;gap:10px!important;}}`}</style>
-    <div className="save-bar-wrapper" style={{
+    <div className="save-bar-wrapper" suppressHydrationWarning style={{
       position:'fixed',bottom:0,left:0,right:0,background:'var(--forest-deep)',
       display:'flex',alignItems:'center',justifyContent:'center',gap:18,
       padding:'13px 24px',zIndex:200,
