@@ -485,6 +485,7 @@ export default function InviteesPage() {
                         }}>Hapus</button>
                       <button
                         id={`copy-${inv.id}`}
+                        data-ref={inv.ref}
                         onClick={() => {
                           const url = `https://managamvania.mrix.ai?ref=${inv.ref}`
                           navigator.clipboard.writeText(url)

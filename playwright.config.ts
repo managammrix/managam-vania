@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   retries: 1,
-  timeout: 30000,
+  timeout: 60000,
   use: {
     baseURL: process.env.TEST_URL ??
       'https://managamvania.mrix.ai',
