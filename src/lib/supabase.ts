@@ -55,12 +55,9 @@ export interface PhotoRow {
 // ── Invitee lookup by ref (anon) ──────────────────────────────────
 export async function fetchInviteeByRef(ref: string): Promise<InviteeRow | null> {
   const { data, error } = await supabase
-    .from('invitees')
-    .select('*')
-    .eq('ref', ref)
-    .single()
-  if (error) return null
-  return data
+    .rpc('get_invitee_by_ref', { p_ref: ref })
+  if (error || !data?.length) return null
+  return data[0] as InviteeRow
 }
 
 export async function fetchDefaultMaxGuests(): Promise<number> {
@@ -70,14 +67,6 @@ export async function fetchDefaultMaxGuests(): Promise<number> {
     .eq('key', 'default_max_guests')
     .single()
   return parseInt(data?.value ?? '2')
-}
-
-export async function recordInviteeOpen(ref: string) {
-  await supabase
-    .from('invitees')
-    .update({ opened_at: new Date().toISOString() })
-    .eq('ref', ref)
-    .is('opened_at', null)
 }
 
 export function generateRef(): string {

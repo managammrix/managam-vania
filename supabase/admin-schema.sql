@@ -69,22 +69,46 @@ alter table public.invitees
 alter table public.invitees
   add column if not exists opened_at timestamptz;
 
--- Anon needs to look up invitee by ref (for personalized invite) and
--- update opened_at (first-open tracking). Reads are restricted to
--- queries that filter by ref via the policy below.
+-- Anon must NOT have direct table access (would expose all invitee
+-- rows to anyone with the anon key). Lookup goes through a security
+-- definer RPC that only returns the single matching row.
 drop policy if exists "Anon read invitee by ref" on public.invitees;
 drop policy if exists "Anon update opened_at" on public.invitees;
 
-create policy "Anon read invitee by ref"
-  on public.invitees for select
-  to anon
-  using (ref is not null);
+create or replace function public.get_invitee_by_ref(p_ref text)
+returns table (
+  id uuid,
+  name text,
+  phone text,
+  ref text,
+  max_guests integer,
+  opened_at timestamptz,
+  sender text,
+  guests integer,
+  rsvp_status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.invitees
+    set opened_at = now()
+    where invitees.ref = p_ref
+    and opened_at is null;
 
-create policy "Anon update opened_at"
-  on public.invitees for update
-  to anon
-  using (ref is not null)
-  with check (ref is not null);
+  return query
+    select
+      i.id, i.name, i.phone, i.ref,
+      i.max_guests, i.opened_at, i.sender,
+      i.guests, i.rsvp_status
+    from public.invitees i
+    where i.ref = p_ref
+    limit 1;
+end;
+$$;
+
+grant execute on function public.get_invitee_by_ref(text) to anon;
 
 -- ── SETTINGS — global key/value config (e.g. default_max_guests) ─
 create table if not exists public.settings (
@@ -96,13 +120,19 @@ alter table public.settings
 
 drop policy if exists "Anon read settings" on public.settings;
 drop policy if exists "Anon write settings" on public.settings;
+drop policy if exists "Anon update settings" on public.settings;
 
 create policy "Anon read settings"
   on public.settings for select
   to anon using (true);
-create policy "Anon write settings"
-  on public.settings for all
-  to anon using (true) with check (true);
+
+-- Anon can only UPDATE the known default_max_guests key.
+-- No insert/delete from anon — new keys must come from SQL migration.
+create policy "Anon update settings"
+  on public.settings for update
+  to anon
+  using (true)
+  with check (key = 'default_max_guests');
 
 insert into public.settings (key, value)
   values ('default_max_guests', '2')

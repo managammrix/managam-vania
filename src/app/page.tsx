@@ -6,7 +6,6 @@ import {
   InviteeRow,
   fetchInviteeByRef,
   fetchDefaultMaxGuests,
-  recordInviteeOpen,
 } from '@/lib/supabase'
 import EnvelopeScreen from '@/components/EnvelopeScreen'
 import NavDots from '@/components/NavDots'
@@ -43,10 +42,7 @@ export default function Home() {
     if (ref) {
       setGuestRef(ref)
       fetchInviteeByRef(ref).then(data => {
-        if (data) {
-          setGuestData(data)
-          recordInviteeOpen(ref)
-        }
+        if (data) setGuestData(data)
       })
     }
     fetchDefaultMaxGuests().then(setDefaultMaxGuests)
