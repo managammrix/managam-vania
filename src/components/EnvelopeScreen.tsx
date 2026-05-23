@@ -12,6 +12,7 @@ export default function EnvelopeScreen({ opened, onOpen, tr, guestName }: Props)
   if (opened) return null
   return (
     <div
+      id="envelope-screen"
       onClick={onOpen}
       style={{
         position:'fixed',inset:0,background:'var(--forest-deep)',zIndex:1000,

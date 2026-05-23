@@ -144,8 +144,23 @@ test.describe('Full ref flow E2E @smoke', () => {
     console.log('✅ Step 4: Formal greeting shown')
 
     // ─── STEP 5: Open envelope ───────────────
-    await page.click('body')
-    await page.waitForTimeout(1500)
+    // Wait for page to fully load with ref data
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1000)
+
+    // Wait for envelope screen to be fully loaded
+    await page.waitForSelector(
+      '#envelope-screen, #envelope-click-target',
+      { state: 'visible', timeout: 10000 }
+    )
+
+    // Click the envelope to open it
+    await page.click(
+      '#envelope-click-target, #envelope-screen',
+      { force: true }
+    )
+    await page.waitForTimeout(2000)
+
     await expect(
       page.locator('#cover')
     ).toBeVisible({ timeout: 5000 })
