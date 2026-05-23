@@ -32,6 +32,8 @@ export interface InviteeRow {
   attending?: boolean | null
   guests?: number
   notes?: string
+  is_family?: boolean
+  auto_confirmed?: boolean
 }
 
 export interface MessageLogRow {

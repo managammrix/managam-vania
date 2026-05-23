@@ -13,9 +13,10 @@ export default function ClosingSection({ tr }: { tr: Translations }) {
   }
 
   const share = () => {
-    const payload = { title:'Managam & Vania — 20.06.2026', text: tr.share_text, url: window.location.href }
+    const shareUrl = 'https://managamvania.mrix.ai?utm_source=personal_share&utm_medium=whatsapp&utm_campaign=organic'
+    const payload = { title:'Managam & Vania — 20.06.2026', text: tr.share_text, url: shareUrl }
     if (navigator.share) navigator.share(payload)
-    else navigator.clipboard.writeText(window.location.href).then(()=>alert(tr.link_copied))
+    else navigator.clipboard.writeText(shareUrl).then(()=>alert(tr.link_copied))
   }
 
   const btn: React.CSSProperties = {fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:3,padding:'15px 22px',minHeight:44,display:'inline-flex',alignItems:'center',border:'0.5px solid rgba(255,255,255,0.25)',color:'var(--cream)',textDecoration:'none',cursor:'pointer',background:'none',transition:'all 0.3s'}

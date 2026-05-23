@@ -6,16 +6,21 @@ import {
 } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: '#f0a500',
-  confirmed: '#2d5a3d',
-  declined: '#c0392b',
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'Belum RSVP',
-  confirmed: 'Konfirmasi',
-  declined: 'Tidak Hadir',
+function getStatusBadge(inv: InviteeRow): {
+  label: string; bg: string; color: string
+} {
+  if (inv.is_family) return {
+    label: 'Keluarga', bg: '#fef9ec', color: '#b8965a',
+  }
+  if (inv.guests === 0) return {
+    label: 'Kehormatan', bg: '#fff8ec', color: '#d4881a',
+  }
+  const map: Record<string, { label: string; bg: string; color: string }> = {
+    confirmed: { label: 'Konfirmasi', bg: '#e8f5e9', color: '#2d5a3d' },
+    declined:  { label: 'Tidak Hadir', bg: '#fce8e8', color: '#c0392b' },
+    pending:   { label: 'Belum RSVP',  bg: '#fff8ec', color: '#f0a500' },
+  }
+  return map[inv.rsvp_status] ?? map.pending
 }
 
 function normalizePhone(raw: string): string {
@@ -111,6 +116,8 @@ export default function InviteesPage() {
       ['guests','tamu','seats','kursi','jumlah'].includes(h))
     const notesIdx = headers.findIndex(h =>
       ['notes','catatan','keterangan'].includes(h))
+    const familyIdx = headers.findIndex(h =>
+      ['family','keluarga','is_family'].includes(h))
 
     if (nameIdx === -1 || phoneIdx === -1) {
       alert('CSV harus punya kolom nama dan phone/telepon')
@@ -123,6 +130,12 @@ export default function InviteesPage() {
         ?.map(c => c.replace(/^"|"$/g, '').trim())
         ?? line.split(',').map(c => c.trim())
 
+      const isFamily = familyIdx >= 0
+        ? ['true','1','ya','yes'].includes(
+            (cols[familyIdx] ?? '').toLowerCase()
+          )
+        : false
+
       return {
         name: cols[nameIdx] ?? '',
         phone: normalizePhone(cols[phoneIdx] ?? ''),
@@ -130,7 +143,10 @@ export default function InviteesPage() {
           ? parseInt(cols[guestsIdx] ?? '1') || 0
           : 1,
         notes: notesIdx >= 0 ? (cols[notesIdx] ?? '') : '',
-        rsvp_status: 'pending' as const,
+        rsvp_status: (isFamily ? 'confirmed' : 'pending') as InviteeRow['rsvp_status'],
+        attending: isFamily ? true : undefined,
+        is_family: isFamily,
+        auto_confirmed: isFamily,
       }
     }).filter(r => r.name && r.phone)
 
@@ -291,7 +307,9 @@ export default function InviteesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(inv => (
+              {filtered.map(inv => {
+                const badge = getStatusBadge(inv)
+                return (
                 <tr key={inv.id} style={{
                   borderBottom:'0.5px solid #f0ece4',
                 }}>
@@ -304,10 +322,10 @@ export default function InviteesPage() {
                     <span style={{
                       padding:'3px 10px', borderRadius:6,
                       fontSize:11, fontWeight:500,
-                      background: (STATUS_COLORS[inv.rsvp_status] ?? '#888') + '20',
-                      color: STATUS_COLORS[inv.rsvp_status] ?? '#888',
+                      background: badge.bg,
+                      color: badge.color,
                     }}>
-                      {STATUS_LABELS[inv.rsvp_status] ?? inv.rsvp_status}
+                      {badge.label}
                     </span>
                   </td>
                   <td style={{padding:'12px 16px',
@@ -350,7 +368,8 @@ export default function InviteesPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
           {filtered.length === 0 && (
@@ -471,7 +490,7 @@ export default function InviteesPage() {
               }}>
                 <thead>
                   <tr style={{background:'#f8f7f4'}}>
-                    {['Nama','Telepon','Tamu','Catatan'].map(h => (
+                    {['Nama','Telepon','Tipe','Tamu','Catatan'].map(h => (
                       <th key={h} style={{
                         padding:'10px 12px', textAlign:'left',
                         fontFamily:'Cinzel,serif', fontSize:10,
@@ -496,6 +515,27 @@ export default function InviteesPage() {
                       }}>
                         {row.phone}
                       </td>
+                      <td style={{padding:'10px 12px'}}>
+                        {row.is_family ? (
+                          <span style={{
+                            padding:'2px 8px', borderRadius:4,
+                            fontSize:11, background:'#fef9ec',
+                            color:'#b8965a', fontWeight:500,
+                          }}>Keluarga</span>
+                        ) : row.guests === 0 ? (
+                          <span style={{
+                            padding:'2px 8px', borderRadius:4,
+                            fontSize:11, background:'#fff8ec',
+                            color:'#b8965a',
+                          }}>Kehormatan</span>
+                        ) : (
+                          <span style={{
+                            padding:'2px 8px', borderRadius:4,
+                            fontSize:11, background:'#f0f7f1',
+                            color:'#2d5a3d',
+                          }}>Tamu</span>
+                        )}
+                      </td>
                       <td style={{
                         padding:'10px 12px',
                         color: row.guests === 0
@@ -504,7 +544,7 @@ export default function InviteesPage() {
                           ? 500 : 400,
                       }}>
                         {row.guests === 0
-                          ? 'Kehormatan' : row.guests}
+                          ? '—' : row.guests}
                       </td>
                       <td style={{
                         padding:'10px 12px', color:'#888',

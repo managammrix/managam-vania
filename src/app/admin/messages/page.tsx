@@ -8,19 +8,23 @@ import { useAdminAuth } from '@/lib/adminAuth'
 const TEMPLATES = [
   {
     label: 'Undangan awal',
-    message: `Shalom, {name} 🌿\n\nDengan penuh syukur kepada Tuhan Yang Maha Baik, kami mengumumkan bahwa kami akan melangsungkan Pernikahan Kudus kami:\n\n✝️ *Managam Raja Silalahi, S.Kom., M.Sc.*\n   Putra Bapak Saut Silalahi & Ibu Erna Sitinjak\n\nbersama\n\n🌸 *Vania, S.Psi.*\n   Putri Bapak Pdt. Fredi (Tee Tjien Hian), S.Th. & Ibu Tan Tjoen Nio\n\n📅 Sabtu, 20 Juni 2026\n⛪ GMS Central Park – Hall B, Jakarta Barat\n🕙 Pukul 10:00 – 12:00 WIB\n\nDengan rendah hati kami mengundang Bapak/Ibu/Saudara/i *{name}* untuk hadir memberikan doa restu bagi kami.\n\nMohon konfirmasi kehadiran melalui:\n🔗 managamvania.mrix.ai\n\n*#BuildingMANAGAMVANturesWithGod*\nTuhan memberkati 🙏`,
+    message: `Shalom, {name} 🌿\n\nDengan penuh syukur kepada Tuhan Yang Maha Baik, kami mengumumkan bahwa kami akan melangsungkan Pernikahan Kudus kami:\n\n✝️ *Managam Raja Silalahi, S.Kom., M.Sc.*\n   Putra Bapak Saut Silalahi & Ibu Erna Sitinjak\n\nbersama\n\n🌸 *Vania, S.Psi.*\n   Putri Bapak Pdt. Fredi (Tee Tjien Hian), S.Th. & Ibu Tan Tjoen Nio\n\n📅 Sabtu, 20 Juni 2026\n⛪ GMS Central Park – Hall B, Jakarta Barat\n🕙 Pukul 10:00 – 12:00 WIB\n\nDengan rendah hati kami mengundang Bapak/Ibu/Saudara/i *{name}* untuk hadir memberikan doa restu bagi kami.\n\nMohon konfirmasi kehadiran melalui:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=undangan_awal\n\n*#BuildingMANAGAMVANturesWithGod*\nTuhan memberkati 🙏`,
   },
   {
     label: 'Reminder RSVP',
-    message: `Shalom, {name} 🌿\n\nKami mengingatkan dengan hormat bahwa konfirmasi kehadiran pernikahan kami ditutup pada *14 Juni 2026*.\n\nKiranya Tuhan memampukan Bapak/Ibu/Saudara/i untuk hadir bersama kami pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nMohon konfirmasi di:\n🔗 managamvania.mrix.ai\n\nTerima kasih atas doa dan kasih Anda 🙏\nManagam & Vania`,
+    message: `Shalom, {name} 🌿\n\nKami mengingatkan dengan hormat bahwa konfirmasi kehadiran pernikahan kami ditutup pada *14 Juni 2026*.\n\nKiranya Tuhan memampukan Bapak/Ibu/Saudara/i untuk hadir bersama kami pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nMohon konfirmasi di:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=reminder_rsvp\n\nTerima kasih atas doa dan kasih Anda 🙏\nManagam & Vania`,
   },
   {
     label: 'H-7',
-    message: `Shalom, {name} 🌿\n\nTinggal *7 hari* lagi menuju hari yang kami nantikan bersama Tuhan 🎉\n\nKami sangat bersukacita dan menantikan kehadiran Bapak/Ibu/Saudara/i pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap:\n🔗 managamvania.mrix.ai\n\nSampai jumpa di hari yang penuh berkat!\n*#BuildingMANAGAMVANturesWithGod* 🙏\nManagam & Vania`,
+    message: `Shalom, {name} 🌿\n\nTinggal *7 hari* lagi menuju hari yang kami nantikan bersama Tuhan 🎉\n\nKami sangat bersukacita dan menantikan kehadiran Bapak/Ibu/Saudara/i pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=h7_reminder\n\nSampai jumpa di hari yang penuh berkat!\n*#BuildingMANAGAMVANturesWithGod* 🙏\nManagam & Vania`,
   },
   {
     label: 'Tamu Kehormatan',
-    message: `Shalom, {name} 🌿\n\nDengan penuh hormat dan kasih, kami ingin berbagi kabar sukacita ini:\n\nPuji Tuhan, kami akan melangsungkan Pernikahan Kudus kami pada:\n\n📅 Sabtu, 20 Juni 2026\n📍 Jakarta\n\nKami memahami jarak dan kesibukan Bapak/Ibu/Saudara/i, namun kami ingin Anda mengetahui momen bersejarah ini dan memohon doa restu Anda dari jauh.\n\nDetail undangan:\n🔗 managamvania.mrix.ai\n\nDoa dan kasih Anda adalah berkat terbesar bagi kami 🙏\n\nSalam dalam kasih Kristus,\nManagam & Vania\n*#BuildingMANAGAMVANturesWithGod*`,
+    message: `Shalom, {name} 🌿\n\nDengan penuh hormat dan kasih, kami ingin berbagi kabar sukacita ini:\n\nPuji Tuhan, kami akan melangsungkan Pernikahan Kudus kami pada:\n\n📅 Sabtu, 20 Juni 2026\n📍 Jakarta\n\nKami memahami jarak dan kesibukan Bapak/Ibu/Saudara/i, namun kami ingin Anda mengetahui momen bersejarah ini dan memohon doa restu Anda dari jauh.\n\nDetail undangan:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=tamu_kehormatan\n\nDoa dan kasih Anda adalah berkat terbesar bagi kami 🙏\n\nSalam dalam kasih Kristus,\nManagam & Vania\n*#BuildingMANAGAMVANturesWithGod*`,
+  },
+  {
+    label: 'Keluarga Inti',
+    message: `Shalom, {name} 🌿\n\nDengan sukacita kami ingin memberitahu bahwa Pernikahan Kudus kami akan segera dilangsungkan:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n⛪ GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap ada di undangan digital kami:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=keluarga_inti\n\nSampai jumpa di hari yang penuh berkat! 🙏\nManagam & Vania\n*#BuildingMANAGAMVANturesWithGod*`,
   },
 ]
 
@@ -32,7 +36,7 @@ export default function MessagesPage() {
     TEMPLATES[0].message
   )
   const [recipientFilter, setRecipientFilter] =
-    useState<'all'|'pending'|'confirmed'|'honored'>('all')
+    useState<'all'|'pending'|'confirmed'|'honored'|'family'>('all')
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{
     sent:number; failed:number
@@ -49,11 +53,13 @@ export default function MessagesPage() {
 
   const recipients = invitees.filter(i => {
     if (recipientFilter === 'pending')
-      return i.rsvp_status === 'pending'
+      return i.rsvp_status === 'pending' && !i.is_family
     if (recipientFilter === 'confirmed')
-      return i.attending === true
+      return i.attending === true && !i.is_family
     if (recipientFilter === 'honored')
       return i.guests === 0
+    if (recipientFilter === 'family')
+      return i.is_family === true
     return true
   })
 
@@ -195,7 +201,7 @@ export default function MessagesPage() {
               letterSpacing:3, color:'#6b8f71',
               marginBottom:12,
             }}>PENERIMA</div>
-            {(['all','pending','confirmed','honored'] as const).map(f => (
+            {(['all','pending','confirmed','honored','family'] as const).map(f => (
               <label key={f} style={{
                 display:'flex', alignItems:'center',
                 gap:10, marginBottom:10, cursor:'pointer',
@@ -209,14 +215,18 @@ export default function MessagesPage() {
                   `Semua tamu (${invitees.length})` :
                  f==='pending' ?
                   `Belum RSVP (${invitees.filter(
-                    i=>i.rsvp_status==='pending'
+                    i=>i.rsvp_status==='pending' && !i.is_family
                   ).length})` :
                  f==='confirmed' ?
                   `Konfirmasi hadir (${invitees.filter(
-                    i=>i.attending
+                    i=>i.attending && !i.is_family
                   ).length})` :
+                 f==='honored' ?
                   `Tamu Kehormatan (${invitees.filter(
                     i=>i.guests===0
+                  ).length})` :
+                  `Keluarga Inti (${invitees.filter(
+                    i=>i.is_family
                   ).length})`
                 }
               </label>
