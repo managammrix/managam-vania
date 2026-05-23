@@ -20,6 +20,27 @@ export interface WishRow {
   created_at?: string
   author: string
   message: string
+  approved?: boolean
+}
+
+export interface InviteeRow {
+  id?: string
+  created_at?: string
+  name: string
+  phone: string
+  rsvp_status: 'pending' | 'confirmed' | 'declined'
+  attending?: boolean | null
+  guests?: number
+  notes?: string
+}
+
+export interface MessageLogRow {
+  id?: string
+  sent_at?: string
+  recipient_count: number
+  message: string
+  recipients: InviteeRow[]
+  status: string
 }
 
 export interface PhotoRow {
@@ -46,6 +67,52 @@ export async function fetchWishes(): Promise<WishRow[]> {
 
 export async function addWish(author: string, message: string) {
   const { error } = await supabase.from('wishes').insert({ author, message })
+  if (error) throw error
+}
+
+// ── Admin: Invitees ───────────────────────────────────────────────
+export async function fetchInvitees(): Promise<InviteeRow[]> {
+  const { data, error } = await supabase
+    .from('invitees')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function upsertInvitee(invitee: InviteeRow) {
+  const { error } = await supabase.from('invitees').upsert(invitee)
+  if (error) throw error
+}
+
+export async function deleteInvitee(id: string) {
+  const { error } = await supabase.from('invitees').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Admin: Wishes moderation ──────────────────────────────────────
+export async function fetchAllWishes(): Promise<WishRow[]> {
+  const { data, error } = await supabase
+    .from('wishes')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data ?? []
+}
+
+export async function updateWishApproval(id: string, approved: boolean) {
+  const { error } = await supabase.from('wishes').update({ approved }).eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteWish(id: string) {
+  const { error } = await supabase.from('wishes').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ── Admin: Message log ────────────────────────────────────────────
+export async function logMessage(log: Omit<MessageLogRow, 'id' | 'sent_at'>) {
+  const { error } = await supabase.from('message_log').insert(log)
   if (error) throw error
 }
 
