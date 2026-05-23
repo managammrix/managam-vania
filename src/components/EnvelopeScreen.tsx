@@ -32,13 +32,58 @@ export default function EnvelopeScreen({ opened, onOpen, tr, guestName }: Props)
         @keyframes pulse-hint{0%,100%{opacity:0.5}50%{opacity:1}}
       `}</style>
       {guestName && (
-        <div style={{marginBottom:16,textAlign:'center'}}>
-          <p style={{fontFamily:'Cormorant Garamond, serif',fontSize:18,fontStyle:'italic',color:'var(--cream-warm)',marginBottom:4}}>
-            Halo, <strong style={{color:'var(--gold-light)',fontStyle:'normal'}}>{guestName}</strong>! 🌿
+        <div style={{
+          marginBottom:24,
+          textAlign:'center',
+          padding:'0 16px',
+        }}>
+          <p style={{
+            fontFamily:'Cinzel,serif',
+            fontSize:9,
+            letterSpacing:4,
+            color:'var(--sage-light)',
+            marginBottom:12,
+            opacity:0.8,
+          }}>KEPADA YTH.</p>
+
+          <p style={{
+            fontFamily:'Cormorant Garamond,serif',
+            fontSize:22,
+            fontStyle:'italic',
+            color:'var(--gold-light)',
+            marginBottom:12,
+            lineHeight:1.3,
+          }}>{guestName}</p>
+
+          <p style={{
+            fontFamily:'Cormorant Garamond,serif',
+            fontSize:13,
+            fontStyle:'italic',
+            color:'var(--cream-warm)',
+            lineHeight:1.8,
+            marginBottom:12,
+            opacity:0.85,
+          }}>
+            Bersama ini kami mengundang<br/>
+            Bapak/Ibu/Saudara/i untuk menghadiri<br/>
+            Pernikahan Kudus kami.
           </p>
-          <p style={{fontFamily:'Cinzel, serif',fontSize:10,letterSpacing:3,color:'var(--sage-light)'}}>
-            Anda memiliki undangan pribadi
-          </p>
+
+          <p style={{
+            fontFamily:'Cinzel,serif',
+            fontSize:9,
+            letterSpacing:3,
+            color:'var(--sage-light)',
+            opacity:0.7,
+          }}>DENGAN HORMAT DAN KASIH</p>
+
+          <p style={{
+            fontFamily:'Cormorant Garamond,serif',
+            fontSize:15,
+            fontStyle:'italic',
+            color:'var(--gold-light)',
+            marginTop:4,
+          }}>Managam &amp; Vania</p>
         </div>
       )}
       <div className="env-wrapper">
