@@ -13,7 +13,7 @@ export default function ClosingSection({ tr }: { tr: Translations }) {
   }
 
   const share = () => {
-    const shareUrl = 'https://managamvania.mrix.ai/u/share'
+    const shareUrl = 'https://managamvania.mrix.ai'
     const payload = { title:'Managam & Vania — 20.06.2026', text: tr.share_text, url: shareUrl }
     if (navigator.share) navigator.share(payload)
     else navigator.clipboard.writeText(shareUrl).then(()=>alert(tr.link_copied))
