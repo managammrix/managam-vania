@@ -23,6 +23,23 @@ function getStatusBadge(inv: InviteeRow): {
   return map[inv.rsvp_status] ?? map.pending
 }
 
+function downloadCsvTemplate() {
+  const headers = 'name,phone,guests,notes,family'
+  const example = [
+    'Budi Santoso,628111111111,2,,false',
+    'Ibu Maria,628222222222,0,Rekan jauh,false',
+    'Bapak Yohanes,628333333333,3,Ayah,true',
+  ].join('\n')
+  const content = headers + '\n' + example
+  const blob = new Blob([content], { type:'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'template_tamu_managam_vania.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function normalizePhone(raw: string): string {
   const digits = raw.replace(/\D/g, '')
   if (digits.startsWith('0628')) return digits.slice(1)
@@ -191,6 +208,19 @@ export default function InviteesPage() {
           fontSize:32, fontStyle:'italic', color:'#1e3d2a',
         }}>Daftar Tamu</h1>
         <div style={{display:'flex', gap:8, alignItems:'center'}}>
+          <button
+            onClick={downloadCsvTemplate}
+            style={{
+              padding:'10px 20px',
+              border:'0.5px solid #6b8f71',
+              borderRadius:8, cursor:'pointer',
+              fontFamily:'Cinzel,serif', fontSize:10,
+              letterSpacing:2, color:'#6b8f71',
+              background:'white',
+            }}
+          >
+            UNDUH TEMPLATE
+          </button>
           <input
             type="file"
             accept=".csv,.xlsx,.xls"
@@ -261,12 +291,13 @@ export default function InviteesPage() {
       <div style={{
         display:'flex', gap:16, marginBottom:20,
         fontSize:13, color:'#888',
+        flexWrap:'wrap',
       }}>
-        <span>{filtered.length} tamu</span>
+        <span>{filtered.length} tampil</span>
         <span>·</span>
         <span style={{color:'#2d5a3d'}}>
           {invitees.filter(i =>
-            i.rsvp_status==='confirmed'
+            i.rsvp_status==='confirmed' && !i.is_family
           ).length} konfirmasi
         </span>
         <span>·</span>
@@ -274,6 +305,22 @@ export default function InviteesPage() {
           {invitees.filter(i =>
             i.rsvp_status==='pending'
           ).length} pending
+        </span>
+        <span>·</span>
+        <span style={{color:'#b8965a'}}>
+          {invitees.filter(i => i.is_family).length} keluarga
+        </span>
+        <span>·</span>
+        <span style={{color:'#d4881a'}}>
+          {invitees.filter(i =>
+            i.guests === 0 && !i.is_family
+          ).length} kehormatan
+        </span>
+        <span>·</span>
+        <span style={{color:'#888', fontWeight:500}}>
+          {invitees.filter(i =>
+            i.rsvp_status === 'confirmed'
+          ).reduce((sum, i) => sum + (i.guests ?? 1), 0)} kursi
         </span>
       </div>
 

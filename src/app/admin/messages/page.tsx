@@ -5,6 +5,14 @@ import { fetchInvitees, logMessage, InviteeRow }
 import { sendBulkWhatsApp } from '@/lib/fonnte'
 import { useAdminAuth } from '@/lib/adminAuth'
 
+const RECOMMENDED_TEMPLATE: Record<string, string> = {
+  pending:   'Undangan awal',
+  confirmed: 'H-7',
+  honored:   'Tamu Kehormatan',
+  family:    'Keluarga Inti',
+  all:       '',
+}
+
 const TEMPLATES = [
   {
     label: 'Undangan awal',
@@ -232,6 +240,28 @@ export default function MessagesPage() {
               </label>
             ))}
           </div>
+
+          {recipientFilter !== 'all' &&
+           RECOMMENDED_TEMPLATE[recipientFilter] &&
+           !message.startsWith(
+             TEMPLATES.find(t =>
+               t.label === RECOMMENDED_TEMPLATE[recipientFilter]
+             )?.message.slice(0, 20) ?? '___'
+           ) && (
+            <div style={{
+              padding:'12px 16px',
+              background:'#fff8ec',
+              border:'0.5px solid #f0a500',
+              borderRadius:8,
+              fontSize:13,
+              color:'#b8600a',
+              marginBottom:12,
+            }}>
+              ⚠️ Template yang dipilih tidak sesuai dengan
+              filter penerima. Disarankan:
+              <strong> {RECOMMENDED_TEMPLATE[recipientFilter]}</strong>
+            </div>
+          )}
 
           <button
             onClick={send}

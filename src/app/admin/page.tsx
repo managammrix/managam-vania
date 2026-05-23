@@ -11,6 +11,9 @@ interface Stats {
   pending: number
   wishes_total: number
   wishes_pending: number
+  family_count: number
+  honored_count: number
+  total_seats: number
 }
 
 export default function AdminDashboard() {
@@ -19,6 +22,7 @@ export default function AdminDashboard() {
     total_invitees:0, rsvp_confirmed:0,
     attending:0, not_attending:0, pending:0,
     wishes_total:0, wishes_pending:0,
+    family_count:0, honored_count:0, total_seats:0,
   })
 
   useEffect(() => {
@@ -30,38 +34,51 @@ export default function AdminDashboard() {
 
       setStats({
         total_invitees: inv.length,
-        rsvp_confirmed: inv.filter(
-          i => i.rsvp_status === 'confirmed'
+        rsvp_confirmed: inv.filter(i =>
+          i.rsvp_status === 'confirmed' && !i.is_family
         ).length,
-        attending: inv.filter(i => i.attending).length,
-        not_attending: inv.filter(
-          i => i.attending === false
+        attending: inv.filter(i =>
+          i.attending && !i.is_family
         ).length,
-        pending: inv.filter(
-          i => i.rsvp_status === 'pending'
+        not_attending: inv.filter(i =>
+          i.attending === false
+        ).length,
+        pending: inv.filter(i =>
+          i.rsvp_status === 'pending'
         ).length,
         wishes_total: wsh.length,
-        wishes_pending: wsh.filter(
-          w => !w.approved
+        wishes_pending: wsh.filter(w => !w.approved).length,
+        family_count: inv.filter(i => i.is_family).length,
+        honored_count: inv.filter(i =>
+          i.guests === 0 && !i.is_family
         ).length,
+        total_seats: inv.filter(i =>
+          i.attending !== false
+        ).reduce((sum, i) => sum + (i.guests ?? 1), 0),
       })
     }
     load()
   }, [])
 
   const cards = [
-    { label:'Total Tamu', value:stats.total_invitees,
-      color:'#1e3d2a' },
-    { label:'Konfirmasi Hadir', value:stats.attending,
-      color:'#2d5a3d' },
-    { label:'Tidak Hadir', value:stats.not_attending,
-      color:'#b8965a' },
-    { label:'Belum RSVP', value:stats.pending,
-      color:'#6b8f71' },
-    { label:'Total Ucapan', value:stats.wishes_total,
-      color:'#2d5a3d' },
-    { label:'Ucapan Pending', value:stats.wishes_pending,
-      color:'#b8965a' },
+    { label:'Total Tamu',
+      value:stats.total_invitees, color:'#1e3d2a' },
+    { label:'Konfirmasi Hadir',
+      value:stats.attending, color:'#2d5a3d' },
+    { label:'Total Kursi',
+      value:stats.total_seats, color:'#2d5a3d' },
+    { label:'Belum RSVP',
+      value:stats.pending, color:'#f0a500' },
+    { label:'Tidak Hadir',
+      value:stats.not_attending, color:'#c0392b' },
+    { label:'Keluarga Inti',
+      value:stats.family_count, color:'#b8965a' },
+    { label:'Tamu Kehormatan',
+      value:stats.honored_count, color:'#d4881a' },
+    { label:'Ucapan Masuk',
+      value:stats.wishes_total, color:'#2d5a3d' },
+    { label:'Ucapan Pending',
+      value:stats.wishes_pending, color:'#b8965a' },
   ]
 
   return (
