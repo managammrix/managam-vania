@@ -9,7 +9,33 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
     <section id="couple" ref={ref} style={{background:'var(--parchment)',padding:'80px 40px',display:'flex',alignItems:'center',justifyContent:'center'}}>
       <div style={{maxWidth:780,width:'100%'}}>
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--forest-deep)',textAlign:'center',marginBottom:10}}>{tr.couple_heading}</h2>
-        <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:52}}>{tr.couple_sub}</p>
+        <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:36}}>{tr.couple_sub}</p>
+
+        <div className="reveal reveal-d1" style={{
+          textAlign:'center',
+          maxWidth:560,
+          margin:'0 auto 48px',
+          padding:'24px 32px',
+          borderTop:'0.5px solid var(--cream-deep)',
+          borderBottom:'0.5px solid var(--cream-deep)',
+        }}>
+          <p style={{
+            fontFamily:'Cormorant Garamond,serif',
+            fontSize:'clamp(14px,2.5vw,17px)',
+            fontStyle:'italic',
+            color:'var(--ink-soft)',
+            lineHeight:1.9,
+            textAlign:'center',
+          }}>
+            &ldquo;Pernikahan adalah rancangan Tuhan,<br/>
+            bukan hanya untuk kebahagiaan,<br/>
+            tetapi untuk membentuk kami dalam kebenaran<br/>
+            dan kesetiaan.<br/>
+            Di dalam kesatuan-Nya yang sempurna,<br/>
+            kami dipersatukan dalam<br/>
+            Pernikahan Kudus.&rdquo;
+          </p>
+        </div>
 
         <style>{`@media(max-width:620px){.couple-grid{grid-template-columns:1fr!important;}.couple-sep{display:none!important;}}`}</style>
         <div className="couple-grid" style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:'0 36px',alignItems:'start'}}>
@@ -36,25 +62,6 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
               <div style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:2,color:'var(--gold)',marginBottom:6}}>HAGGAI 1:9</div>
               <p style={{fontFamily:'Cormorant Garamond,serif',fontSize:12,fontStyle:'italic',color:'var(--sage)',lineHeight:1.6,marginBottom:8}}>
                 &ldquo;You expected much, but it came to little. Why? Because my house lies in ruins while each of you runs to your own house.&rdquo;
-              </p>
-            </div>
-            <div style={{
-              borderTop:'0.5px solid var(--cream-deep)',
-              margin:'16px 0',paddingTop:16,
-            }}>
-              <p style={{
-                fontFamily:'Cormorant Garamond,serif',
-                fontSize:13,fontStyle:'italic',
-                color:'var(--sage)',lineHeight:1.85,
-                textAlign:'center',
-              }}>
-                &ldquo;Pernikahan adalah rancangan Tuhan,<br/>
-                bukan hanya untuk kebahagiaan,<br/>
-                tetapi untuk membentuk kami dalam kebenaran<br/>
-                dan kesetiaan.<br/>
-                Di dalam kesatuan-Nya yang sempurna,<br/>
-                kami dipersatukan dalam<br/>
-                Pernikahan Kudus.&rdquo;
               </p>
             </div>
             <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.9}}>

@@ -8,15 +8,19 @@ import { useAdminAuth } from '@/lib/adminAuth'
 const TEMPLATES = [
   {
     label: 'Undangan awal',
-    message: `Halo {name} 🌿\n\nKami mengundang Anda untuk hadir di pernikahan kami:\n\n*Managam & Vania*\n📅 Sabtu, 20 Juni 2026\n⛪ GMS Central Park – Hall B\n🕙 10:00 – 12:00 WIB\n\nBuka undangan digital kami:\nhttps://managamvania.mrix.ai\n\n#BuildingMANAGAMVANturesWithGod`,
+    message: `Shalom, {name} 🌿\n\nDengan penuh syukur kepada Tuhan Yang Maha Baik, kami mengumumkan bahwa kami akan melangsungkan Pernikahan Kudus kami:\n\n✝️ *Managam Raja Silalahi, S.Kom., M.Sc.*\n   Putra Bapak Saut Silalahi & Ibu Erna Sitinjak\n\nbersama\n\n🌸 *Vania, S.Psi.*\n   Putri Bapak Pdt. Fredi (Tee Tjien Hian), S.Th. & Ibu Tan Tjoen Nio\n\n📅 Sabtu, 20 Juni 2026\n⛪ GMS Central Park – Hall B, Jakarta Barat\n🕙 Pukul 10:00 – 12:00 WIB\n\nDengan rendah hati kami mengundang Bapak/Ibu/Saudara/i *{name}* untuk hadir memberikan doa restu bagi kami.\n\nMohon konfirmasi kehadiran melalui:\n🔗 managamvania.mrix.ai\n\n*#BuildingMANAGAMVANturesWithGod*\nTuhan memberkati 🙏`,
   },
   {
     label: 'Reminder RSVP',
-    message: `Halo {name} 👋\n\nKami ingin mengingatkan bahwa konfirmasi kehadiran pernikahan Managam & Vania ditutup *14 Juni 2026*.\n\nMohon konfirmasi kehadiran Anda di:\nhttps://managamvania.mrix.ai\n\nTerima kasih 🙏`,
+    message: `Shalom, {name} 🌿\n\nKami mengingatkan dengan hormat bahwa konfirmasi kehadiran pernikahan kami ditutup pada *14 Juni 2026*.\n\nKiranya Tuhan memampukan Bapak/Ibu/Saudara/i untuk hadir bersama kami pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nMohon konfirmasi di:\n🔗 managamvania.mrix.ai\n\nTerima kasih atas doa dan kasih Anda 🙏\nManagam & Vania`,
   },
   {
-    label: 'H-7 reminder',
-    message: `Halo {name} 🌿\n\nTinggal 7 hari lagi! Kami sangat menantikan kehadiran Anda di pernikahan kami.\n\n*Managam & Vania*\n📅 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nSampai jumpa!\n#BuildingMANAGAMVANturesWithGod`,
+    label: 'H-7',
+    message: `Shalom, {name} 🌿\n\nTinggal *7 hari* lagi menuju hari yang kami nantikan bersama Tuhan 🎉\n\nKami sangat bersukacita dan menantikan kehadiran Bapak/Ibu/Saudara/i pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap:\n🔗 managamvania.mrix.ai\n\nSampai jumpa di hari yang penuh berkat!\n*#BuildingMANAGAMVANturesWithGod* 🙏\nManagam & Vania`,
+  },
+  {
+    label: 'Tamu Kehormatan',
+    message: `Shalom, {name} 🌿\n\nDengan penuh hormat dan kasih, kami ingin berbagi kabar sukacita ini:\n\nPuji Tuhan, kami akan melangsungkan Pernikahan Kudus kami pada:\n\n📅 Sabtu, 20 Juni 2026\n📍 Jakarta\n\nKami memahami jarak dan kesibukan Bapak/Ibu/Saudara/i, namun kami ingin Anda mengetahui momen bersejarah ini dan memohon doa restu Anda dari jauh.\n\nDetail undangan:\n🔗 managamvania.mrix.ai\n\nDoa dan kasih Anda adalah berkat terbesar bagi kami 🙏\n\nSalam dalam kasih Kristus,\nManagam & Vania\n*#BuildingMANAGAMVANturesWithGod*`,
   },
 ]
 
@@ -28,7 +32,7 @@ export default function MessagesPage() {
     TEMPLATES[0].message
   )
   const [recipientFilter, setRecipientFilter] =
-    useState<'all'|'pending'|'confirmed'>('all')
+    useState<'all'|'pending'|'confirmed'|'honored'>('all')
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{
     sent:number; failed:number
@@ -48,6 +52,8 @@ export default function MessagesPage() {
       return i.rsvp_status === 'pending'
     if (recipientFilter === 'confirmed')
       return i.attending === true
+    if (recipientFilter === 'honored')
+      return i.guests === 0
     return true
   })
 
@@ -189,7 +195,7 @@ export default function MessagesPage() {
               letterSpacing:3, color:'#6b8f71',
               marginBottom:12,
             }}>PENERIMA</div>
-            {(['all','pending','confirmed'] as const).map(f => (
+            {(['all','pending','confirmed','honored'] as const).map(f => (
               <label key={f} style={{
                 display:'flex', alignItems:'center',
                 gap:10, marginBottom:10, cursor:'pointer',
@@ -205,8 +211,12 @@ export default function MessagesPage() {
                   `Belum RSVP (${invitees.filter(
                     i=>i.rsvp_status==='pending'
                   ).length})` :
+                 f==='confirmed' ?
                   `Konfirmasi hadir (${invitees.filter(
                     i=>i.attending
+                  ).length})` :
+                  `Tamu Kehormatan (${invitees.filter(
+                    i=>i.guests===0
                   ).length})`
                 }
               </label>
