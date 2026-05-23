@@ -55,7 +55,7 @@ export default function Home() {
   }, [mounted])
 
   return (
-    <>
+    <div suppressHydrationWarning>
       <EnvelopeScreen
         opened={opened}
         onOpen={() => setOpened(true)}
@@ -87,6 +87,6 @@ export default function Home() {
           </main>
         </>
       )}
-    </>
+    </div>
   )
 }

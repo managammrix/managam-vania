@@ -111,6 +111,7 @@ test.describe('Full ref flow E2E @smoke', () => {
     }
 
     // ─── STEP 4: Open personal link ──────────
+    // Register error listener FIRST, then navigate.
     const errors: string[] = []
     page.on('pageerror', e => errors.push(e.message))
 
