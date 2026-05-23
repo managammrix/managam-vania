@@ -47,7 +47,7 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
               border:'2px solid var(--cream-deep)',
             }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/managam.jpg" alt="Managam"
+              <img src="/managam.png" alt="Managam"
                 style={{
                   width:'100%', height:'100%',
                   objectFit:'cover',
@@ -88,7 +88,7 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
               border:'2px solid var(--cream-deep)',
             }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/vania.jpg" alt="Vania"
+              <img src="/vania.png" alt="Vania"
                 style={{
                   width:'100%', height:'100%',
                   objectFit:'cover',
