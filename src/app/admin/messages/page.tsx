@@ -5,34 +5,29 @@ import { fetchInvitees, logMessage, InviteeRow }
 import { sendBulkWhatsApp } from '@/lib/fonnte'
 import { useAdminAuth } from '@/lib/adminAuth'
 
-const RECOMMENDED_TEMPLATE: Record<string, string> = {
-  pending:   'Undangan awal',
+const RECOMMENDED_TEMPLATE: Record<string,string> = {
+  pending:  'Undangan Awal',
   confirmed: 'H-7',
-  honored:   'Tamu Kehormatan',
-  family:    'Keluarga Inti',
-  all:       '',
+  honored:  'Tamu Kehormatan',
+  all:      '',
 }
 
 const TEMPLATES = [
   {
-    label: 'Undangan awal',
-    message: `Shalom, {name} 🌿\n\nDengan penuh syukur kepada Tuhan Yang Maha Baik, kami mengumumkan bahwa kami akan melangsungkan Pernikahan Kudus kami:\n\n✝️ *Managam Raja Silalahi, S.Kom., M.Sc.*\n   Putra Bapak Saut Silalahi & Ibu Erna Sitinjak\n\nbersama\n\n🌸 *Vania, S.Psi.*\n   Putri Bapak Pdt. Fredi (Tee Tjien Hian), S.Th. & Ibu Tan Tjoen Nio\n\n📅 Sabtu, 20 Juni 2026\n⛪ GMS Central Park – Hall B, Jakarta Barat\n🕙 Pukul 10:00 – 12:00 WIB\n\nDengan rendah hati kami mengundang Bapak/Ibu/Saudara/i *{name}* untuk hadir memberikan doa restu bagi kami.\n\nMohon konfirmasi kehadiran melalui:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=undangan_awal\n\n*#BuildingMANAGAMVANturesWithGod*\nTuhan memberkati 🙏`,
+    label: 'Undangan Awal',
+    message: `Syalom, {name}! 🌿\n\nPuji Tuhan — Ia yang telah memulai pekerjaan yang baik ini, Ia pula yang menyelesaikannya! 🙌\n\nDengan penuh sukacita dan ucapan syukur atas kesetiaan Tuhan, kami ingin bersaksi:\n\n*Tuhan telah menetapkan waktu-Nya* — dan kami akan melangsungkan Pernikahan Kudus kami:\n\n✝️ *Managam Raja Silalahi, S.Kom., M.Sc.*\n    Putra Bapak Saut Silalahi & Ibu Erna Sitinjak, S.K.M.\n\nbersama\n\n🌸 *Vania, S.Psi.*\n    Putri Bapak Pdt. Fredi (Tee Tjien Hian), S.Th. & Ibu Tan Tjoen Nio\n\n📅 *Sabtu, 20 Juni 2026*\n⛪ GMS Central Park – Hall B\n    Jl. Letjen S. Parman No. Kav. 28, Jakarta Barat\n🕙 Pukul 10:00 – 12:00 WIB\n\nKami mengundang Bapak/Ibu/Saudara/i *{name}* untuk hadir menjadi saksi atas karya Tuhan dalam hidup kami dan turut bersukacita bersama kami pada hari yang penuh berkat ini.\n\n_"For I know the plans I have for you, declares the Lord — plans to prosper you and not to harm you, plans to give you hope and a future."_\n— Jeremiah 29:11\n\nMohon konfirmasi kehadiran:\n🔗 https://managamvania.mrix.ai/u/awal\n\n*#BuildingMANAGAMVANturesWithGod* 🙏\nTuhan Yesus memberkati Bapak/Ibu/Saudara/i!\n\nDengan kasih dalam Kristus,\n*Managam & Vania*`,
   },
   {
     label: 'Reminder RSVP',
-    message: `Shalom, {name} 🌿\n\nKami mengingatkan dengan hormat bahwa konfirmasi kehadiran pernikahan kami ditutup pada *14 Juni 2026*.\n\nKiranya Tuhan memampukan Bapak/Ibu/Saudara/i untuk hadir bersama kami pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nMohon konfirmasi di:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=reminder_rsvp\n\nTerima kasih atas doa dan kasih Anda 🙏\nManagam & Vania`,
+    message: `Syalom, {name}! 🌿\n\nKiranya damai sejahtera Tuhan menyertai Bapak/Ibu/Saudara/i hari ini 🙏\n\nKami mengingatkan dengan penuh kasih bahwa *konfirmasi kehadiran* pernikahan kami ditutup pada *14 Juni 2026*.\n\nKami percaya Tuhan sudah menetapkan siapa yang akan menjadi saksi pada hari bersejarah dalam hidup kami ini 🙌\n\n📅 *Sabtu, 20 Juni 2026 · 10:00 WIB*\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nMohon konfirmasi kehadiran di:\n🔗 https://managamvania.mrix.ai/u/reminder\n\n_"There is a time for everything, and a season for every activity under the heavens."_\n— Ecclesiastes 3:1 🌿\n\nTerima kasih atas doa dan kasih Bapak/Ibu/Saudara/i 🙏\n\n*Tuhan memberkati!*\nManagam & Vania`,
   },
   {
     label: 'H-7',
-    message: `Shalom, {name} 🌿\n\nTinggal *7 hari* lagi menuju hari yang kami nantikan bersama Tuhan 🎉\n\nKami sangat bersukacita dan menantikan kehadiran Bapak/Ibu/Saudara/i pada:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=h7_reminder\n\nSampai jumpa di hari yang penuh berkat!\n*#BuildingMANAGAMVANturesWithGod* 🙏\nManagam & Vania`,
+    message: `Syalom, {name}! 🌿🎉\n\n*Haleluya — tinggal 7 hari lagi!*\n\nKami bersukacita dan memuliakan Tuhan atas kesetiaan-Nya yang luar biasa dalam perjalanan panjang ini. Ia yang memulai, Ia yang menyelesaikan! 🙌\n\nKami sangat menantikan kehadiran dan doa restu Bapak/Ibu/Saudara/i pada:\n\n📅 *Sabtu, 20 Juni 2026 · 10:00 WIB*\n📍 GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap undangan:\n🔗 https://managamvania.mrix.ai/u/h7\n\n_"There is a time for everything, and a season for every activity under the heavens."_\n— Ecclesiastes 3:1 🌿\n\nSampai berjumpa di hari yang penuh kemuliaan-Nya!\n*#BuildingMANAGAMVANturesWithGod* 🙏\n\nTuhan Yesus memberkati!\n*Managam & Vania*`,
   },
   {
     label: 'Tamu Kehormatan',
-    message: `Shalom, {name} 🌿\n\nDengan penuh hormat dan kasih, kami ingin berbagi kabar sukacita ini:\n\nPuji Tuhan, kami akan melangsungkan Pernikahan Kudus kami pada:\n\n📅 Sabtu, 20 Juni 2026\n📍 Jakarta\n\nKami memahami jarak dan kesibukan Bapak/Ibu/Saudara/i, namun kami ingin Anda mengetahui momen bersejarah ini dan memohon doa restu Anda dari jauh.\n\nDetail undangan:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=tamu_kehormatan\n\nDoa dan kasih Anda adalah berkat terbesar bagi kami 🙏\n\nSalam dalam kasih Kristus,\nManagam & Vania\n*#BuildingMANAGAMVANturesWithGod*`,
-  },
-  {
-    label: 'Keluarga Inti',
-    message: `Shalom, {name} 🌿\n\nDengan sukacita kami ingin memberitahu bahwa Pernikahan Kudus kami akan segera dilangsungkan:\n\n📅 Sabtu, 20 Juni 2026 · 10:00 WIB\n⛪ GMS Central Park – Hall B, Jakarta Barat\n\nDetail lengkap ada di undangan digital kami:\n🔗 https://managamvania.mrix.ai?utm_source=whatsapp_blast&utm_medium=whatsapp&utm_campaign=keluarga_inti\n\nSampai jumpa di hari yang penuh berkat! 🙏\nManagam & Vania\n*#BuildingMANAGAMVANturesWithGod*`,
+    message: `Syalom, {name}! 🌿\n\nKiranya kasih karunia dan damai sejahtera Tuhan Yesus Kristus menyertai Bapak/Ibu/Saudara/i 🙏\n\nDengan penuh hormat dan kasih dalam Kristus, kami ingin berbagi kabar sukacita ini:\n\n*Puji Tuhan — Ia telah menuntun perjalanan kami hingga pada hari yang telah Ia tetapkan.*\n\nKami akan melangsungkan Pernikahan Kudus kami pada *Sabtu, 20 Juni 2026* di Jakarta.\n\nKami memahami bahwa jarak dan situasi mungkin tidak memungkinkan kehadiran fisik Bapak/Ibu/Saudara/i — namun kami percaya *doa dan restu Anda adalah kekuatan* bagi kami.\n\nKiranya Anda turut bersukacita bersama kami dari jauh dan mengangkat kami dalam doa 🙌\n\nDetail undangan digital:\n🔗 https://managamvania.mrix.ai/u/hormat\n\n_"I press on toward the goal for the prize of the upward call of God in Christ Jesus."_\n— Philippians 3:14\n\nSalam dalam kasih Kristus Yesus,\n*Managam & Vania*\n*#BuildingMANAGAMVANturesWithGod*`,
   },
 ]
 
@@ -44,7 +39,7 @@ export default function MessagesPage() {
     TEMPLATES[0].message
   )
   const [recipientFilter, setRecipientFilter] =
-    useState<'all'|'pending'|'confirmed'|'honored'|'family'>('all')
+    useState<'all'|'pending'|'confirmed'|'honored'>('all')
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{
     sent:number; failed:number
@@ -61,13 +56,11 @@ export default function MessagesPage() {
 
   const recipients = invitees.filter(i => {
     if (recipientFilter === 'pending')
-      return i.rsvp_status === 'pending' && !i.is_family
+      return i.rsvp_status === 'pending'
     if (recipientFilter === 'confirmed')
-      return i.attending === true && !i.is_family
+      return i.attending === true
     if (recipientFilter === 'honored')
       return i.guests === 0
-    if (recipientFilter === 'family')
-      return i.is_family === true
     return true
   })
 
@@ -209,7 +202,7 @@ export default function MessagesPage() {
               letterSpacing:3, color:'#6b8f71',
               marginBottom:12,
             }}>PENERIMA</div>
-            {(['all','pending','confirmed','honored','family'] as const).map(f => (
+            {(['all','pending','confirmed','honored'] as const).map(f => (
               <label key={f} style={{
                 display:'flex', alignItems:'center',
                 gap:10, marginBottom:10, cursor:'pointer',
@@ -223,18 +216,14 @@ export default function MessagesPage() {
                   `Semua tamu (${invitees.length})` :
                  f==='pending' ?
                   `Belum RSVP (${invitees.filter(
-                    i=>i.rsvp_status==='pending' && !i.is_family
+                    i=>i.rsvp_status==='pending'
                   ).length})` :
                  f==='confirmed' ?
                   `Konfirmasi hadir (${invitees.filter(
-                    i=>i.attending && !i.is_family
+                    i=>i.attending
                   ).length})` :
-                 f==='honored' ?
                   `Tamu Kehormatan (${invitees.filter(
                     i=>i.guests===0
-                  ).length})` :
-                  `Keluarga Inti (${invitees.filter(
-                    i=>i.is_family
                   ).length})`
                 }
               </label>

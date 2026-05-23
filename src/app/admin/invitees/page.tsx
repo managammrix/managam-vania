@@ -9,9 +9,6 @@ import { useAdminAuth } from '@/lib/adminAuth'
 function getStatusBadge(inv: InviteeRow): {
   label: string; bg: string; color: string
 } {
-  if (inv.is_family) return {
-    label: 'Keluarga', bg: '#fef9ec', color: '#b8965a',
-  }
   if (inv.guests === 0) return {
     label: 'Kehormatan', bg: '#fff8ec', color: '#d4881a',
   }
@@ -24,11 +21,11 @@ function getStatusBadge(inv: InviteeRow): {
 }
 
 function downloadCsvTemplate() {
-  const headers = 'name,phone,guests,notes,family'
+  const headers = 'name,phone,guests,notes'
   const example = [
-    'Budi Santoso,628111111111,2,,false',
-    'Ibu Maria,628222222222,0,Rekan jauh,false',
-    'Bapak Yohanes,628333333333,3,Ayah,true',
+    'Budi Santoso,628111111111,2,Teman kuliah',
+    'Ibu Maria,628222222222,0,Rekan jauh',
+    'Pastor Yohanes,628333333333,1,',
   ].join('\n')
   const content = headers + '\n' + example
   const blob = new Blob([content], { type:'text/csv;charset=utf-8;' })
@@ -133,8 +130,6 @@ export default function InviteesPage() {
       ['guests','tamu','seats','kursi','jumlah'].includes(h))
     const notesIdx = headers.findIndex(h =>
       ['notes','catatan','keterangan'].includes(h))
-    const familyIdx = headers.findIndex(h =>
-      ['family','keluarga','is_family'].includes(h))
 
     if (nameIdx === -1 || phoneIdx === -1) {
       alert('CSV harus punya kolom nama dan phone/telepon')
@@ -147,12 +142,6 @@ export default function InviteesPage() {
         ?.map(c => c.replace(/^"|"$/g, '').trim())
         ?? line.split(',').map(c => c.trim())
 
-      const isFamily = familyIdx >= 0
-        ? ['true','1','ya','yes'].includes(
-            (cols[familyIdx] ?? '').toLowerCase()
-          )
-        : false
-
       return {
         name: cols[nameIdx] ?? '',
         phone: normalizePhone(cols[phoneIdx] ?? ''),
@@ -160,10 +149,7 @@ export default function InviteesPage() {
           ? parseInt(cols[guestsIdx] ?? '1') || 0
           : 1,
         notes: notesIdx >= 0 ? (cols[notesIdx] ?? '') : '',
-        rsvp_status: (isFamily ? 'confirmed' : 'pending') as InviteeRow['rsvp_status'],
-        attending: isFamily ? true : undefined,
-        is_family: isFamily,
-        auto_confirmed: isFamily,
+        rsvp_status: 'pending' as const,
       }
     }).filter(r => r.name && r.phone)
 
@@ -297,7 +283,7 @@ export default function InviteesPage() {
         <span>·</span>
         <span style={{color:'#2d5a3d'}}>
           {invitees.filter(i =>
-            i.rsvp_status==='confirmed' && !i.is_family
+            i.rsvp_status==='confirmed'
           ).length} konfirmasi
         </span>
         <span>·</span>
@@ -307,14 +293,8 @@ export default function InviteesPage() {
           ).length} pending
         </span>
         <span>·</span>
-        <span style={{color:'#b8965a'}}>
-          {invitees.filter(i => i.is_family).length} keluarga
-        </span>
-        <span>·</span>
         <span style={{color:'#d4881a'}}>
-          {invitees.filter(i =>
-            i.guests === 0 && !i.is_family
-          ).length} kehormatan
+          {invitees.filter(i => i.guests === 0).length} kehormatan
         </span>
         <span>·</span>
         <span style={{color:'#888', fontWeight:500}}>
@@ -537,7 +517,7 @@ export default function InviteesPage() {
               }}>
                 <thead>
                   <tr style={{background:'#f8f7f4'}}>
-                    {['Nama','Telepon','Tipe','Tamu','Catatan'].map(h => (
+                    {['Nama','Telepon','Tamu','Catatan'].map(h => (
                       <th key={h} style={{
                         padding:'10px 12px', textAlign:'left',
                         fontFamily:'Cinzel,serif', fontSize:10,
@@ -562,27 +542,6 @@ export default function InviteesPage() {
                       }}>
                         {row.phone}
                       </td>
-                      <td style={{padding:'10px 12px'}}>
-                        {row.is_family ? (
-                          <span style={{
-                            padding:'2px 8px', borderRadius:4,
-                            fontSize:11, background:'#fef9ec',
-                            color:'#b8965a', fontWeight:500,
-                          }}>Keluarga</span>
-                        ) : row.guests === 0 ? (
-                          <span style={{
-                            padding:'2px 8px', borderRadius:4,
-                            fontSize:11, background:'#fff8ec',
-                            color:'#b8965a',
-                          }}>Kehormatan</span>
-                        ) : (
-                          <span style={{
-                            padding:'2px 8px', borderRadius:4,
-                            fontSize:11, background:'#f0f7f1',
-                            color:'#2d5a3d',
-                          }}>Tamu</span>
-                        )}
-                      </td>
                       <td style={{
                         padding:'10px 12px',
                         color: row.guests === 0
@@ -591,7 +550,7 @@ export default function InviteesPage() {
                           ? 500 : 400,
                       }}>
                         {row.guests === 0
-                          ? '—' : row.guests}
+                          ? 'Kehormatan' : row.guests}
                       </td>
                       <td style={{
                         padding:'10px 12px', color:'#888',

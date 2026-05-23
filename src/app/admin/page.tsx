@@ -11,7 +11,6 @@ interface Stats {
   pending: number
   wishes_total: number
   wishes_pending: number
-  family_count: number
   honored_count: number
   total_seats: number
 }
@@ -22,7 +21,7 @@ export default function AdminDashboard() {
     total_invitees:0, rsvp_confirmed:0,
     attending:0, not_attending:0, pending:0,
     wishes_total:0, wishes_pending:0,
-    family_count:0, honored_count:0, total_seats:0,
+    honored_count:0, total_seats:0,
   })
 
   useEffect(() => {
@@ -35,11 +34,9 @@ export default function AdminDashboard() {
       setStats({
         total_invitees: inv.length,
         rsvp_confirmed: inv.filter(i =>
-          i.rsvp_status === 'confirmed' && !i.is_family
+          i.rsvp_status === 'confirmed'
         ).length,
-        attending: inv.filter(i =>
-          i.attending && !i.is_family
-        ).length,
+        attending: inv.filter(i => i.attending).length,
         not_attending: inv.filter(i =>
           i.attending === false
         ).length,
@@ -48,10 +45,7 @@ export default function AdminDashboard() {
         ).length,
         wishes_total: wsh.length,
         wishes_pending: wsh.filter(w => !w.approved).length,
-        family_count: inv.filter(i => i.is_family).length,
-        honored_count: inv.filter(i =>
-          i.guests === 0 && !i.is_family
-        ).length,
+        honored_count: inv.filter(i => i.guests === 0).length,
         total_seats: inv.filter(i =>
           i.attending !== false
         ).reduce((sum, i) => sum + (i.guests ?? 1), 0),
@@ -71,8 +65,6 @@ export default function AdminDashboard() {
       value:stats.pending, color:'#f0a500' },
     { label:'Tidak Hadir',
       value:stats.not_attending, color:'#c0392b' },
-    { label:'Keluarga Inti',
-      value:stats.family_count, color:'#b8965a' },
     { label:'Tamu Kehormatan',
       value:stats.honored_count, color:'#d4881a' },
     { label:'Ucapan Masuk',

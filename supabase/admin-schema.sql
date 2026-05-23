@@ -58,13 +58,3 @@ alter table public.message_log enable row level security;
 drop policy if exists "Public access on message_log" on public.message_log;
 drop policy if exists "Auth users only on message_log" on public.message_log;
 -- No policies → anon denied. service_role bypasses RLS.
-
--- ── INVITEES: family fields ───────────────────────────────────────
--- is_family marks core/nuclear family members (auto-confirmed,
--- no RSVP needed, excluded from reminder blasts).
--- auto_confirmed records whether the row was confirmed at import
--- rather than via the public RSVP form.
-alter table public.invitees
-  add column if not exists is_family boolean default false;
-alter table public.invitees
-  add column if not exists auto_confirmed boolean default false;
