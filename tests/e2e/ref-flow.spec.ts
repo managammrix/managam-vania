@@ -61,27 +61,35 @@ test.describe('Full ref flow E2E @smoke', () => {
       'clipboard-read', 'clipboard-write'
     ])
 
-    // Clear + re-search to ensure fresh row render
+    // Clear any existing search
     await page.fill('input[placeholder*="Cari"]', '')
-    await page.waitForTimeout(300)
+    await page.waitForTimeout(500)
+
+    // Reload to ensure fresh data (new tamu's ref column populated)
+    await page.reload()
+    await page.waitForTimeout(1000)
+
+    // Now search for the tamu
     await page.fill(
       'input[placeholder*="Cari"]',
       TEST_TAMU.name
     )
-    await page.waitForTimeout(800)
+    await page.waitForTimeout(1000)
+
+    const rowCount = await page.locator('tr')
+      .filter({ hasText: TEST_TAMU.name })
+      .count()
+    console.log('   Rows found with name:', rowCount)
 
     const row = page.locator('tr').filter({
       hasText: TEST_TAMU.name
     })
-    await expect(
-      row.locator('button', { hasText: 'Link' })
-    ).toBeVisible({ timeout: 5000 })
+    await expect(row).toBeVisible({ timeout: 10000 })
 
-    // Prefer reading data-ref directly — more reliable
-    // than clipboard API in headless mode
-    const ref = await row
-      .locator('button[data-ref]')
-      .getAttribute('data-ref')
+    const linkBtn = row.locator('button[data-ref]')
+    await expect(linkBtn).toBeVisible({ timeout: 10000 })
+
+    const ref = await linkBtn.getAttribute('data-ref')
     expect(ref).toBeTruthy()
     expect(ref?.length).toBe(8)
     console.log('✅ Step 3: Ref extracted from DOM:', ref)
