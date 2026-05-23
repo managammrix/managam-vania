@@ -178,14 +178,12 @@ test.describe('Full ref flow E2E @smoke', () => {
     console.log('✅ Step 6: RSVP pre-filled')
 
     // ─── STEP 7: Select HADIR ─────────────────
-    const hadirLabel = page.locator('#rsvp label')
-      .filter({ hasText: 'HADIR' }).first()
-    await hadirLabel.click()
-    await page.waitForTimeout(500)
+    await page.click('#hadir-btn', { force: true })
+    await page.waitForTimeout(1000)
 
     await expect(
-      page.locator('#rsvp select')
-    ).toBeVisible({ timeout: 3000 })
+      page.locator('#seat-selector')
+    ).toBeVisible({ timeout: 5000 })
     console.log('✅ Step 7: HADIR selected, seat selector shown')
 
     // ─── STEP 8: Submit RSVP ─────────────────

@@ -88,7 +88,10 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
                   {value:true, label:tr.rsvp_attending},
                   {value:false, label:tr.rsvp_not_attending}
                 ].map(opt => (
-                  <label key={String(opt.value)} style={{
+                  <label
+                    key={String(opt.value)}
+                    id={opt.value ? 'hadir-btn' : 'tidak-hadir-btn'}
+                    style={{
                     flex:1,border:`0.5px solid ${attending===opt.value?'var(--forest)':'var(--cream-deep)'}`,
                     padding:'13px 14px',minHeight:44,cursor:'pointer',
                     fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,
@@ -114,6 +117,7 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
               <div style={{marginBottom:24}}>
                 <label style={labelStyle}>{tr.rsvp_guests}</label>
                 <select
+                  id="seat-selector"
                   className="form-input"
                   value={guests}
                   onChange={e => setGuests(Number(e.target.value))}
