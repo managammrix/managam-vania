@@ -86,33 +86,34 @@ export default function MessagesPage() {
       i => i.sender === 'vania'
     )
 
-    let totalSent = 0
-    let totalFailed = 0
-
     try {
-      if (agamRecipients.length > 0 && tokenAgam) {
-        const res = await sendBulkWhatsApp(
-          tokenAgam,
-          agamRecipients.map(i => ({ name: i.name, phone: i.phone })),
-          message
-        )
-        totalSent += res.sent
-        totalFailed += res.failed
-      } else if (agamRecipients.length > 0 && !tokenAgam) {
-        totalFailed += agamRecipients.length
-      }
+      const results = await Promise.all([
+        agamRecipients.length > 0 && tokenAgam
+          ? sendBulkWhatsApp(
+              tokenAgam,
+              agamRecipients.map(i => ({
+                name: i.name, phone: i.phone
+              })),
+              message
+            )
+          : Promise.resolve({ sent: 0, failed: agamRecipients.length }),
+        vaniaRecipients.length > 0 && tokenVania
+          ? sendBulkWhatsApp(
+              tokenVania,
+              vaniaRecipients.map(i => ({
+                name: i.name, phone: i.phone
+              })),
+              message
+            )
+          : Promise.resolve({ sent: 0, failed: vaniaRecipients.length }),
+      ])
 
-      if (vaniaRecipients.length > 0 && tokenVania) {
-        const res = await sendBulkWhatsApp(
-          tokenVania,
-          vaniaRecipients.map(i => ({ name: i.name, phone: i.phone })),
-          message
-        )
-        totalSent += res.sent
-        totalFailed += res.failed
-      } else if (vaniaRecipients.length > 0 && !tokenVania) {
-        totalFailed += vaniaRecipients.length
-      }
+      const totalSent = results.reduce(
+        (sum, r) => sum + r.sent, 0
+      )
+      const totalFailed = results.reduce(
+        (sum, r) => sum + r.failed, 0
+      )
 
       const finalResult = { sent: totalSent, failed: totalFailed }
       setResult(finalResult)
