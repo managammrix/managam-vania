@@ -57,7 +57,7 @@ export default function InviteesPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Partial<InviteeRow>>({
     name:'', phone:'', rsvp_status:'pending',
-    guests:1, notes:'', sender:'agam',
+    notes:'', sender:'agam',
     max_guests: null as number | null,
   })
   const [defaultMax, setDefaultMax] = useState(2)
@@ -107,7 +107,7 @@ export default function InviteesPage() {
     await upsertInvitee(dataToSave as InviteeRow)
     setShowForm(false)
     setForm({ name:'', phone:'',
-      rsvp_status:'pending', guests:1, notes:'', sender:'agam',
+      rsvp_status:'pending', notes:'', sender:'agam',
       max_guests: null })
     load()
   }
@@ -558,11 +558,6 @@ export default function InviteesPage() {
               <option value="confirmed">Konfirmasi Hadir</option>
               <option value="declined">Tidak Hadir</option>
             </select>
-            <input placeholder="Jumlah tamu (0 = Kehormatan)" type="number"
-              value={form.guests ?? 1} style={inp}
-              min={0} max={10}
-              onChange={e => setForm(f =>
-                ({...f, guests:Number(e.target.value)}))} />
             <input type="number"
               placeholder="Maks tamu (kosong = default)"
               value={form.max_guests ?? ''}
