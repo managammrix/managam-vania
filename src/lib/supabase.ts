@@ -56,6 +56,7 @@ export interface PhotoRow {
 export async function fetchInviteeByRef(ref: string): Promise<InviteeRow | null> {
   const { data, error } = await supabase
     .rpc('get_invitee_by_ref', { p_ref: ref })
+  console.log('[ref] rpc raw response — data:', data, '| error:', error)
   if (error || !data?.length) return null
   return data[0] as InviteeRow
 }

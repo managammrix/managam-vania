@@ -39,13 +39,21 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('ref')
+    console.log('[ref] url ref param:', ref)
     if (ref) {
       setGuestRef(ref)
       fetchInviteeByRef(ref).then(data => {
+        console.log('[ref] ref:', ref)
+        console.log('[ref] data:', data)
         if (data) setGuestData(data)
+      }).catch(err => {
+        console.error('[ref] error:', err)
       })
     }
-    fetchDefaultMaxGuests().then(setDefaultMaxGuests)
+    fetchDefaultMaxGuests().then(v => {
+      console.log('[ref] defaultMaxGuests:', v)
+      setDefaultMaxGuests(v)
+    })
   }, [])
 
   return (
