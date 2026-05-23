@@ -108,7 +108,7 @@ export default function InviteesPage() {
     setShowForm(false)
     setForm({ name:'', phone:'',
       rsvp_status:'pending', notes:'', sender:'agam',
-      max_guests: null })
+      max_guests: defaultMax })
     load()
   }
 
