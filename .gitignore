@@ -13,6 +13,9 @@ out/
 .env
 .dev.vars
 
+# Supabase CLI local state
+supabase/.temp/
+
 # misc
 .DS_Store
 *.pem
