@@ -32,7 +32,7 @@ export const t = {
     daughter_of: 'Putri dari',
     // Events
     events_heading: 'Rangkaian Acara',
-    events_sub: 'SABTU 20 JUNI & MINGGU 21 JUNI 2026',
+    events_sub: 'SABTU, 20 JUNI 2026',
     sat_label: 'SABTU, 20 JUNI 2026',
     ceremony_title: 'Pemberkatan Nikah',
     open_maps: 'BUKA DI MAPS ↗',
@@ -110,7 +110,7 @@ export const t = {
     son_of: 'Son of',
     daughter_of: 'Daughter of',
     events_heading: 'The Celebrations',
-    events_sub: 'SATURDAY 20 JUNE & SUNDAY 21 JUNE 2026',
+    events_sub: 'SATURDAY, 20 JUNE 2026',
     sat_label: 'SATURDAY, 20 JUNE 2026',
     ceremony_title: 'Holy Matrimony',
     open_maps: 'OPEN IN MAPS ↗',
