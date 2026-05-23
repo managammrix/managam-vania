@@ -147,11 +147,144 @@ grant execute on function
   public.submit_rsvp_by_ref(text, boolean, integer)
   to anon;
 
--- Check-in and souvenir tracking columns
+-- Check-in, souvenir, and lunchbox tracking columns
 alter table public.invitees
   add column if not exists checked_in_at timestamptz;
 alter table public.invitees
   add column if not exists souvenir_claimed boolean default false;
+alter table public.invitees
+  add column if not exists lunchbox_claimed boolean default false;
+
+-- ── Check-in / claim RPCs ─────────────────────────────────────────
+-- All three are security-definer so anon can call them without a
+-- direct UPDATE policy on invitees. They return JSON for easy client
+-- consumption, including idempotency signals (already_checked_in /
+-- already_claimed) so the scanner UI can show distinct states.
+
+create or replace function public.checkin_by_ref(p_ref text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.invitees%rowtype;
+begin
+  select * into v_row from public.invitees where ref = p_ref limit 1;
+
+  if not found then
+    return json_build_object(
+      'success', false,
+      'error', 'Tamu tidak ditemukan'
+    );
+  end if;
+
+  if v_row.checked_in_at is not null then
+    return json_build_object(
+      'success', false,
+      'already_checked_in', true,
+      'name', v_row.name,
+      'guests', v_row.guests,
+      'checked_in_at', v_row.checked_in_at,
+      'souvenir_claimed', v_row.souvenir_claimed,
+      'lunchbox_claimed', v_row.lunchbox_claimed
+    );
+  end if;
+
+  update public.invitees
+    set checked_in_at = now()
+    where ref = p_ref;
+
+  return json_build_object(
+    'success', true,
+    'name', v_row.name,
+    'guests', v_row.guests,
+    'rsvp_status', v_row.rsvp_status,
+    'souvenir_claimed', false,
+    'lunchbox_claimed', false
+  );
+end;
+$$;
+grant execute on function public.checkin_by_ref(text) to anon;
+
+create or replace function public.claim_souvenir_by_ref(p_ref text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.invitees%rowtype;
+begin
+  select * into v_row from public.invitees where ref = p_ref limit 1;
+
+  if not found then
+    return json_build_object(
+      'success', false,
+      'error', 'Tamu tidak ditemukan'
+    );
+  end if;
+
+  if v_row.souvenir_claimed then
+    return json_build_object(
+      'success', false,
+      'already_claimed', true,
+      'name', v_row.name
+    );
+  end if;
+
+  update public.invitees
+    set souvenir_claimed = true
+    where ref = p_ref;
+
+  return json_build_object(
+    'success', true,
+    'name', v_row.name,
+    'guests', v_row.guests
+  );
+end;
+$$;
+grant execute on function public.claim_souvenir_by_ref(text) to anon;
+
+create or replace function public.claim_lunchbox_by_ref(p_ref text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.invitees%rowtype;
+begin
+  select * into v_row from public.invitees where ref = p_ref limit 1;
+
+  if not found then
+    return json_build_object(
+      'success', false,
+      'error', 'Tamu tidak ditemukan'
+    );
+  end if;
+
+  if v_row.lunchbox_claimed then
+    return json_build_object(
+      'success', false,
+      'already_claimed', true,
+      'name', v_row.name,
+      'guests', v_row.guests
+    );
+  end if;
+
+  update public.invitees
+    set lunchbox_claimed = true
+    where ref = p_ref;
+
+  return json_build_object(
+    'success', true,
+    'name', v_row.name,
+    'guests', v_row.guests
+  );
+end;
+$$;
+grant execute on function public.claim_lunchbox_by_ref(text) to anon;
 
 -- ── SETTINGS — global key/value config (e.g. default_max_guests) ─
 create table if not exists public.settings (
