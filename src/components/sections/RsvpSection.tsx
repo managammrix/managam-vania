@@ -38,9 +38,9 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
     } catch { /* still show success — store locally */ }
     // If this guest came in via a personal ref link, also update
     // the invitees row so the admin dashboard reflects their status.
-    if (guestData?.id) {
+    if (guestData?.ref) {
       try {
-        await updateInviteeRsvp(guestData.id, attending, guestCount)
+        await updateInviteeRsvp(guestData.ref, attending, guestCount)
       } catch (err) {
         console.error('[rsvp] invitee update error:', err)
       }

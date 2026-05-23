@@ -110,15 +110,42 @@ $$;
 
 grant execute on function public.get_invitee_by_ref(text) to anon;
 
--- Allow anon to update their own RSVP status when they came in
--- via a personal ref link. The RsvpSection on the public site
--- calls updateInviteeRsvp(id, attending, guests) after submit.
+-- RSVP submission goes through a security definer RPC, NOT direct
+-- anon UPDATE. The RPC only writes rsvp_status/attending/guests on
+-- the row whose ref matches — name, phone, sender etc. stay protected.
 drop policy if exists "Anon update own rsvp status" on public.invitees;
-create policy "Anon update own rsvp status"
-  on public.invitees for update
-  to anon
-  using (ref is not null)
-  with check (ref is not null);
+
+create or replace function public.submit_rsvp_by_ref(
+  p_ref text,
+  p_attending boolean,
+  p_guests integer
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_updated integer;
+begin
+  update public.invitees
+    set
+      rsvp_status = case
+        when p_attending then 'confirmed'
+        else 'declined'
+      end,
+      attending = p_attending,
+      guests = p_guests
+    where ref = p_ref;
+
+  get diagnostics v_updated = row_count;
+  return v_updated > 0;
+end;
+$$;
+
+grant execute on function
+  public.submit_rsvp_by_ref(text, boolean, integer)
+  to anon;
 
 -- ── SETTINGS — global key/value config (e.g. default_max_guests) ─
 create table if not exists public.settings (
