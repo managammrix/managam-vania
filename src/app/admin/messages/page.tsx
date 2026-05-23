@@ -128,6 +128,13 @@ export default function MessagesPage() {
       i => i.sender === 'vania'
     )
 
+    console.log('[blast] agam recipients:', agamRecipients.length)
+    console.log('[blast] vania recipients:', vaniaRecipients.length)
+    console.log('[blast] tokenAgam present:', !!tokenAgam, 'length:', tokenAgam.length)
+    console.log('[blast] tokenVania present:', !!tokenVania, 'length:', tokenVania.length)
+    console.log('[blast] active token tab:', activeToken)
+    console.log('[blast] vania sample recipient:', vaniaRecipients[0])
+
     try {
       const results = await Promise.all([
         agamRecipients.length > 0 && tokenAgam

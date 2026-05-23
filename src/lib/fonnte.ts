@@ -51,13 +51,16 @@ export async function sendBulkWhatsApp(
       )
 
     try {
+      console.log('[fonnte] sending to:', recipient.phone, 'name:', recipient.name)
       const result = await sendWhatsApp(token, {
         target: recipient.phone,
         message,
       })
+      console.log('[fonnte] response:', result)
       if (result.status) sent++
       else failed++
-    } catch {
+    } catch (e) {
+      console.error('[fonnte] error:', e)
       failed++
     }
 
