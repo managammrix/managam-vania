@@ -43,7 +43,8 @@ export default function ClosingSection({ tr }: { tr: Translations }) {
 
         <p className="reveal reveal-d1" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(19px,3.5vw,28px)',fontStyle:'italic',fontWeight:300,color:'var(--cream-warm)',lineHeight:1.75,marginBottom:32}}>
           &ldquo;I love you today. Tomorrow is glory.<br/>
-          I will love you always — growing, maturing, serving.<br/>
+          I will love you always —<br/>
+          growing, maturing, serving.<br/>
           I will love you faithfully, and hold on to you,<br/>
           loyal and triumphant.<br/>
           For all you are is precious to me.<br/>

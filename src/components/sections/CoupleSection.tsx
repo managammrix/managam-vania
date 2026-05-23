@@ -24,6 +24,25 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
                 &ldquo;You expected much, but it came to little. Why? Because my house lies in ruins while each of you runs to your own house.&rdquo;
               </p>
             </div>
+            <div style={{
+              borderTop:'0.5px solid var(--cream-deep)',
+              margin:'16px 0',paddingTop:16,
+            }}>
+              <p style={{
+                fontFamily:'Cormorant Garamond,serif',
+                fontSize:13,fontStyle:'italic',
+                color:'var(--sage)',lineHeight:1.85,
+                textAlign:'center',
+              }}>
+                &ldquo;Pernikahan adalah rancangan Tuhan,<br/>
+                bukan hanya untuk kebahagiaan,<br/>
+                tetapi untuk membentuk kami dalam kebenaran<br/>
+                dan kesetiaan.<br/>
+                Di dalam kesatuan-Nya yang sempurna,<br/>
+                kami dipersatukan dalam<br/>
+                Pernikahan Kudus.&rdquo;
+              </p>
+            </div>
             <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.9}}>
               {tr.son_of}<br/>
               <strong>Bapak Saut Silalahi</strong><br/>

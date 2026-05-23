@@ -21,13 +21,6 @@ export default function StorySection({ tr }: { tr: Translations }) {
     <section id="story" ref={ref} style={{background:'var(--forest-deep)',display:'flex',alignItems:'center',justifyContent:'center',padding:'80px 40px'}}>
       <div style={{maxWidth:660,width:'100%',textAlign:'center',color:'var(--cream)'}}>
         <span className="reveal" style={{fontFamily:'Cinzel,serif',fontSize:11,letterSpacing:5,opacity:0.45,marginBottom:32,display:'block'}}>{tr.our_story}</span>
-        <p className="reveal reveal-d1" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(17px,3.2vw,24px)',fontStyle:'italic',fontWeight:300,lineHeight:1.85,color:'var(--cream-warm)',marginBottom:40}}>
-          &ldquo;Pernikahan adalah rancangan Tuhan, bukan hanya untuk kebahagiaan,<br/>
-          tetapi untuk membentuk kami dalam kebenaran dan kesetiaan.<br/>
-          Di dalam kesatuan-Nya yang sempurna, kami dipersatukan dalam<br/>
-          Pernikahan Kudus.&rdquo;
-        </p>
-        <div className="reveal reveal-d2" style={{width:1,height:56,background:'var(--gold)',margin:'0 auto 36px',opacity:0.55}}/>
 
         <div className="reveal reveal-d2" style={{maxWidth:540,margin:'0 auto',textAlign:'left',position:'relative'}}>
           {/* timeline line */}

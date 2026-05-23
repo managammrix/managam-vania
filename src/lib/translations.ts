@@ -42,7 +42,7 @@ export const t = {
     attire_text: 'Kami mengundang Anda untuk hadir dengan nuansa hijau sage, krem, atau warna bumi — selaras dengan tema pernikahan kami. Bukan keharusan, namun akan sangat indah.',
     // RSVP
     rsvp_heading: 'Konfirmasi Kehadiran',
-    rsvp_sub: 'SEBELUM 1 JUNI 2026',
+    rsvp_sub: 'SEBELUM 14 JUNI 2026',
     rsvp_name: 'NAMA LENGKAP',
     rsvp_phone: 'TELEPON / WHATSAPP',
     rsvp_attendance: 'KEHADIRAN',
@@ -121,7 +121,7 @@ export const t = {
     attire_label: 'COLOUR THEME',
     attire_text: 'We warmly invite you to dress in sage green, cream, or earth tones — in harmony with our wedding palette. Not a requirement, but it would be beautiful.',
     rsvp_heading: 'Will You Join Us?',
-    rsvp_sub: 'BEFORE 1 JUNE 2026',
+    rsvp_sub: 'BEFORE 14 JUNE 2026',
     rsvp_name: 'FULL NAME',
     rsvp_phone: 'PHONE / WHATSAPP',
     rsvp_attendance: 'ATTENDANCE',
