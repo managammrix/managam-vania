@@ -12,7 +12,7 @@ export default function CoverSection({ tr, isPostWedding = false }: { tr: Transl
         <img
           src="https://bawnvpgjpueqdebjqcjp.supabase.co/storage/v1/object/public/prewedding/03.jpg"
           alt="Managam & Vania"
-          style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',opacity:0.12,mixBlendMode:'multiply'}}
+          style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',opacity:0.22,mixBlendMode:'normal'}}
           loading="eager"
           fetchPriority="high"
         />

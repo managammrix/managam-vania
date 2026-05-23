@@ -1,9 +1,14 @@
 'use client'
 import { Translations } from '@/lib/translations'
 
-interface Props { opened: boolean; onOpen: () => void; tr: Translations }
+interface Props {
+  opened: boolean
+  onOpen: () => void
+  tr: Translations
+  guestName: string | null
+}
 
-export default function EnvelopeScreen({ opened, onOpen, tr }: Props) {
+export default function EnvelopeScreen({ opened, onOpen, tr, guestName }: Props) {
   if (opened) return null
   return (
     <div
@@ -26,6 +31,16 @@ export default function EnvelopeScreen({ opened, onOpen, tr }: Props) {
         .open-hint{margin-top:36px;font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--sage-light);letter-spacing:4px;animation:pulse-hint 2.2s ease-in-out infinite;}
         @keyframes pulse-hint{0%,100%{opacity:0.5}50%{opacity:1}}
       `}</style>
+      {guestName && (
+        <div style={{marginBottom:16,textAlign:'center'}}>
+          <p style={{fontFamily:'Cormorant Garamond, serif',fontSize:18,fontStyle:'italic',color:'var(--cream-warm)',marginBottom:4}}>
+            Halo, <strong style={{color:'var(--gold-light)',fontStyle:'normal'}}>{guestName}</strong>! 🌿
+          </p>
+          <p style={{fontFamily:'Cinzel, serif',fontSize:10,letterSpacing:3,color:'var(--sage-light)'}}>
+            Anda memiliki undangan pribadi
+          </p>
+        </div>
+      )}
       <div className="env-wrapper">
         <div className="env-body">
           <div className="env-liner">

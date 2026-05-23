@@ -11,7 +11,7 @@ const milestones: Milestone[] = [
   { date:'29.06.2024\n–\n16.05.2025', titleKey:'m4_title', detailKey:'m4_detail' },
   { date:'16.05.2025',  titleKey:'m5_title', detailKey:'m5_detail' },
   { date:'21.06.2025',  titleKey:'m6_title', detailKey:'m6_detail' },
-  { date:'24.12.2025',  titleKey:'m7_title', detailKey:'m7_detail' },
+  { date:'26.02.2026',  titleKey:'m7_title', detailKey:'m7_detail' },
   { date:'20.06\n2026', titleKey:'m8_title', detailKey:'m8_detail', highlight: true },
 ]
 

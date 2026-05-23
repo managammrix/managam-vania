@@ -92,7 +92,7 @@ export default function MessagesPage() {
           ? sendBulkWhatsApp(
               tokenAgam,
               agamRecipients.map(i => ({
-                name: i.name, phone: i.phone
+                name: i.name, phone: i.phone, ref: i.ref,
               })),
               message
             )
@@ -101,7 +101,7 @@ export default function MessagesPage() {
           ? sendBulkWhatsApp(
               tokenVania,
               vaniaRecipients.map(i => ({
-                name: i.name, phone: i.phone
+                name: i.name, phone: i.phone, ref: i.ref,
               })),
               message
             )

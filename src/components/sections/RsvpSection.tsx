@@ -1,17 +1,32 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Translations } from '@/lib/translations'
-import { submitRsvp } from '@/lib/supabase'
+import { InviteeRow, submitRsvp } from '@/lib/supabase'
 import { useReveal } from '../useReveal'
 
-export default function RsvpSection({ tr }: { tr: Translations }) {
+interface Props {
+  tr: Translations
+  guestData: InviteeRow | null
+  defaultMaxGuests: number
+}
+
+export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) {
   const ref = useReveal()
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
+  const [name, setName] = useState(guestData?.name ?? '')
+  const [phone, setPhone] = useState(guestData?.phone ?? '')
   const [attending, setAttending] = useState<boolean | null>(null)
   const [guests, setGuests] = useState(1)
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (guestData) {
+      setName(guestData.name)
+      setPhone(guestData.phone ?? '')
+    }
+  }, [guestData])
+
+  const maxSeats = guestData?.max_guests ?? defaultMaxGuests
 
   const handleSubmit = async () => {
     if (!name.trim()) { alert(tr.alert_name); return }
@@ -40,11 +55,31 @@ export default function RsvpSection({ tr }: { tr: Translations }) {
           <div className="reveal reveal-d2" style={{marginTop:40,textAlign:'left'}}>
             <div style={{marginBottom:24}}>
               <label style={labelStyle}>{tr.rsvp_name}</label>
-              <input style={inputStyle} value={name} onChange={e=>setName(e.target.value)} placeholder={tr.rsvp_name_placeholder}/>
+              <input
+                style={{
+                  ...inputStyle,
+                  background: guestData ? 'var(--cream-warm)' : 'transparent',
+                  color: guestData ? 'var(--ink-soft)' : 'var(--ink)',
+                }}
+                value={name}
+                onChange={e => !guestData && setName(e.target.value)}
+                readOnly={!!guestData}
+                placeholder={tr.rsvp_name_placeholder}
+              />
             </div>
             <div style={{marginBottom:24}}>
               <label style={labelStyle}>{tr.rsvp_phone}</label>
-              <input style={inputStyle} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+62 ..."/>
+              <input
+                style={{
+                  ...inputStyle,
+                  background: guestData ? 'var(--cream-warm)' : 'transparent',
+                  color: guestData ? 'var(--ink-soft)' : 'var(--ink)',
+                }}
+                value={phone}
+                onChange={e => !guestData && setPhone(e.target.value)}
+                readOnly={!!guestData}
+                placeholder="+62 ..."
+              />
             </div>
             <div style={{marginBottom:24}}>
               <label style={labelStyle}>{tr.rsvp_attendance}</label>
@@ -75,10 +110,48 @@ export default function RsvpSection({ tr }: { tr: Translations }) {
                 ))}
               </div>
             </div>
-            <div style={{marginBottom:24}}>
-              <label style={labelStyle}>{tr.rsvp_guests}</label>
-              <input style={inputStyle} type="number" value={guests} min={1} max={10} onChange={e=>setGuests(Number(e.target.value))}/>
-            </div>
+            {attending === true && (
+              <div style={{marginBottom:24}}>
+                <label style={labelStyle}>{tr.rsvp_guests}</label>
+                <select
+                  className="form-input"
+                  value={guests}
+                  onChange={e => setGuests(Number(e.target.value))}
+                  style={{
+                    width:'100%', border:0,
+                    borderBottom:'1px solid var(--cream-deep)',
+                    background:'transparent',
+                    padding:'10px 0',
+                    fontFamily:'EB Garamond,serif',
+                    fontSize:16, color:'var(--ink)',
+                    outline:'none',
+                    appearance:'none',
+                  }}
+                >
+                  {Array.from({length: maxSeats}, (_, i) => (
+                    <option key={i+1} value={i+1}>
+                      {i+1} tamu
+                    </option>
+                  ))}
+                </select>
+                <p style={{fontSize:12,color:'var(--sage)',marginTop:4}}>
+                  Maksimal {maxSeats} tamu untuk undangan ini
+                </p>
+              </div>
+            )}
+            {attending === false && (
+              <div style={{
+                padding:'12px 16px',
+                background:'var(--cream-warm)',
+                borderRadius:8,
+                fontSize:14,
+                color:'var(--sage)',
+                fontStyle:'italic',
+                marginBottom:24,
+              }}>
+                Terima kasih telah memberitahu kami. Doa Anda tetap berarti bagi kami 🙏
+              </div>
+            )}
             <button onClick={handleSubmit} disabled={loading}
               style={{width:'100%',background:'var(--forest)',color:'var(--cream)',border:'none',padding:16,fontFamily:'Cinzel,serif',fontSize:11,letterSpacing:4,cursor:'pointer',opacity: loading?0.7:1}}>
               {loading ? '...' : tr.rsvp_submit}

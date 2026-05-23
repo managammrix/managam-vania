@@ -33,6 +33,9 @@ export interface InviteeRow {
   guests?: number
   notes?: string
   sender?: 'agam' | 'vania'
+  ref?: string
+  max_guests?: number | null
+  opened_at?: string | null
 }
 
 export interface MessageLogRow {
@@ -47,6 +50,38 @@ export interface MessageLogRow {
 export interface PhotoRow {
   name: string
   url: string
+}
+
+// ── Invitee lookup by ref (anon) ──────────────────────────────────
+export async function fetchInviteeByRef(ref: string): Promise<InviteeRow | null> {
+  const { data, error } = await supabase
+    .from('invitees')
+    .select('*')
+    .eq('ref', ref)
+    .single()
+  if (error) return null
+  return data
+}
+
+export async function fetchDefaultMaxGuests(): Promise<number> {
+  const { data } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', 'default_max_guests')
+    .single()
+  return parseInt(data?.value ?? '2')
+}
+
+export async function recordInviteeOpen(ref: string) {
+  await supabase
+    .from('invitees')
+    .update({ opened_at: new Date().toISOString() })
+    .eq('ref', ref)
+    .is('opened_at', null)
+}
+
+export function generateRef(): string {
+  return Math.random().toString(36).substring(2, 10)
 }
 
 // ── RSVP ──────────────────────────────────────────────────────────

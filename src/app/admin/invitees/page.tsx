@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import {
   fetchInvitees, upsertInvitee, deleteInvitee,
+  generateRef, supabase,
   InviteeRow,
 } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
@@ -57,7 +58,9 @@ export default function InviteesPage() {
   const [form, setForm] = useState<Partial<InviteeRow>>({
     name:'', phone:'', rsvp_status:'pending',
     guests:1, notes:'', sender:'agam',
+    max_guests: null as number | null,
   })
+  const [defaultMax, setDefaultMax] = useState(2)
   const [importing, setImporting] = useState(false)
   const [preview, setPreview] = useState<Partial<InviteeRow>[]>([])
   const [showPreview, setShowPreview] = useState(false)
@@ -70,7 +73,16 @@ export default function InviteesPage() {
     } finally { setLoading(false) }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    supabase.from('settings')
+      .select('value')
+      .eq('key', 'default_max_guests')
+      .single()
+      .then(({data}) => {
+        if (data) setDefaultMax(parseInt(data.value))
+      })
+  }, [])
 
   const filtered = invitees.filter(i => {
     const matchSearch = i.name.toLowerCase()
@@ -89,10 +101,14 @@ export default function InviteesPage() {
 
   const save = async () => {
     if (!form.name || !form.phone) return
-    await upsertInvitee(form as InviteeRow)
+    const dataToSave = form.id
+      ? form
+      : { ...form, ref: form.ref || generateRef() }
+    await upsertInvitee(dataToSave as InviteeRow)
     setShowForm(false)
     setForm({ name:'', phone:'',
-      rsvp_status:'pending', guests:1, notes:'', sender:'agam' })
+      rsvp_status:'pending', guests:1, notes:'', sender:'agam',
+      max_guests: null })
     load()
   }
 
@@ -241,7 +257,8 @@ export default function InviteesPage() {
             onClick={() => {
               setEditing(null)
               setForm({ name:'', phone:'',
-                rsvp_status:'pending', guests:1, notes:'', sender:'agam' })
+                rsvp_status:'pending', guests:1, notes:'', sender:'agam',
+                max_guests: null })
               setShowForm(true)
             }}
             style={{
@@ -253,6 +270,39 @@ export default function InviteesPage() {
             }}
           >+ TAMBAH TAMU</button>
         </div>
+      </div>
+
+      <div style={{
+        display:'flex', alignItems:'center',
+        gap:12, marginBottom:16,
+        padding:'12px 16px',
+        background:'white', borderRadius:8,
+        border:'0.5px solid #ede5d4',
+        fontSize:13,
+      }}>
+        <span style={{color:'#888'}}>Default maks tamu:</span>
+        <input
+          type="number" min={1} max={20}
+          value={defaultMax}
+          onChange={async e => {
+            const val = Number(e.target.value)
+            setDefaultMax(val)
+            await supabase.from('settings')
+              .upsert({
+                key:'default_max_guests',
+                value: String(val),
+              })
+          }}
+          style={{
+            width:60, padding:'4px 8px',
+            border:'0.5px solid #d9cdb8',
+            borderRadius:6, fontSize:13,
+            textAlign:'center', outline:'none',
+          }}
+        />
+        <span style={{color:'#aaa', fontSize:12}}>
+          kursi per undangan (dapat diubah per tamu)
+        </span>
       </div>
 
       <div style={{
@@ -338,7 +388,7 @@ export default function InviteesPage() {
                 borderBottom:'0.5px solid #ede5d4',
               }}>
                 {['Nama','Telepon','Status',
-                  'Dari','Tamu','Catatan',''].map(h => (
+                  'Dari','Tamu','Dibuka','Catatan',''].map(h => (
                   <th key={h} style={{
                     padding:'12px 16px', textAlign:'left',
                     fontFamily:'Cinzel,serif', fontSize:10,
@@ -392,6 +442,15 @@ export default function InviteesPage() {
                       }}>Kehormatan</span>
                     ) : inv.guests ?? 1}
                   </td>
+                  <td style={{padding:'12px 16px'}}>
+                    {inv.opened_at ? (
+                      <span style={{fontSize:11,color:'#2d5a3d'}}>
+                        ✓ {new Date(inv.opened_at).toLocaleDateString('id')}
+                      </span>
+                    ) : (
+                      <span style={{fontSize:11,color:'#aaa'}}>—</span>
+                    )}
+                  </td>
                   <td style={{padding:'12px 16px',
                     color:'#888',maxWidth:200,
                     overflow:'hidden',
@@ -419,6 +478,30 @@ export default function InviteesPage() {
                           fontSize:11, cursor:'pointer',
                           color:'#c0392b',
                         }}>Hapus</button>
+                      <button
+                        id={`copy-${inv.id}`}
+                        onClick={() => {
+                          const url = `https://managamvania.mrix.ai?ref=${inv.ref}`
+                          navigator.clipboard.writeText(url)
+                            .then(() => {
+                              const btn = document.getElementById(
+                                `copy-${inv.id}`
+                              )
+                              if (btn) {
+                                btn.textContent = '✓'
+                                setTimeout(() => {
+                                  btn.textContent = 'Link'
+                                }, 1500)
+                              }
+                            })
+                        }}
+                        style={{
+                          padding:'4px 12px',
+                          border:'0.5px solid #d9cdb8',
+                          borderRadius:6, background:'white',
+                          fontSize:11, cursor:'pointer',
+                          color:'#2d5a3d',
+                        }}>Link</button>
                     </div>
                   </td>
                 </tr>
@@ -480,6 +563,16 @@ export default function InviteesPage() {
               min={0} max={10}
               onChange={e => setForm(f =>
                 ({...f, guests:Number(e.target.value)}))} />
+            <input type="number"
+              placeholder="Maks tamu (kosong = default)"
+              value={form.max_guests ?? ''}
+              min={1} max={20}
+              onChange={e => setForm(f => ({
+                ...f,
+                max_guests: e.target.value
+                  ? Number(e.target.value) : null,
+              }))}
+              style={inp} />
             <textarea placeholder="Catatan (opsional)"
               value={form.notes ?? ''}
               onChange={e => setForm(f =>

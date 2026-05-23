@@ -24,9 +24,15 @@ export async function sendWhatsApp(
   return data
 }
 
+export interface Recipient {
+  name: string
+  phone: string
+  ref?: string
+}
+
 export async function sendBulkWhatsApp(
   token: string,
-  recipients: Array<{ name: string; phone: string }>,
+  recipients: Recipient[],
   messageTemplate: string
 ): Promise<{ sent: number; failed: number }> {
   let sent = 0
@@ -36,6 +42,13 @@ export async function sendBulkWhatsApp(
     const message = messageTemplate
       .replace(/\{name\}/g, recipient.name)
       .replace(/\{Name\}/g, recipient.name)
+      .replace(/\{ref\}/g, recipient.ref ?? '')
+      .replace(
+        /\{link\}/g,
+        recipient.ref
+          ? `https://managamvania.mrix.ai?ref=${recipient.ref}`
+          : 'https://managamvania.mrix.ai'
+      )
 
     try {
       const result = await sendWhatsApp(token, {

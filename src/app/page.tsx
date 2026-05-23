@@ -1,7 +1,13 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLang } from '@/lib/useLang'
 import { Lang } from '@/lib/translations'
+import {
+  InviteeRow,
+  fetchInviteeByRef,
+  fetchDefaultMaxGuests,
+  recordInviteeOpen,
+} from '@/lib/supabase'
 import EnvelopeScreen from '@/components/EnvelopeScreen'
 import NavDots from '@/components/NavDots'
 import LangToggle from '@/components/LangToggle'
@@ -24,13 +30,36 @@ const POST_SECTIONS = ['cover','story','couple','events','gift','wishes','galler
 
 export default function Home() {
   const [opened, setOpened] = useState(false)
+  const [, setGuestRef] = useState<string | null>(null)
+  const [guestData, setGuestData] = useState<InviteeRow | null>(null)
+  const [defaultMaxGuests, setDefaultMaxGuests] = useState(2)
   const { lang, setLang, tr } = useLang()
   const isPostWedding = new Date() > WEDDING_DATE
   const sections = isPostWedding ? POST_SECTIONS : ALL_SECTIONS
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref) {
+      setGuestRef(ref)
+      fetchInviteeByRef(ref).then(data => {
+        if (data) {
+          setGuestData(data)
+          recordInviteeOpen(ref)
+        }
+      })
+    }
+    fetchDefaultMaxGuests().then(setDefaultMaxGuests)
+  }, [])
+
   return (
     <>
-      <EnvelopeScreen opened={opened} onOpen={() => setOpened(true)} tr={tr} />
+      <EnvelopeScreen
+        opened={opened}
+        onOpen={() => setOpened(true)}
+        tr={tr}
+        guestName={guestData?.name ?? null}
+      />
       {opened && (
         <>
           <AudioPlayer play={opened} />
@@ -42,7 +71,13 @@ export default function Home() {
             <StorySection tr={tr} />
             <CoupleSection tr={tr} />
             <EventsSection tr={tr} />
-            {!isPostWedding && <RsvpSection tr={tr} />}
+            {!isPostWedding && (
+              <RsvpSection
+                tr={tr}
+                guestData={guestData}
+                defaultMaxGuests={defaultMaxGuests}
+              />
+            )}
             <GiftSection tr={tr} />
             <WishesSection tr={tr} />
             <GallerySection tr={tr} />

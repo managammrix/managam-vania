@@ -58,3 +58,57 @@ alter table public.message_log enable row level security;
 drop policy if exists "Public access on message_log" on public.message_log;
 drop policy if exists "Auth users only on message_log" on public.message_log;
 -- No policies → anon denied. service_role bypasses RLS.
+
+-- ── INVITEES — unique ref links, max guests, opened tracking ─────
+alter table public.invitees
+  add column if not exists ref text unique;
+
+alter table public.invitees
+  add column if not exists max_guests integer;
+
+alter table public.invitees
+  add column if not exists opened_at timestamptz;
+
+-- Anon needs to look up invitee by ref (for personalized invite) and
+-- update opened_at (first-open tracking). Reads are restricted to
+-- queries that filter by ref via the policy below.
+drop policy if exists "Anon read invitee by ref" on public.invitees;
+drop policy if exists "Anon update opened_at" on public.invitees;
+
+create policy "Anon read invitee by ref"
+  on public.invitees for select
+  to anon
+  using (ref is not null);
+
+create policy "Anon update opened_at"
+  on public.invitees for update
+  to anon
+  using (ref is not null)
+  with check (ref is not null);
+
+-- ── SETTINGS — global key/value config (e.g. default_max_guests) ─
+create table if not exists public.settings (
+  key text primary key,
+  value text not null
+);
+alter table public.settings
+  enable row level security;
+
+drop policy if exists "Anon read settings" on public.settings;
+drop policy if exists "Anon write settings" on public.settings;
+
+create policy "Anon read settings"
+  on public.settings for select
+  to anon using (true);
+create policy "Anon write settings"
+  on public.settings for all
+  to anon using (true) with check (true);
+
+insert into public.settings (key, value)
+  values ('default_max_guests', '2')
+  on conflict (key) do nothing;
+
+-- Generate refs for all existing invitees that don't have one yet
+update public.invitees
+  set ref = substr(md5(random()::text), 1, 8)
+  where ref is null;

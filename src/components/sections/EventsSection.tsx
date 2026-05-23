@@ -45,7 +45,12 @@ export default function EventsSection({ tr }: { tr: Translations }) {
           <div className="reveal reveal-d3" style={card}>
             <span style={{fontFamily:'Cinzel,serif',fontSize:9,letterSpacing:3,color:'var(--gold)',marginBottom:12,display:'block'}}>{tr.sun_label}</span>
             <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:26,fontStyle:'italic',color:'var(--forest-deep)',marginBottom:16,lineHeight:1.2}}>{tr.thanksgiving_title}</div>
-            <span style={{fontFamily:'Cinzel,serif',fontSize:11,letterSpacing:2,color:'var(--forest)',marginBottom:14,display:'block'}}>{tr.congregation}</span>
+            <span className="event-card-time" style={{fontFamily:'Cinzel,serif',fontSize:13,letterSpacing:2,color:'var(--forest)',marginBottom:8,display:'block'}}>
+              {tr.thanksgiving_time}
+            </span>
+            <span style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--sage)',display:'block',marginBottom:14}}>
+              {tr.congregation}
+            </span>
             <div style={{fontSize:14,color:'var(--ink-soft)',lineHeight:1.75,marginBottom:20}}>
               GPPS Imanuel Kersana<br/>
               Jl. Raya No. 04, RT.01/RW.01<br/>
