@@ -54,10 +54,14 @@ export default function AdminDashboard() {
           i.attending !== false
         ).reduce((sum, i) => sum + (i.guests ?? 1), 0),
         reminder_sent: logs.some(l =>
-          l.message?.includes('/u/reminder')
+          l.message?.includes('/u/reminder') &&
+          l.sent_at !== null &&
+          new Date(l.sent_at) > new Date('2026-06-07T02:00:00Z')
         ),
         h7_sent: logs.some(l =>
-          l.message?.includes('/u/h7')
+          l.message?.includes('/u/h7') &&
+          l.sent_at !== null &&
+          new Date(l.sent_at) > new Date('2026-06-13T02:00:00Z')
         ),
       })
     }
