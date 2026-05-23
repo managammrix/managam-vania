@@ -79,6 +79,22 @@ export async function submitRsvp(data: Omit<RsvpRow, 'id' | 'created_at'>) {
   if (error) throw error
 }
 
+export async function updateInviteeRsvp(
+  id: string,
+  attending: boolean,
+  guests: number
+) {
+  const { error } = await supabase
+    .from('invitees')
+    .update({
+      rsvp_status: attending ? 'confirmed' : 'declined',
+      attending: attending,
+      guests: guests,
+    })
+    .eq('id', id)
+  if (error) throw error
+}
+
 // ── Wishes ────────────────────────────────────────────────────────
 export async function fetchWishes(): Promise<WishRow[]> {
   const { data, error } = await supabase

@@ -110,6 +110,16 @@ $$;
 
 grant execute on function public.get_invitee_by_ref(text) to anon;
 
+-- Allow anon to update their own RSVP status when they came in
+-- via a personal ref link. The RsvpSection on the public site
+-- calls updateInviteeRsvp(id, attending, guests) after submit.
+drop policy if exists "Anon update own rsvp status" on public.invitees;
+create policy "Anon update own rsvp status"
+  on public.invitees for update
+  to anon
+  using (ref is not null)
+  with check (ref is not null);
+
 -- ── SETTINGS — global key/value config (e.g. default_max_guests) ─
 create table if not exists public.settings (
   key text primary key,

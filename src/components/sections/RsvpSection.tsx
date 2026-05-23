@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Translations } from '@/lib/translations'
-import { InviteeRow, submitRsvp } from '@/lib/supabase'
+import { InviteeRow, submitRsvp, updateInviteeRsvp } from '@/lib/supabase'
 import { useReveal } from '../useReveal'
 
 interface Props {
@@ -32,9 +32,19 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
     if (!name.trim()) { alert(tr.alert_name); return }
     if (attending === null) { alert(tr.alert_attend); return }
     setLoading(true)
+    const guestCount = attending ? guests : 0
     try {
-      await submitRsvp({ name, phone, attending, guests })
+      await submitRsvp({ name, phone, attending, guests: guestCount })
     } catch { /* still show success — store locally */ }
+    // If this guest came in via a personal ref link, also update
+    // the invitees row so the admin dashboard reflects their status.
+    if (guestData?.id) {
+      try {
+        await updateInviteeRsvp(guestData.id, attending, guestCount)
+      } catch (err) {
+        console.error('[rsvp] invitee update error:', err)
+      }
+    }
     setLoading(false)
     setSubmitted(true)
   }
@@ -162,11 +172,31 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
             </button>
           </div>
         ) : (
-          <div className="reveal" style={{textAlign:'center',padding:'40px 0'}}>
-            <div style={{fontSize:48}}>🌿</div>
-            <h3 style={{fontFamily:'Cormorant Garamond,serif',fontSize:28,fontStyle:'italic',color:'var(--forest)',marginBottom:12,marginTop:16}}>{tr.rsvp_success_title}</h3>
-            <p style={{color:'var(--sage)',fontSize:15,lineHeight:1.7}}>{tr.rsvp_success_body}</p>
-            <p style={{color:'var(--forest)',fontStyle:'italic',marginTop:8,fontSize:15}}>#BuildingMANAGAMVANturesWithGod</p>
+          <div style={{
+            textAlign:'center',
+            padding:'48px 24px',
+          }}>
+            <div style={{fontSize:40, marginBottom:16}}>🌿</div>
+            <h3 style={{
+              fontFamily:'Cormorant Garamond,serif',
+              fontSize:28, fontStyle:'italic',
+              color:'var(--forest)', marginBottom:12,
+            }}>Terima kasih!</h3>
+            <p style={{
+              fontFamily:'Cormorant Garamond,serif',
+              fontSize:16, color:'var(--ink-soft)',
+              lineHeight:1.7, marginBottom:8,
+            }}>
+              Kami sangat bersukacita menantikan<br/>
+              kehadiran Anda pada hari yang penuh berkat.
+            </p>
+            <p style={{
+              fontFamily:'Cinzel,serif', fontSize:10,
+              letterSpacing:3, color:'var(--sage)',
+              marginTop:16,
+            }}>
+              #BuildingMANAGAMVANturesWithGod
+            </p>
           </div>
         )}
       </div>
