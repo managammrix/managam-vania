@@ -28,6 +28,7 @@ const ALL_SECTIONS = ['cover','story','couple','events','rsvp','gift','wishes','
 const POST_SECTIONS = ['cover','story','couple','events','gift','wishes','gallery','closing'] as const
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false)
   const [opened, setOpened] = useState(false)
   const [, setGuestRef] = useState<string | null>(null)
   const [guestData, setGuestData] = useState<InviteeRow | null>(null)
@@ -37,6 +38,11 @@ export default function Home() {
   const sections = isPostWedding ? POST_SECTIONS : ALL_SECTIONS
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('ref')
     if (ref) {
@@ -46,7 +52,7 @@ export default function Home() {
       })
     }
     fetchDefaultMaxGuests().then(setDefaultMaxGuests)
-  }, [])
+  }, [mounted])
 
   return (
     <>
