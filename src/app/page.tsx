@@ -60,7 +60,7 @@ export default function Home() {
         opened={opened}
         onOpen={() => setOpened(true)}
         tr={tr}
-        guestName={guestData?.name ?? null}
+        guestName={mounted ? (guestData?.name ?? null) : null}
       />
       {opened && (
         <>
@@ -76,8 +76,8 @@ export default function Home() {
             {!isPostWedding && (
               <RsvpSection
                 tr={tr}
-                guestData={guestData}
-                defaultMaxGuests={defaultMaxGuests}
+                guestData={mounted ? guestData : null}
+                defaultMaxGuests={mounted ? defaultMaxGuests : 2}
               />
             )}
             <GiftSection tr={tr} />
