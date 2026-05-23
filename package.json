@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "cp public/_redirects out/_redirects",
     "start": "next start",
     "lint": "next lint"
   },
