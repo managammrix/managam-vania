@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   fetchInvitees, upsertInvitee, deleteInvitee,
   generateRef, supabase,
@@ -61,6 +61,11 @@ export default function InviteesPage() {
     max_guests: null as number | null,
   })
   const [defaultMax, setDefaultMax] = useState(2)
+  const defaultMaxRef = useRef(2)
+
+  useEffect(() => {
+    defaultMaxRef.current = defaultMax
+  }, [defaultMax])
   const [importing, setImporting] = useState(false)
   const [preview, setPreview] = useState<Partial<InviteeRow>[]>([])
   const [showPreview, setShowPreview] = useState(false)
@@ -108,7 +113,7 @@ export default function InviteesPage() {
     setShowForm(false)
     setForm({ name:'', phone:'',
       rsvp_status:'pending', notes:'', sender:'agam',
-      max_guests: defaultMax })
+      max_guests: defaultMaxRef.current })
     load()
   }
 
@@ -257,8 +262,8 @@ export default function InviteesPage() {
             onClick={() => {
               setEditing(null)
               setForm({ name:'', phone:'',
-                rsvp_status:'pending', guests:1, notes:'', sender:'agam',
-                max_guests: null })
+                rsvp_status:'pending', notes:'', sender:'agam',
+                max_guests: defaultMaxRef.current })
               setShowForm(true)
             }}
             style={{
