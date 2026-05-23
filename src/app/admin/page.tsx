@@ -107,7 +107,74 @@ export default function AdminDashboard() {
       </div>
 
       <div style={{
-        marginTop:40, padding:'24px',
+        marginTop:24,
+        background:'white',
+        borderRadius:12,
+        padding:'20px 24px',
+        border:'0.5px solid #ede5d4',
+      }}>
+        <div style={{
+          fontFamily:'Cinzel,serif',
+          fontSize:10, letterSpacing:3,
+          color:'#6b8f71', marginBottom:16,
+        }}>JADWAL OTOMATIS</div>
+
+        {[
+          {
+            name: 'Reminder RSVP',
+            date: '7 Juni 2026 · 09:00 WIB',
+            target: 'Tamu belum RSVP',
+            template: 'Reminder RSVP (Sedang)',
+            fired: new Date() > new Date('2026-06-07T02:00:00Z'),
+          },
+          {
+            name: 'H-7 Blast',
+            date: '13 Juni 2026 · 09:00 WIB',
+            target: 'Tamu konfirmasi hadir',
+            template: 'H-7 (Sedang)',
+            fired: new Date() > new Date('2026-06-13T02:00:00Z'),
+          },
+        ].map(job => (
+          <div key={job.name} style={{
+            display:'flex',
+            alignItems:'center',
+            justifyContent:'space-between',
+            padding:'12px 0',
+            borderBottom:'0.5px solid #f0ece4',
+            fontSize:13,
+          }}>
+            <div>
+              <div style={{
+                fontWeight:500,
+                color:'#1e3d2a',
+                marginBottom:2,
+              }}>{job.name}</div>
+              <div style={{color:'#888', fontSize:12}}>
+                {job.date} · {job.target}
+              </div>
+              <div style={{
+                color:'#aaa', fontSize:11,
+                fontFamily:'Cinzel,serif',
+                letterSpacing:1,
+              }}>{job.template}</div>
+            </div>
+            <span style={{
+              padding:'3px 10px',
+              borderRadius:6,
+              fontSize:11,
+              background: job.fired ? '#e8f5e9' : '#fff8ec',
+              color: job.fired ? '#2d5a3d' : '#f0a500',
+              fontWeight:500,
+              flexShrink:0,
+            }}>
+              {job.fired ? 'TERKIRIM' : 'TERJADWAL'}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        marginTop:24, padding:'24px',
         background:'white', borderRadius:12,
         border:'0.5px solid #ede5d4',
       }}>

@@ -91,6 +91,30 @@ Every push to `main` auto-deploys. ✓
 
 ---
 
+## Edge Functions (scheduled WhatsApp blasts)
+
+The `send-blast` Edge Function fires WhatsApp messages to filtered groups of invitees. It's invoked on a schedule via `pg_cron` — see `supabase/cron.sql`.
+
+```bash
+# Deploy the send-blast function
+supabase functions deploy send-blast
+
+# Set secrets
+supabase secrets set FONNTE_TOKEN=your_token
+supabase secrets set SUPABASE_URL=https://your-ref.supabase.co
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your_key
+
+# Test manually
+supabase functions invoke send-blast \
+  --body '{"type":"reminder_rsvp"}'
+```
+
+After the function is deployed, enable `pg_cron` + `pg_net` in **Database → Extensions**, then run `supabase/cron.sql` (substituting your project ref) to schedule the two automated blasts:
+- Reminder RSVP — 7 Juni 2026 · 09:00 WIB → all pending invitees
+- H-7 — 13 Juni 2026 · 09:00 WIB → all confirmed-attending invitees
+
+---
+
 ## Project structure
 
 ```
