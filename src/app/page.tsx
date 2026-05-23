@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useLang } from '@/lib/useLang'
 import { Lang } from '@/lib/translations'
 import {
@@ -27,8 +28,7 @@ const WEDDING_DATE = new Date('2026-06-20T10:00:00+07:00')
 const ALL_SECTIONS = ['cover','story','couple','events','rsvp','gift','wishes','gallery','closing'] as const
 const POST_SECTIONS = ['cover','story','couple','events','gift','wishes','gallery','closing'] as const
 
-export default function Home() {
-  const [mounted, setMounted] = useState(false)
+function HomeContent() {
   const [opened, setOpened] = useState(false)
   const [, setGuestRef] = useState<string | null>(null)
   const [guestData, setGuestData] = useState<InviteeRow | null>(null)
@@ -38,11 +38,6 @@ export default function Home() {
   const sections = isPostWedding ? POST_SECTIONS : ALL_SECTIONS
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (!mounted) return
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('ref')
     if (!ref) {
@@ -76,15 +71,15 @@ export default function Home() {
     })
 
     fetchDefaultMaxGuests().then(setDefaultMaxGuests)
-  }, [mounted])
+  }, [])
 
   return (
-    <div suppressHydrationWarning>
+    <div>
       <EnvelopeScreen
         opened={opened}
         onOpen={() => setOpened(true)}
         tr={tr}
-        guestName={mounted ? (guestData?.name ?? null) : null}
+        guestName={guestData?.name ?? null}
       />
       {opened && (
         <>
@@ -100,8 +95,8 @@ export default function Home() {
             {!isPostWedding && (
               <RsvpSection
                 tr={tr}
-                guestData={mounted ? guestData : null}
-                defaultMaxGuests={mounted ? defaultMaxGuests : 2}
+                guestData={guestData}
+                defaultMaxGuests={defaultMaxGuests}
               />
             )}
             <GiftSection tr={tr} />
@@ -114,3 +109,9 @@ export default function Home() {
     </div>
   )
 }
+
+// SSR disabled — no server render = no hydration mismatch possible.
+// Acceptable for a client-side-only wedding invitation.
+export default dynamic(() => Promise.resolve(HomeContent), {
+  ssr: false,
+})
