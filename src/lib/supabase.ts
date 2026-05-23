@@ -32,6 +32,7 @@ export interface InviteeRow {
   attending?: boolean | null
   guests?: number
   notes?: string
+  sender?: 'agam' | 'vania'
 }
 
 export interface MessageLogRow {

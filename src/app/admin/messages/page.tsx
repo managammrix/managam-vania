@@ -20,8 +20,6 @@ export default function MessagesPage() {
   const [tokenVania, setTokenVania] = useState('')
   const [activeToken, setActiveToken] =
     useState<'agam'|'vania'>('agam')
-  const currentToken = activeToken === 'agam'
-    ? tokenAgam : tokenVania
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template>(TEMPLATES[0])
   const [selectedVersion, setSelectedVersion] =
@@ -58,7 +56,7 @@ export default function MessagesPage() {
     setMessage(ver.message)
   }
 
-  const recipients = invitees.filter(i => {
+  const recipients: InviteeRow[] = invitees.filter(i => {
     if (recipientFilter === 'pending')
       return i.rsvp_status === 'pending'
     if (recipientFilter === 'confirmed')
@@ -69,8 +67,8 @@ export default function MessagesPage() {
   })
 
   const send = async () => {
-    if (!currentToken) {
-      alert('Masukkan Fonnte API token dulu.')
+    if (!tokenAgam && !tokenVania) {
+      alert('Masukkan minimal satu Fonnte token.')
       return
     }
     if (!message) return
@@ -81,22 +79,57 @@ export default function MessagesPage() {
     setSending(true)
     setResult(null)
 
+    const agamRecipients = recipients.filter(
+      i => (i.sender ?? 'agam') === 'agam'
+    )
+    const vaniaRecipients = recipients.filter(
+      i => i.sender === 'vania'
+    )
+
+    let totalSent = 0
+    let totalFailed = 0
+
     try {
-      const res = await sendBulkWhatsApp(
-        currentToken, recipients, message
-      )
-      setResult(res)
+      if (agamRecipients.length > 0 && tokenAgam) {
+        const res = await sendBulkWhatsApp(
+          tokenAgam,
+          agamRecipients.map(i => ({ name: i.name, phone: i.phone })),
+          message
+        )
+        totalSent += res.sent
+        totalFailed += res.failed
+      } else if (agamRecipients.length > 0 && !tokenAgam) {
+        totalFailed += agamRecipients.length
+      }
+
+      if (vaniaRecipients.length > 0 && tokenVania) {
+        const res = await sendBulkWhatsApp(
+          tokenVania,
+          vaniaRecipients.map(i => ({ name: i.name, phone: i.phone })),
+          message
+        )
+        totalSent += res.sent
+        totalFailed += res.failed
+      } else if (vaniaRecipients.length > 0 && !tokenVania) {
+        totalFailed += vaniaRecipients.length
+      }
+
+      const finalResult = { sent: totalSent, failed: totalFailed }
+      setResult(finalResult)
+
       await logMessage({
-        recipient_count: recipients.length,
+        recipient_count: totalSent,
         message,
-        recipients: recipients,
-        status: res.failed === 0 ? 'sent' : 'partial',
+        recipients,
+        status: totalFailed === 0 ? 'sent' : 'partial',
       })
+
       setLog(l => [{
         time: new Date().toLocaleTimeString('id'),
-        count: res.sent,
-        status: res.failed===0 ? 'Berhasil' :
-          `${res.sent} berhasil, ${res.failed} gagal`,
+        count: totalSent,
+        status: totalFailed === 0
+          ? 'Berhasil'
+          : `${totalSent} berhasil, ${totalFailed} gagal`,
       }, ...l])
     } finally { setSending(false) }
   }
@@ -361,6 +394,30 @@ export default function MessagesPage() {
             </div>
           )}
 
+          {(() => {
+            const missingAgam = recipients.filter(
+              i => (i.sender ?? 'agam') === 'agam'
+            ).length > 0 && !tokenAgam
+            const missingVania = recipients.filter(
+              i => i.sender === 'vania'
+            ).length > 0 && !tokenVania
+            if (missingAgam || missingVania) return (
+              <div style={{
+                padding:'10px 14px',
+                background:'#fff8ec',
+                border:'0.5px solid #f0a500',
+                borderRadius:8, fontSize:12,
+                color:'#b8600a', marginBottom:10,
+              }}>
+                ⚠️ Token {missingAgam ? 'Managam' : ''}
+                {missingAgam && missingVania ? ' dan ' : ''}
+                {missingVania ? 'Vania' : ''} belum diisi —
+                pesan ke tamu tersebut tidak akan terkirim.
+              </div>
+            )
+            return null
+          })()}
+
           <button
             onClick={send}
             disabled={sending || recipients.length===0}
@@ -373,9 +430,21 @@ export default function MessagesPage() {
                 ? 0.6 : 1,
             }}
           >
-            {sending ?
-              `MENGIRIM... (${recipients.length} pesan)` :
-              `KIRIM KE ${recipients.length} PENERIMA`
+            {sending
+              ? `MENGIRIM...`
+              : (() => {
+                  const agam = recipients.filter(
+                    i => (i.sender ?? 'agam') === 'agam'
+                  ).length
+                  const vania = recipients.filter(
+                    i => i.sender === 'vania'
+                  ).length
+                  if (agam > 0 && vania > 0)
+                    return `KIRIM ${agam} (Managam) + ${vania} (Vania)`
+                  if (vania > 0)
+                    return `KIRIM ${vania} PENERIMA (Vania)`
+                  return `KIRIM ${agam} PENERIMA (Managam)`
+                })()
             }
           </button>
 

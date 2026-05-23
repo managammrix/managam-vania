@@ -21,11 +21,11 @@ function getStatusBadge(inv: InviteeRow): {
 }
 
 function downloadCsvTemplate() {
-  const headers = 'name,phone,guests,notes'
+  const headers = 'name,phone,guests,notes,sender'
   const example = [
-    'Budi Santoso,628111111111,2,Teman kuliah',
-    'Ibu Maria,628222222222,0,Rekan jauh',
-    'Pastor Yohanes,628333333333,1,',
+    'Budi Santoso,628111111111,2,Teman kuliah,agam',
+    'Ibu Maria,628222222222,0,Rekan jauh,vania',
+    'Pastor Yohanes,628333333333,1,,agam',
   ].join('\n')
   const content = headers + '\n' + example
   const blob = new Blob([content], { type:'text/csv;charset=utf-8;' })
@@ -51,12 +51,12 @@ export default function InviteesPage() {
   const [invitees, setInvitees] = useState<InviteeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<string>('all')
+  const [filter, setFilter] = useState<'all'|'pending'|'confirmed'|'declined'|'agam_only'|'vania_only'>('all')
   const [editing, setEditing] = useState<InviteeRow | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Partial<InviteeRow>>({
     name:'', phone:'', rsvp_status:'pending',
-    guests:1, notes:'',
+    guests:1, notes:'', sender:'agam',
   })
   const [importing, setImporting] = useState(false)
   const [preview, setPreview] = useState<Partial<InviteeRow>[]>([])
@@ -76,8 +76,14 @@ export default function InviteesPage() {
     const matchSearch = i.name.toLowerCase()
       .includes(search.toLowerCase()) ||
       i.phone.includes(search)
-    const matchFilter = filter === 'all' ||
-      i.rsvp_status === filter
+    const matchFilter =
+      filter === 'all' ? true :
+      filter === 'pending' ? i.rsvp_status === 'pending' :
+      filter === 'confirmed' ? i.rsvp_status === 'confirmed' :
+      filter === 'declined' ? i.rsvp_status === 'declined' :
+      filter === 'agam_only' ? (i.sender ?? 'agam') === 'agam' :
+      filter === 'vania_only' ? i.sender === 'vania' :
+      true
     return matchSearch && matchFilter
   })
 
@@ -86,7 +92,7 @@ export default function InviteesPage() {
     await upsertInvitee(form as InviteeRow)
     setShowForm(false)
     setForm({ name:'', phone:'',
-      rsvp_status:'pending', guests:1, notes:'' })
+      rsvp_status:'pending', guests:1, notes:'', sender:'agam' })
     load()
   }
 
@@ -130,6 +136,8 @@ export default function InviteesPage() {
       ['guests','tamu','seats','kursi','jumlah'].includes(h))
     const notesIdx = headers.findIndex(h =>
       ['notes','catatan','keterangan'].includes(h))
+    const senderIdx = headers.findIndex(h =>
+      ['sender','dari','pengirim'].includes(h))
 
     if (nameIdx === -1 || phoneIdx === -1) {
       alert('CSV harus punya kolom nama dan phone/telepon')
@@ -150,6 +158,11 @@ export default function InviteesPage() {
           : 1,
         notes: notesIdx >= 0 ? (cols[notesIdx] ?? '') : '',
         rsvp_status: 'pending' as const,
+        sender: (senderIdx >= 0
+          ? (['vania','v'].includes(
+              (cols[senderIdx] ?? '').toLowerCase()
+            ) ? 'vania' : 'agam')
+          : 'agam') as 'agam' | 'vania',
       }
     }).filter(r => r.name && r.phone)
 
@@ -228,7 +241,7 @@ export default function InviteesPage() {
             onClick={() => {
               setEditing(null)
               setForm({ name:'', phone:'',
-                rsvp_status:'pending', guests:1, notes:'' })
+                rsvp_status:'pending', guests:1, notes:'', sender:'agam' })
               setShowForm(true)
             }}
             style={{
@@ -255,7 +268,7 @@ export default function InviteesPage() {
             fontSize:14, outline:'none',
           }}
         />
-        {['all','pending','confirmed','declined'].map(f => (
+        {(['all','pending','confirmed','declined','agam_only','vania_only'] as const).map(f => (
           <button key={f}
             onClick={() => setFilter(f)}
             style={{
@@ -269,7 +282,9 @@ export default function InviteesPage() {
           >
             {f==='all' ? 'SEMUA' :
              f==='pending' ? 'PENDING' :
-             f==='confirmed' ? 'HADIR' : 'TIDAK'}
+             f==='confirmed' ? 'HADIR' :
+             f==='declined' ? 'TIDAK' :
+             f==='agam_only' ? 'MANAGAM' : 'VANIA'}
           </button>
         ))}
       </div>
@@ -323,7 +338,7 @@ export default function InviteesPage() {
                 borderBottom:'0.5px solid #ede5d4',
               }}>
                 {['Nama','Telepon','Status',
-                  'Tamu','Catatan',''].map(h => (
+                  'Dari','Tamu','Catatan',''].map(h => (
                   <th key={h} style={{
                     padding:'12px 16px', textAlign:'left',
                     fontFamily:'Cinzel,serif', fontSize:10,
@@ -353,6 +368,18 @@ export default function InviteesPage() {
                       color: badge.color,
                     }}>
                       {badge.label}
+                    </span>
+                  </td>
+                  <td style={{padding:'12px 16px'}}>
+                    <span style={{
+                      padding:'2px 8px', borderRadius:4,
+                      fontSize:11, fontWeight:500,
+                      background: inv.sender==='vania'
+                        ? '#fbeaf0' : '#e8f5e9',
+                      color: inv.sender==='vania'
+                        ? '#993556' : '#2d5a3d',
+                    }}>
+                      {inv.sender==='vania' ? 'Vania' : 'Managam'}
                     </span>
                   </td>
                   <td style={{padding:'12px 16px',
@@ -459,6 +486,40 @@ export default function InviteesPage() {
                 ({...f, notes:e.target.value}))}
               style={{...inp, height:80,
                 resize:'vertical'}} />
+            <div style={{marginBottom:12}}>
+              <label style={{
+                fontFamily:'Cinzel,serif', fontSize:10,
+                letterSpacing:2, color:'#6b8f71',
+                display:'block', marginBottom:8,
+              }}>DIUNDANG OLEH</label>
+              <div style={{display:'flex', gap:8}}>
+                {[
+                  {value:'agam', label:'Managam'},
+                  {value:'vania', label:'Vania'},
+                ].map(s => (
+                  <button key={s.value}
+                    type="button"
+                    onClick={() => setForm(f =>
+                      ({...f, sender: s.value as
+                        'agam'|'vania'}))}
+                    style={{
+                      flex:1, padding:'10px',
+                      borderRadius:8,
+                      border:`0.5px solid ${
+                        form.sender===s.value
+                          ? '#1e3d2a' : '#d9cdb8'
+                      }`,
+                      background: form.sender===s.value
+                        ? '#1e3d2a' : 'white',
+                      color: form.sender===s.value
+                        ? 'white' : '#888',
+                      fontSize:12, cursor:'pointer',
+                      fontFamily:'Cinzel,serif',
+                      letterSpacing:1,
+                    }}>{s.label}</button>
+                ))}
+              </div>
+            </div>
             <div style={{
               display:'flex', gap:12, marginTop:8,
             }}>
@@ -517,7 +578,7 @@ export default function InviteesPage() {
               }}>
                 <thead>
                   <tr style={{background:'#f8f7f4'}}>
-                    {['Nama','Telepon','Tamu','Catatan'].map(h => (
+                    {['Nama','Telepon','Dari','Tamu','Catatan'].map(h => (
                       <th key={h} style={{
                         padding:'10px 12px', textAlign:'left',
                         fontFamily:'Cinzel,serif', fontSize:10,
@@ -541,6 +602,18 @@ export default function InviteesPage() {
                           ? '#2d5a3d' : '#c0392b',
                       }}>
                         {row.phone}
+                      </td>
+                      <td style={{padding:'10px 12px'}}>
+                        <span style={{
+                          padding:'2px 8px', borderRadius:4,
+                          fontSize:11,
+                          background: row.sender==='vania'
+                            ? '#fbeaf0' : '#e8f5e9',
+                          color: row.sender==='vania'
+                            ? '#993556' : '#2d5a3d',
+                        }}>
+                          {row.sender==='vania' ? 'Vania' : 'Managam'}
+                        </span>
                       </td>
                       <td style={{
                         padding:'10px 12px',
