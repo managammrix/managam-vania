@@ -35,6 +35,8 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{
     sent:number; failed:number
+    agam: { sent:number; failed:number }
+    vania: { sent:number; failed:number }
   }|null>(null)
   const [log, setLog] = useState<Array<{
     time:string; count:number; status:string
@@ -136,7 +138,7 @@ export default function MessagesPage() {
     console.log('[blast] vania sample recipient:', vaniaRecipients[0])
 
     try {
-      const results = await Promise.all([
+      const [agamResult, vaniaResult] = await Promise.all([
         agamRecipients.length > 0 && tokenAgam
           ? sendBulkWhatsApp(
               tokenAgam,
@@ -144,8 +146,11 @@ export default function MessagesPage() {
                 name: i.name, phone: i.phone, ref: i.ref,
               })),
               currentMessage
-            )
-          : Promise.resolve({ sent: 0, failed: agamRecipients.length }),
+            ).catch(err => {
+              console.error('[blast] agam error:', err)
+              return { sent: 0, failed: agamRecipients.length }
+            })
+          : Promise.resolve({ sent: 0, failed: 0 }),
         vaniaRecipients.length > 0 && tokenVania
           ? sendBulkWhatsApp(
               tokenVania,
@@ -153,19 +158,25 @@ export default function MessagesPage() {
                 name: i.name, phone: i.phone, ref: i.ref,
               })),
               currentMessage
-            )
-          : Promise.resolve({ sent: 0, failed: vaniaRecipients.length }),
+            ).catch(err => {
+              console.error('[blast] vania error:', err)
+              return { sent: 0, failed: vaniaRecipients.length }
+            })
+          : Promise.resolve({ sent: 0, failed: 0 }),
       ])
 
-      const totalSent = results.reduce(
-        (sum, r) => sum + r.sent, 0
-      )
-      const totalFailed = results.reduce(
-        (sum, r) => sum + r.failed, 0
-      )
+      const totalSent = agamResult.sent + vaniaResult.sent
+      const totalFailed = agamResult.failed + vaniaResult.failed
 
-      const finalResult = { sent: totalSent, failed: totalFailed }
-      setResult(finalResult)
+      console.log('[blast] agam result:', agamResult)
+      console.log('[blast] vania result:', vaniaResult)
+
+      setResult({
+        sent: totalSent,
+        failed: totalFailed,
+        agam: agamResult,
+        vania: vaniaResult,
+      })
 
       await logMessage({
         recipient_count: totalSent,
@@ -549,11 +560,30 @@ export default function MessagesPage() {
                 result.failed===0 ? '#2d5a3d' : '#f0a500'
               }`,
               fontSize:14,
+              display:'flex',
+              flexDirection:'column',
+              gap:6,
             }}>
-              ✓ {result.sent} pesan terkirim
-              {result.failed > 0 &&
-                ` · ${result.failed} gagal`
-              }
+              <div>
+                ✓ {result.sent} pesan terkirim
+                {result.failed > 0 &&
+                  ` · ${result.failed} gagal`
+                }
+              </div>
+              {(result.agam.sent > 0 || result.agam.failed > 0) && (
+                <div style={{fontSize:12, color:'#2d5a3d'}}>
+                  ↳ Managam: {result.agam.sent} terkirim
+                  {result.agam.failed > 0 &&
+                    ` · ${result.agam.failed} gagal`}
+                </div>
+              )}
+              {(result.vania.sent > 0 || result.vania.failed > 0) && (
+                <div style={{fontSize:12, color:'#993556'}}>
+                  ↳ Vania: {result.vania.sent} terkirim
+                  {result.vania.failed > 0 &&
+                    ` · ${result.vania.failed} gagal`}
+                </div>
+              )}
             </div>
           )}
 
