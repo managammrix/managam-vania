@@ -45,12 +45,36 @@ export default function Home() {
     if (!mounted) return
     const params = new URLSearchParams(window.location.search)
     const ref = params.get('ref')
-    if (ref) {
-      setGuestRef(ref)
-      fetchInviteeByRef(ref).then(data => {
-        if (data) setGuestData(data)
-      })
+    if (!ref) {
+      fetchDefaultMaxGuests().then(setDefaultMaxGuests)
+      return
     }
+
+    setGuestRef(ref)
+
+    // Check sessionStorage cache first for speed (mobile)
+    const cached = sessionStorage.getItem(`guest_${ref}`)
+    if (cached) {
+      try {
+        const data = JSON.parse(cached)
+        setGuestData(data)
+        fetchDefaultMaxGuests().then(setDefaultMaxGuests)
+        return
+      } catch {}
+    }
+
+    fetchInviteeByRef(ref).then(data => {
+      if (data) {
+        setGuestData(data)
+        sessionStorage.setItem(
+          `guest_${ref}`,
+          JSON.stringify(data)
+        )
+      }
+    }).catch(err => {
+      console.error('[ref] fetch error:', err)
+    })
+
     fetchDefaultMaxGuests().then(setDefaultMaxGuests)
   }, [mounted])
 

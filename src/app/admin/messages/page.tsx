@@ -22,8 +22,6 @@ export default function MessagesPage() {
   const [invitees, setInvitees] = useState<InviteeRow[]>([])
   const [tokenAgam, setTokenAgam] = useState('')
   const [tokenVania, setTokenVania] = useState('')
-  const [activeToken, setActiveToken] =
-    useState<'agam'|'vania'>('agam')
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template>(TEMPLATES[0])
   const [selectedVersion, setSelectedVersion] =
@@ -134,7 +132,6 @@ export default function MessagesPage() {
     console.log('[blast] vania recipients:', vaniaRecipients.length)
     console.log('[blast] tokenAgam present:', !!tokenAgam, 'length:', tokenAgam.length)
     console.log('[blast] tokenVania present:', !!tokenVania, 'length:', tokenVania.length)
-    console.log('[blast] active token tab:', activeToken)
     console.log('[blast] vania sample recipient:', vaniaRecipients[0])
 
     try {
@@ -338,108 +335,88 @@ export default function MessagesPage() {
             <div style={{
               fontFamily:'Cinzel,serif', fontSize:10,
               letterSpacing:3, color:'#6b8f71',
-              marginBottom:12,
-            }}>FONNTE TOKEN</div>
+              marginBottom:16,
+            }}>FONNTE API TOKEN</div>
 
-            <div style={{
-              display:'flex', gap:8, marginBottom:16,
-            }}>
-              {[
-                {key:'agam', label:'Managam'},
-                {key:'vania', label:'Vania'},
-              ].map(s => (
-                <button key={s.key}
-                  onClick={() => setActiveToken(
-                    s.key as 'agam'|'vania'
-                  )}
-                  style={{
-                    flex:1, padding:'8px',
-                    borderRadius:8,
-                    border:'0.5px solid #d9cdb8',
-                    background: activeToken===s.key
-                      ? '#1e3d2a' : 'white',
-                    color: activeToken===s.key
-                      ? 'white' : '#888',
-                    fontSize:12, cursor:'pointer',
-                    fontFamily:'Cinzel,serif',
-                    letterSpacing:1,
-                  }}>{s.label}</button>
-              ))}
+            {/* Managam token */}
+            <div style={{marginBottom:16}}>
+              <label style={{
+                fontFamily:'Cinzel,serif', fontSize:9,
+                letterSpacing:2, color:'#2d5a3d',
+                display:'block', marginBottom:6,
+              }}>MANAGAM</label>
+              <input
+                type="password"
+                placeholder="Token Fonnte Managam"
+                value={tokenAgam}
+                onChange={e => {
+                  setTokenAgam(e.target.value)
+                  if (e.target.value) localStorage.setItem(
+                    'fonnte_token', e.target.value
+                  )
+                }}
+                style={{
+                  width:'100%', padding:'10px 12px',
+                  border:'0.5px solid #d9cdb8',
+                  borderRadius:8, fontSize:14,
+                  outline:'none',
+                }}
+              />
+              <div style={{
+                display:'flex', justifyContent:'space-between',
+                marginTop:4,
+              }}>
+                <p style={{fontSize:11, color:'#aaa'}}>
+                  Untuk tamu undangan Managam
+                </p>
+                {tokenAgam && (
+                  <span style={{
+                    fontSize:10, color:'#2d5a3d',
+                    fontFamily:'Cinzel,serif', letterSpacing:1,
+                  }}>✓ TERSIMPAN</span>
+                )}
+              </div>
             </div>
 
-            {activeToken === 'agam' && (
-              <>
-                <input
-                  type="password"
-                  placeholder="Token Fonnte Managam"
-                  value={tokenAgam}
-                  onChange={e => {
-                    setTokenAgam(e.target.value)
-                    if (e.target.value) localStorage.setItem(
-                      'fonnte_token', e.target.value
-                    )
-                  }}
-                  style={{
-                    width:'100%', padding:'10px 12px',
-                    border:'0.5px solid #d9cdb8',
-                    borderRadius:8, fontSize:14,
-                    outline:'none', marginBottom:6,
-                  }}
-                />
-                <div style={{
-                  display:'flex', alignItems:'center',
-                  justifyContent:'space-between',
-                }}>
-                  <p style={{fontSize:11, color:'#aaa'}}>
-                    Dari WA Managam ke tamu Managam
-                  </p>
-                  {tokenAgam && (
-                    <span style={{
-                      fontSize:10, color:'#2d5a3d',
-                      fontFamily:'Cinzel,serif',
-                      letterSpacing:1,
-                    }}>✓ TERSIMPAN</span>
-                  )}
-                </div>
-              </>
-            )}
-
-            {activeToken === 'vania' && (
-              <>
-                <input
-                  type="password"
-                  placeholder="Token Fonnte Vania"
-                  value={tokenVania}
-                  onChange={e => {
-                    setTokenVania(e.target.value)
-                    if (e.target.value) localStorage.setItem(
-                      'fonnte_token_vania', e.target.value
-                    )
-                  }}
-                  style={{
-                    width:'100%', padding:'10px 12px',
-                    border:'0.5px solid #d9cdb8',
-                    borderRadius:8, fontSize:14,
-                    outline:'none', marginBottom:6,
-                  }}
-                />
-                <div style={{
-                  display:'flex', alignItems:'center',
-                  justifyContent:'space-between',
-                }}>
-                  <p style={{fontSize:11, color:'#aaa'}}>
-                    Dari WA Vania ke tamu Vania
-                  </p>
-                  {tokenVania && (
-                    <span style={{
-                      fontSize:10, color:'#2d5a3d',
-                      fontFamily:'Cinzel,serif',
-                      letterSpacing:1,
-                    }}>✓ TERSIMPAN</span>
-                  )}
-                </div>
-              </>
-            )}
+            {/* Vania token */}
+            <div>
+              <label style={{
+                fontFamily:'Cinzel,serif', fontSize:9,
+                letterSpacing:2, color:'#993556',
+                display:'block', marginBottom:6,
+              }}>VANIA</label>
+              <input
+                type="password"
+                placeholder="Token Fonnte Vania"
+                value={tokenVania}
+                onChange={e => {
+                  setTokenVania(e.target.value)
+                  if (e.target.value) localStorage.setItem(
+                    'fonnte_token_vania', e.target.value
+                  )
+                }}
+                style={{
+                  width:'100%', padding:'10px 12px',
+                  border:'0.5px solid #d9cdb8',
+                  borderRadius:8, fontSize:14,
+                  outline:'none',
+                }}
+              />
+              <div style={{
+                display:'flex', justifyContent:'space-between',
+                marginTop:4,
+              }}>
+                <p style={{fontSize:11, color:'#aaa'}}>
+                  Untuk tamu undangan Vania
+                </p>
+                {tokenVania && (
+                  <span style={{
+                    fontSize:10, color:'#993556',
+                    fontFamily:'Cinzel,serif', letterSpacing:1,
+                  }}>✓ TERSIMPAN</span>
+                )}
+              </div>
+            </div>
           </div>
 
           <div style={{
@@ -520,6 +497,19 @@ export default function MessagesPage() {
             )
             return null
           })()}
+
+          <div style={{
+            padding:'12px 14px',
+            background:'#f0f7f1',
+            border:'0.5px solid #6b8f71',
+            borderRadius:8, fontSize:12,
+            color:'#2d5a3d', marginBottom:12,
+            lineHeight:1.6,
+          }}>
+            💡 Pesan akan dikirim otomatis:<br/>
+            <strong>Token Managam</strong> → tamu dengan sender Managam<br/>
+            <strong>Token Vania</strong> → tamu dengan sender Vania
+          </div>
 
           <button
             onClick={send}
