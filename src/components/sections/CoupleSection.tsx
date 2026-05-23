@@ -15,7 +15,21 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
         <div className="couple-grid" style={{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:'0 36px',alignItems:'start'}}>
           {/* Managam */}
           <div className="reveal reveal-d2" style={card}>
-            <div style={{width:76,height:76,borderRadius:'50%',background:'var(--forest)',margin:'0 auto 18px',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Cinzel,serif',fontSize:26,color:'var(--cream)'}}>M</div>
+            <div style={{
+              width:76, height:76, borderRadius:'50%',
+              overflow:'hidden', margin:'0 auto 18px',
+              border:'2px solid var(--cream-deep)',
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/managam.jpg" alt="Managam"
+                style={{
+                  width:'100%', height:'100%',
+                  objectFit:'cover',
+                  objectPosition:'center top',
+                  display:'block',
+                }}
+              />
+            </div>
             <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:24,fontStyle:'italic',color:'var(--forest-deep)',marginBottom:4}}>Managam Raja Silalahi</div>
             <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:12}}>S.Kom., M.Sc.</div>
             <div style={{marginBottom:18,textAlign:'center'}}>
@@ -61,7 +75,21 @@ export default function CoupleSection({ tr }: { tr: Translations }) {
 
           {/* Vania */}
           <div className="reveal reveal-d3" style={card}>
-            <div style={{width:76,height:76,borderRadius:'50%',background:'var(--sage)',margin:'0 auto 18px',display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Cinzel,serif',fontSize:26,color:'var(--cream)'}}>V</div>
+            <div style={{
+              width:76, height:76, borderRadius:'50%',
+              overflow:'hidden', margin:'0 auto 18px',
+              border:'2px solid var(--cream-deep)',
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/vania.jpg" alt="Vania"
+                style={{
+                  width:'100%', height:'100%',
+                  objectFit:'cover',
+                  objectPosition:'center top',
+                  display:'block',
+                }}
+              />
+            </div>
             <div style={{fontFamily:'Cormorant Garamond,serif',fontSize:24,fontStyle:'italic',color:'var(--forest-deep)',marginBottom:4}}>Vania</div>
             <div style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:2,color:'var(--gold)',marginBottom:12}}>S.Psi.</div>
             <div style={{marginBottom:18,textAlign:'center'}}>
