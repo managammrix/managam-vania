@@ -13,6 +13,10 @@ const RECOMMENDED_TEMPLATE: Record<string,string> = {
   all:      '',
 }
 
+function templateKey(label: string, version: string): string {
+  return `${label}__${version}`
+}
+
 export default function MessagesPage() {
   useAdminAuth()
   const [invitees, setInvitees] = useState<InviteeRow[]>([])
@@ -24,9 +28,8 @@ export default function MessagesPage() {
     useState<Template>(TEMPLATES[0])
   const [selectedVersion, setSelectedVersion] =
     useState<TemplateVersion>(TEMPLATES[0].versions[0])
-  const [message, setMessage] = useState(
-    TEMPLATES[0].versions[0].message
-  )
+  const [editedTemplates, setEditedTemplates] =
+    useState<Record<string, string>>({})
   const [recipientFilter, setRecipientFilter] =
     useState<'all'|'pending'|'confirmed'|'honored'>('all')
   const [sending, setSending] = useState(false)
@@ -43,17 +46,56 @@ export default function MessagesPage() {
     const savedV = localStorage.getItem('fonnte_token_vania')
     if (saved) setTokenAgam(saved)
     if (savedV) setTokenVania(savedV)
+    const savedEdits = localStorage.getItem('mv_template_edits')
+    if (savedEdits) {
+      try {
+        setEditedTemplates(JSON.parse(savedEdits))
+      } catch {}
+    }
   }, [])
+
+  const currentKey = templateKey(
+    selectedTemplate.label,
+    selectedVersion.label
+  )
+  const currentMessage =
+    editedTemplates[currentKey] ?? selectedVersion.message
+  const isEdited =
+    editedTemplates[currentKey] !== undefined &&
+    editedTemplates[currentKey] !== selectedVersion.message
 
   const selectTemplate = (tmpl: Template) => {
     setSelectedTemplate(tmpl)
     setSelectedVersion(tmpl.versions[0])
-    setMessage(tmpl.versions[0].message)
   }
 
   const selectVersion = (ver: TemplateVersion) => {
     setSelectedVersion(ver)
-    setMessage(ver.message)
+  }
+
+  const updateMessage = (val: string) => {
+    const newEdits = { ...editedTemplates, [currentKey]: val }
+    setEditedTemplates(newEdits)
+    localStorage.setItem(
+      'mv_template_edits',
+      JSON.stringify(newEdits)
+    )
+  }
+
+  const resetCurrent = () => {
+    const newEdits = { ...editedTemplates }
+    delete newEdits[currentKey]
+    setEditedTemplates(newEdits)
+    localStorage.setItem(
+      'mv_template_edits',
+      JSON.stringify(newEdits)
+    )
+  }
+
+  const resetAll = () => {
+    if (!confirm('Reset semua template ke versi asli?')) return
+    setEditedTemplates({})
+    localStorage.removeItem('mv_template_edits')
   }
 
   const recipients: InviteeRow[] = invitees.filter(i => {
@@ -71,7 +113,7 @@ export default function MessagesPage() {
       alert('Masukkan minimal satu Fonnte token.')
       return
     }
-    if (!message) return
+    if (!currentMessage) return
     if (!confirm(
       `Kirim ke ${recipients.length} penerima?`
     )) return
@@ -94,7 +136,7 @@ export default function MessagesPage() {
               agamRecipients.map(i => ({
                 name: i.name, phone: i.phone, ref: i.ref,
               })),
-              message
+              currentMessage
             )
           : Promise.resolve({ sent: 0, failed: agamRecipients.length }),
         vaniaRecipients.length > 0 && tokenVania
@@ -103,7 +145,7 @@ export default function MessagesPage() {
               vaniaRecipients.map(i => ({
                 name: i.name, phone: i.phone, ref: i.ref,
               })),
-              message
+              currentMessage
             )
           : Promise.resolve({ sent: 0, failed: vaniaRecipients.length }),
       ])
@@ -120,7 +162,7 @@ export default function MessagesPage() {
 
       await logMessage({
         recipient_count: totalSent,
-        message,
+        message: currentMessage,
         recipients,
         status: totalFailed === 0 ? 'sent' : 'partial',
       })
@@ -204,26 +246,68 @@ export default function MessagesPage() {
               fontSize:11, color:'#aaa',
               alignSelf:'center', marginLeft:4,
             }}>
-              {message.length} karakter
+              {currentMessage.length} karakter
             </span>
           </div>
 
           <div style={{
-            fontFamily:'Cinzel,serif', fontSize:10,
-            letterSpacing:3, color:'#6b8f71',
+            display:'flex', alignItems:'center',
+            justifyContent:'space-between',
             marginBottom:8,
-          }}>PESAN</div>
+          }}>
+            <span style={{
+              fontFamily:'Cinzel,serif', fontSize:10,
+              letterSpacing:3, color:'#6b8f71',
+            }}>PESAN</span>
+            <div style={{display:'flex', gap:8, alignItems:'center'}}>
+              {isEdited && (
+                <span style={{
+                  fontSize:10, color:'#2d5a3d',
+                  fontFamily:'Cinzel,serif',
+                  letterSpacing:1,
+                }}>✓ DIEDIT</span>
+              )}
+              {isEdited && (
+                <button
+                  onClick={resetCurrent}
+                  style={{
+                    padding:'4px 10px',
+                    border:'0.5px solid #f5c6c6',
+                    borderRadius:6, background:'white',
+                    fontSize:10, cursor:'pointer',
+                    color:'#c0392b',
+                    fontFamily:'Cinzel,serif',
+                    letterSpacing:1,
+                  }}
+                >RESET</button>
+              )}
+            </div>
+          </div>
           <textarea
-            value={message}
-            onChange={e => setMessage(e.target.value)}
+            value={currentMessage}
+            onChange={e => updateMessage(e.target.value)}
             rows={12}
             style={ta}
           />
           <p style={{
             fontSize:12, color:'#aaa', marginTop:6,
           }}>
-            Gunakan {'{name}'} untuk nama penerima
+            Gunakan {'{name}'} untuk nama penerima, {'{link}'} untuk link undangan
           </p>
+          <button
+            onClick={resetAll}
+            style={{
+              marginTop:8,
+              padding:'6px 12px',
+              border:'0.5px solid #f5c6c6',
+              borderRadius:6, background:'white',
+              fontSize:10, cursor:'pointer',
+              color:'#c0392b',
+              fontFamily:'Cinzel,serif',
+              letterSpacing:1,
+              width:'100%',
+            }}
+          >RESET SEMUA TEMPLATE</button>
         </div>
 
         <div style={{display:'flex',flexDirection:'column',
