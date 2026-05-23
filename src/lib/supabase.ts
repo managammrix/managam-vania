@@ -132,9 +132,6 @@ export async function logMessage(log: Omit<MessageLogRow, 'id' | 'sent_at'>) {
   await adminCall('log_message', log as unknown as Record<string, unknown>)
 }
 
-export async function fetchMessageLog(): Promise<Array<{ message: string | null; sent_at: string | null }>> {
-  return (await adminCall<Array<{ message: string | null; sent_at: string | null }> | null>('list_message_log')) ?? []
-}
 
 // ── Gallery ───────────────────────────────────────────────────────
 export async function fetchGalleryPhotos(): Promise<PhotoRow[]> {
