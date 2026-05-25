@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { SESSION_KEY } from '@/lib/adminAuth'
 
-const PIN_LENGTH = 10
+const PIN_LENGTH = 8
 
 export default function AdminLogin() {
   const router = useRouter()
