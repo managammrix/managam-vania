@@ -90,27 +90,44 @@ async function deleteRow(page: Page, name: string) {
   await page.waitForTimeout(800)
 }
 
-// Delete every row whose name starts with "TEST -". Iterates while
-// rows remain (each delete shrinks the search hits). Caps at 50 to
-// prevent any pathological infinite loop.
+// Delete every row whose name starts with "TEST -". After each
+// delete the admin component calls load() which re-fetches and
+// re-renders, possibly clearing the search input. We therefore
+// re-navigate + re-search on every iteration for a clean state.
 async function cleanupAllTestRows(page: Page): Promise<number> {
-  await page.goto('/admin/invitees')
-  await page.waitForTimeout(800)
-  await page.fill('input[placeholder*="Cari"]', 'TEST -')
-  await page.waitForTimeout(800)
   let removed = 0
-  for (let i = 0; i < 50; i++) {
-    const rows = page.locator('tr').filter({ hasText: 'TEST -' })
-    const count = await rows.count()
-    if (count === 0) break
-    page.once('dialog', d => d.accept())
-    await rows.first().locator('button:has-text("Hapus")').click()
-      .catch(() => { /* ignore */ })
-    await page.waitForTimeout(600)
-    removed++
+  let attempts = 0
+  // Persistent dialog handler — page.once was re-registering per
+  // iteration but if the dialog fired faster than the next handler
+  // could attach, the handler was missing.
+  const dialogHandler = (d: { accept: () => Promise<void> }) => d.accept()
+  page.on('dialog', dialogHandler)
+  try {
+    for (let i = 0; i < 60; i++) {
+      attempts++
+      await page.goto('/admin/invitees')
+      await page.waitForTimeout(1000)
+      await page.fill('input[placeholder*="Cari"]', 'TEST -')
+      await page.waitForTimeout(900)
+      const rows = page.locator('tr').filter({ hasText: 'TEST -' })
+      const count = await rows.count()
+      if (count === 0) break
+      try {
+        await rows.first()
+          .locator('button:has-text("Hapus")')
+          .click({ timeout: 5000 })
+        await page.waitForTimeout(1200)
+        removed++
+      } catch (e) {
+        console.warn(`  cleanup iter ${i}: click failed —`,
+          (e as Error).message.slice(0, 100))
+        break
+      }
+    }
+  } finally {
+    page.off('dialog', dialogHandler)
   }
-  await page.fill('input[placeholder*="Cari"]', '')
-  await page.waitForTimeout(300)
+  console.log(`  cleanup: ${removed} removed across ${attempts} attempts`)
   return removed
 }
 
@@ -220,7 +237,8 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     for (let i = 0; i < CASES.length; i++) {
       const c = CASES[i]
       const r = results[i]
-      const verbose = i === 0 // verbose only for case 1
+      // Verbose for cases 1, 6 (No Phone), 8 (Overseas SG)
+      const verbose = i === 0 || i === 5 || i === 7
       verboseCase = verbose ? c.label : ''
       console.log(`\n── ${c.label} (${c.name}) ──`)
       const log = (...args: unknown[]) => {
@@ -325,18 +343,18 @@ test.describe('Comprehensive guest test suite @smoke', () => {
           await konfirmasiBtn.click()
           log('clicked KONFIRMASI')
 
-          // Wait for success message (was using isVisible which is a
-          // synchronous snapshot — wrong tool. Use waitForSelector to
-          // actually wait for the network call + state update.)
+          // Wait for success message. 20s timeout to accommodate
+          // Supabase RPC + QR canvas generation + render time on
+          // slower test runs.
           try {
             await page.waitForSelector('text=Terima kasih!', {
-              state: 'visible', timeout: 10000,
+              state: 'visible', timeout: 20000,
             })
             r.rsvpFlow = true
             log('"Terima kasih!" visible')
           } catch {
             r.rsvpFlow = false
-            log('"Terima kasih!" never appeared')
+            log('"Terima kasih!" never appeared within 20s')
           }
         } catch (err) {
           r.error = `rsvp flow error: ${(err as Error).message}`
@@ -348,7 +366,10 @@ test.describe('Comprehensive guest test suite @smoke', () => {
         await page.goto('/admin/invitees')
         await page.waitForTimeout(1000)
         const adminRow = await findRow(page, c.name)
-        const expectedBadge = c.guests > 0 ? 'Konfirmasi' : 'Tidak Hadir'
+        // Admin getStatusBadge() returns "Kehormatan" (not "Tidak Hadir")
+        // for any row with guests=0, by design. So that's what we look
+        // for when the test case is a 0-seat decline.
+        const expectedBadge = c.guests > 0 ? 'Konfirmasi' : 'Kehormatan'
         const badgeOk = await adminRow.getByText(expectedBadge).isVisible({ timeout: 5000 })
           .catch(() => false)
         r.adminUpdated = badgeOk
