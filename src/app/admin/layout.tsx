@@ -6,6 +6,7 @@ const NAV = [
   { href: '/admin', label: 'Dashboard', icon: '◎' },
   { href: '/admin/invitees', label: 'Tamu', icon: '◈' },
   { href: '/admin/messages', label: 'Kirim Pesan', icon: '◉' },
+  { href: '/admin/checkin', label: 'Check-in', icon: '✓' },
   { href: '/admin/wishes', label: 'Ucapan', icon: '◇' },
 ]
 

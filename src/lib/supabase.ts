@@ -76,6 +76,41 @@ export function generateRef(): string {
   return Math.random().toString(36).substring(2, 10)
 }
 
+// ── Check-in / claim RPCs (anon, security-definer) ────────────────
+export interface CheckinResult {
+  success: boolean
+  error?: string
+  already_checked_in?: boolean
+  already_claimed?: boolean
+  name?: string
+  guests?: number
+  rsvp_status?: string
+  checked_in_at?: string
+  souvenir_claimed?: boolean
+  lunchbox_claimed?: boolean
+}
+
+export async function checkinByRef(ref: string): Promise<CheckinResult> {
+  const { data, error } = await supabase
+    .rpc('checkin_by_ref', { p_ref: ref })
+  if (error) return { success: false, error: error.message }
+  return (data ?? { success: false, error: 'No response' }) as CheckinResult
+}
+
+export async function claimSouvenirByRef(ref: string): Promise<CheckinResult> {
+  const { data, error } = await supabase
+    .rpc('claim_souvenir_by_ref', { p_ref: ref })
+  if (error) return { success: false, error: error.message }
+  return (data ?? { success: false, error: 'No response' }) as CheckinResult
+}
+
+export async function claimLunchboxByRef(ref: string): Promise<CheckinResult> {
+  const { data, error } = await supabase
+    .rpc('claim_lunchbox_by_ref', { p_ref: ref })
+  if (error) return { success: false, error: error.message }
+  return (data ?? { success: false, error: 'No response' }) as CheckinResult
+}
+
 // ── RSVP ──────────────────────────────────────────────────────────
 export async function submitRsvp(data: Omit<RsvpRow, 'id' | 'created_at'>) {
   const { error } = await supabase.from('rsvp').insert(data)
