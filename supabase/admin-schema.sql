@@ -98,10 +98,14 @@ security definer
 set search_path = public
 as $$
 begin
-  update public.invitees
+  -- Use a table alias `inv` so the WHERE-clause `inv.opened_at` is
+  -- unambiguously the column (not the RETURNS TABLE OUT-parameter
+  -- of the same name, which causes 42702 "ambiguous column").
+  -- SET column on the LHS does not need qualification.
+  update public.invitees as inv
     set opened_at = now()
-    where invitees.ref = p_ref
-    and opened_at is null;
+    where inv.ref = p_ref
+    and inv.opened_at is null;
 
   return query
     select
@@ -113,8 +117,6 @@ begin
     limit 1;
 end;
 $$;
-
-grant execute on function public.get_invitee_by_ref(text) to anon;
 
 grant execute on function public.get_invitee_by_ref(text) to anon;
 
