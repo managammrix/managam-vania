@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { SESSION_KEY } from '@/lib/adminAuth'
 
@@ -11,32 +11,15 @@ export default function AdminLogin() {
   const [error, setError] = useState(false)
   const [shake, setShake] = useState(false)
   const [verifying, setVerifying] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' &&
-        sessionStorage.getItem(SESSION_KEY)) {
-      router.replace('/admin')
-      return
-    }
-    inputRef.current?.focus()
-    // Auto-fill saved PIN from localStorage (auto-verifies if full-length)
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('mv_admin_pin')
-      if (saved) attempt(saved)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router])
-
-  const fail = () => {
+  const fail = useCallback(() => {
     setShake(true)
     setError(true)
     setPin('')
     setTimeout(() => setShake(false), 600)
-    inputRef.current?.focus()
-  }
+  }, [])
 
-  const attempt = async (value: string) => {
+  const attempt = useCallback(async (value: string) => {
     setPin(value)
     setError(false)
     if (value.length < PIN_LENGTH || verifying) return
@@ -64,6 +47,38 @@ export default function AdminLogin() {
     } finally {
       setVerifying(false)
     }
+  }, [router, verifying, fail])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' &&
+        sessionStorage.getItem(SESSION_KEY)) {
+      router.replace('/admin')
+      return
+    }
+    // Auto-fill saved PIN — auto-verifies if full-length
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('mv_admin_pin')
+      if (saved) attempt(saved)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router])
+
+  const tapDigit = (d: string) => {
+    if (verifying || pin.length >= PIN_LENGTH) return
+    const next = pin + d
+    attempt(next)
+  }
+
+  const tapBackspace = () => {
+    if (verifying) return
+    setPin(p => p.slice(0, -1))
+    setError(false)
+  }
+
+  const tapClear = () => {
+    if (verifying) return
+    setPin('')
+    setError(false)
   }
 
   return (
@@ -73,6 +88,7 @@ export default function AdminLogin() {
       alignItems:'center',
       justifyContent:'center',
       background:'#1e3d2a',
+      padding: 16,
     }}>
       <style>{`
         @keyframes shake {
@@ -88,11 +104,11 @@ export default function AdminLogin() {
       <div style={{
         background:'#faf6ef',
         borderRadius:20,
-        padding:'52px 44px',
+        padding:'40px 32px',
         width:360,
+        maxWidth:'100%',
         textAlign:'center',
         boxShadow:'0 32px 80px rgba(0,0,0,0.4)',
-        position:'relative',
       }}>
         <div style={{
           fontFamily:'Cinzel,serif',
@@ -115,7 +131,7 @@ export default function AdminLogin() {
           color:'#9db89f',
           letterSpacing:2,
           fontFamily:'Cinzel,serif',
-          marginBottom:40,
+          marginBottom:28,
         }}>20.06.2026</div>
 
         <div
@@ -124,7 +140,8 @@ export default function AdminLogin() {
             display:'flex',
             justifyContent:'center',
             gap:10,
-            marginBottom:32,
+            marginBottom:14,
+            userSelect: 'none',
           }}
         >
           {Array.from({length:PIN_LENGTH}).map((_,i) => (
@@ -140,46 +157,80 @@ export default function AdminLogin() {
           ))}
         </div>
 
-        <input
-          ref={inputRef}
-          type="password"
-          inputMode="text"
-          value={pin}
-          maxLength={PIN_LENGTH}
-          onChange={e => attempt(e.target.value)}
-          style={{
-            position:'absolute',
-            opacity:0,
-            pointerEvents:'none',
-            width:1,
-            height:1,
-          }}
-        />
-
-        <div
-          onClick={() => inputRef.current?.focus()}
-          style={{
-            fontFamily:'Cinzel,serif',
-            fontSize:10,
-            letterSpacing:3,
-            color: error ? '#c0392b' : '#9db89f',
-            cursor:'pointer',
-            userSelect:'none',
-            marginBottom:8,
-          }}
-        >
+        <div style={{
+          fontFamily:'Cinzel,serif',
+          fontSize:10,
+          letterSpacing:3,
+          color: error ? '#c0392b' : '#9db89f',
+          marginBottom:24,
+          minHeight: 14,
+          userSelect: 'none',
+        }}>
           {verifying ? 'MEMVERIFIKASI...' :
            error ? 'PIN SALAH — COBA LAGI' : 'MASUKKAN PIN'}
         </div>
 
+        {/* Numeric keypad — PIN entry only via these buttons */}
         <div style={{
-          fontSize:11,
-          color:'#d9cdb8',
-          marginTop:16,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 10,
         }}>
-          Ketuk di sini lalu ketik PIN
+          {['1','2','3','4','5','6','7','8','9'].map(d => (
+            <Key key={d} onClick={() => tapDigit(d)} disabled={verifying}>
+              {d}
+            </Key>
+          ))}
+          <Key onClick={tapClear} disabled={verifying} muted>
+            BERSIH
+          </Key>
+          <Key onClick={() => tapDigit('0')} disabled={verifying}>
+            0
+          </Key>
+          <Key onClick={tapBackspace} disabled={verifying} muted>
+            ⌫
+          </Key>
         </div>
       </div>
     </div>
+  )
+}
+
+function Key({ onClick, disabled, muted, children }: {
+  onClick: () => void
+  disabled?: boolean
+  muted?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: '16px 0',
+        background: muted ? 'transparent' : '#ffffff',
+        border: '0.5px solid #d9cdb8',
+        borderRadius: 12,
+        fontFamily: muted ? 'Cinzel,serif' : 'Cormorant Garamond,serif',
+        fontSize: muted ? 11 : 24,
+        letterSpacing: muted ? 2 : 0,
+        color: muted ? '#9db89f' : '#1e3d2a',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.5 : 1,
+        userSelect: 'none',
+        transition: 'background 0.15s ease',
+      }}
+      onMouseDown={e => {
+        if (!disabled && !muted) (e.currentTarget as HTMLButtonElement).style.background = '#f0ece4'
+      }}
+      onMouseUp={e => {
+        if (!muted) (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'
+      }}
+      onMouseLeave={e => {
+        if (!muted) (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'
+      }}
+    >
+      {children}
+    </button>
   )
 }
