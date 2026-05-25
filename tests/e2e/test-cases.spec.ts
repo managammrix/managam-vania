@@ -40,8 +40,13 @@ async function loginAdmin(page: Page) {
 
 function buildCsv(rows: TestCase[]): string {
   const header = 'name,phone,guests,notes,sender'
+  // Quote every field so that empty cells (e.g. No Phone) survive the
+  // import parser. The admin CSV regex uses `[^,]+` which silently skips
+  // consecutive commas — without quotes, an empty phone would shift later
+  // columns left and put `guests` into the phone field.
+  const q = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`
   const body = rows
-    .map(r => `${r.name},${r.phone},${r.guests},${r.notes},${r.sender}`)
+    .map(r => [r.name, r.phone, r.guests, r.notes, r.sender].map(q).join(','))
     .join('\n')
   return header + '\n' + body
 }
@@ -370,7 +375,10 @@ test.describe('Comprehensive guest test suite @smoke', () => {
         // for any row with guests=0, by design. So that's what we look
         // for when the test case is a 0-seat decline.
         const expectedBadge = c.guests > 0 ? 'Konfirmasi' : 'Kehormatan'
-        const badgeOk = await adminRow.getByText(expectedBadge).isVisible({ timeout: 5000 })
+        // For guests=0 the row renders "Kehormatan" twice (status badge
+        // + guest-count cell), so `.first()` avoids a strict-mode throw.
+        const badgeOk = await adminRow.getByText(expectedBadge).first()
+          .isVisible({ timeout: 5000 })
           .catch(() => false)
         r.adminUpdated = badgeOk
         console.log('  admin status reflects:', badgeOk, `(expected "${expectedBadge}")`)
