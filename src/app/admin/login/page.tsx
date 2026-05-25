@@ -20,6 +20,12 @@ export default function AdminLogin() {
       return
     }
     inputRef.current?.focus()
+    // Auto-fill saved PIN from localStorage (auto-verifies if full-length)
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('mv_admin_pin')
+      if (saved) attempt(saved)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   const fail = () => {
@@ -46,8 +52,11 @@ export default function AdminLogin() {
       })
       if (res.ok) {
         sessionStorage.setItem(SESSION_KEY, value)
+        localStorage.setItem('mv_admin_pin', value)
         router.replace('/admin')
       } else {
+        // Wrong PIN — clear any stale saved value
+        localStorage.removeItem('mv_admin_pin')
         fail()
       }
     } catch {
