@@ -58,12 +58,10 @@ async function importCsv(page: Page, csv: string) {
     mimeType: 'text/csv',
     buffer,
   })
-  // Preview modal appears — confirm import
   await page.waitForSelector('button:has-text("IMPORT")', {
     state: 'visible', timeout: 5000,
   })
   await page.click('button:has-text("IMPORT")')
-  // Wait for alert dialog showing imported count, accept it
   page.once('dialog', d => d.accept())
   await page.waitForTimeout(3000)
 }
@@ -92,6 +90,30 @@ async function deleteRow(page: Page, name: string) {
   await page.waitForTimeout(800)
 }
 
+// Delete every row whose name starts with "TEST -". Iterates while
+// rows remain (each delete shrinks the search hits). Caps at 50 to
+// prevent any pathological infinite loop.
+async function cleanupAllTestRows(page: Page): Promise<number> {
+  await page.goto('/admin/invitees')
+  await page.waitForTimeout(800)
+  await page.fill('input[placeholder*="Cari"]', 'TEST -')
+  await page.waitForTimeout(800)
+  let removed = 0
+  for (let i = 0; i < 50; i++) {
+    const rows = page.locator('tr').filter({ hasText: 'TEST -' })
+    const count = await rows.count()
+    if (count === 0) break
+    page.once('dialog', d => d.accept())
+    await rows.first().locator('button:has-text("Hapus")').click()
+      .catch(() => { /* ignore */ })
+    await page.waitForTimeout(600)
+    removed++
+  }
+  await page.fill('input[placeholder*="Cari"]', '')
+  await page.waitForTimeout(300)
+  return removed
+}
+
 type Result = {
   label: string
   csvImported: boolean
@@ -107,7 +129,7 @@ type Result = {
 // ─── Test ───────────────────────────────────────────────────────
 
 test.describe('Comprehensive guest test suite @smoke', () => {
-  test.setTimeout(15 * 60 * 1000) // 15 min for full sweep
+  test.setTimeout(15 * 60 * 1000)
 
   test('12 cases: CSV import → ref → link → RSVP → admin status → blast filter → cleanup',
     async ({ page, context }) => {
@@ -131,6 +153,29 @@ test.describe('Comprehensive guest test suite @smoke', () => {
       })
     })
 
+    // ─── Intercept get_invitee_by_ref RPC responses ─────────
+    // Listen to all Supabase RPC responses; case-1 verbose logging
+    // toggles based on `verboseCase` below.
+    const rpcResponses: Array<{
+      url: string
+      body: unknown
+      caseLabel: string
+    }> = []
+    let verboseCase = ''
+    page.on('response', async resp => {
+      const url = resp.url()
+      if (url.includes('/rpc/get_invitee_by_ref')) {
+        try {
+          const body = await resp.json()
+          rpcResponses.push({ url, body, caseLabel: verboseCase })
+          if (verboseCase) {
+            console.log(`  [RPC ${verboseCase}] get_invitee_by_ref →`,
+              JSON.stringify(body).slice(0, 300))
+          }
+        } catch { /* not JSON */ }
+      }
+    })
+
     const results: Result[] = CASES.map(c => ({
       label: c.label,
       csvImported: false,
@@ -141,17 +186,19 @@ test.describe('Comprehensive guest test suite @smoke', () => {
       qrAvailable: false,
     }))
 
-    // ─── STEP 1: Login + import CSV ──────────────────────────
+    // ─── STEP 0: Login + pre-cleanup stale TEST rows ────────
     await loginAdmin(page)
-    console.log('✅ Step 1: Logged in to admin')
+    console.log('✅ Step 0: Logged in to admin')
+    const preRemoved = await cleanupAllTestRows(page)
+    console.log(`✅ Step 0b: Pre-cleanup — removed ${preRemoved} stale TEST rows`)
 
+    // ─── STEP 1: Import CSV ─────────────────────────────────
     await importCsv(page, buildCsv(CASES))
-    console.log('✅ Step 2: CSV import dispatched, waiting for table refresh')
+    console.log('✅ Step 1: CSV import dispatched, reloading table')
     await page.reload()
     await page.waitForTimeout(2000)
 
-    // Wait until at least one TEST row with a data-ref attribute
-    // renders, so we know refs were generated and the table is ready.
+    // Wait until first row's Link button (data-ref) is in DOM
     await page.fill('input[placeholder*="Cari"]', CASES[0].name)
     await page.waitForTimeout(800)
     await page.waitForSelector(
@@ -159,8 +206,6 @@ test.describe('Comprehensive guest test suite @smoke', () => {
       { state: 'attached', timeout: 10000 }
     ).catch(() => null)
 
-    // Debug — dump first TEST row's HTML so future ref-extraction
-    // failures are diagnosable in CI logs.
     const firstRowHtml = await page.locator('tr')
       .filter({ hasText: CASES[0].name })
       .first()
@@ -171,13 +216,18 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     await page.fill('input[placeholder*="Cari"]', '')
     await page.waitForTimeout(400)
 
-    // ─── STEP 3: Per-guest verification ──────────────────────
+    // ─── STEP 2: Per-guest verification ─────────────────────
     for (let i = 0; i < CASES.length; i++) {
       const c = CASES[i]
       const r = results[i]
+      const verbose = i === 0 // verbose only for case 1
+      verboseCase = verbose ? c.label : ''
       console.log(`\n── ${c.label} (${c.name}) ──`)
+      const log = (...args: unknown[]) => {
+        if (verbose) console.log('  [v]', ...args)
+      }
+
       try {
-        // Re-load invitees page each iteration to get fresh data
         await page.goto('/admin/invitees')
         await page.waitForTimeout(800)
 
@@ -192,79 +242,109 @@ test.describe('Comprehensive guest test suite @smoke', () => {
         console.log('  ref:', ref)
         if (!ref) { r.error = 'No ref generated'; continue }
 
-        // Open personal link. Wait for the envelope shell element
-        // (closed envelope state — shows KLIK UNTUK MEMBUKA). The
-        // personalized "KEPADA YTH." block also lives on the closed
-        // envelope but only renders once guestData has loaded.
+        // ─── Open personal link ────────────────────────────
+        log('navigating to /?ref=' + ref)
         await page.goto(`/?ref=${ref}`)
         await page.waitForLoadState('networkidle')
+        log('networkidle reached')
+
         let envelopeLoaded = false
         try {
           await page.waitForSelector('#envelope-screen', {
-            state: 'visible',
-            timeout: 12000,
+            state: 'visible', timeout: 12000,
           })
           envelopeLoaded = true
+          log('#envelope-screen visible')
         } catch { envelopeLoaded = false }
         r.linkOpens = envelopeLoaded
-        console.log('  link opens (envelope element visible):', envelopeLoaded)
+        console.log('  link opens (envelope visible):', envelopeLoaded)
+
         if (!envelopeLoaded) {
           const visibleText = await page.locator('body').innerText().catch(() => '')
           console.log('  page text snippet:', visibleText.slice(0, 200).replace(/\n/g, ' | '))
           continue
         }
 
-        // Click envelope to open. After this, EnvelopeScreen unmounts
-        // and the inner sections (cover/story/rsvp) render.
+        // ─── Open envelope ─────────────────────────────────
+        log('clicking #envelope-screen')
         await page.locator('#envelope-screen').click({ force: true }).catch(() => {})
         await page.waitForTimeout(1500)
-        // Confirm we're now inside the invitation (cover section visible)
-        await page.waitForSelector('#cover', { state: 'visible', timeout: 8000 })
-          .catch(() => null)
+        const coverVisible = await page.locator('#cover').isVisible().catch(() => false)
+        log('#cover visible after click:', coverVisible)
+        if (!coverVisible) {
+          r.error = 'Envelope did not open (no #cover after click)'
+          console.warn('  ⚠', r.error)
+          continue
+        }
 
-        // RSVP flow — fully wrapped so per-case failures don't kill
-        // the loop and subsequent cases still run.
+        // ─── Navigate to RSVP ──────────────────────────────
         try {
           await page.locator('#rsvp').scrollIntoViewIfNeeded()
           await page.waitForTimeout(800)
+          log('scrolled to #rsvp')
 
           if (c.guests > 0) {
+            const hadirVisible = await page.locator('#hadir-btn').isVisible().catch(() => false)
+            log('#hadir-btn visible:', hadirVisible)
             await page.click('#hadir-btn', { force: true })
+            log('clicked #hadir-btn')
             await page.waitForTimeout(900)
-            // Wait for select to actually render before measuring options
+
             await page.waitForSelector('#seat-selector', {
               state: 'visible', timeout: 5000,
             })
             const selectEl = page.locator('#seat-selector')
             const optionCount = await selectEl.locator('option').count()
+            log('seat selector option count:', optionCount)
+            if (verbose) {
+              const selectorHtml = await selectEl.innerHTML().catch(() => '')
+              log('seat selector HTML:', selectorHtml.replace(/\s+/g, ' ').slice(0, 300))
+            }
             if (optionCount !== c.guests) {
-              const msg = `seat selector has ${optionCount} options, expected guests=${c.guests}`
-              r.error = msg
+              r.error = `seat options=${optionCount}, expected ${c.guests}`
               console.warn('  ⚠ seat options mismatch:', optionCount, 'vs', c.guests)
             }
-            // Cap the selection to whatever options are actually present,
-            // so a mismatch doesn't throw and break subsequent cases.
             const seatToPick = Math.min(c.guests, optionCount)
             if (seatToPick > 0) {
               await selectEl.selectOption(String(seatToPick)).catch(err => {
                 console.warn('  ⚠ selectOption failed:', (err as Error).message)
               })
+              log('selected seat:', seatToPick)
             }
           } else {
+            const tidakVisible = await page.locator('#tidak-hadir-btn').isVisible().catch(() => false)
+            log('#tidak-hadir-btn visible:', tidakVisible)
             await page.click('#tidak-hadir-btn', { force: true })
+            log('clicked #tidak-hadir-btn')
             await page.waitForTimeout(500)
           }
-          await page.click('button:has-text("KONFIRMASI")')
+
+          const konfirmasiBtn = page.locator('button:has-text("KONFIRMASI")')
+          const konfirmasiVisible = await konfirmasiBtn.isVisible().catch(() => false)
+          log('KONFIRMASI button visible:', konfirmasiVisible)
+          await konfirmasiBtn.click()
+          log('clicked KONFIRMASI')
+
+          // Wait for success message (was using isVisible which is a
+          // synchronous snapshot — wrong tool. Use waitForSelector to
+          // actually wait for the network call + state update.)
+          try {
+            await page.waitForSelector('text=Terima kasih!', {
+              state: 'visible', timeout: 10000,
+            })
+            r.rsvpFlow = true
+            log('"Terima kasih!" visible')
+          } catch {
+            r.rsvpFlow = false
+            log('"Terima kasih!" never appeared')
+          }
         } catch (err) {
           r.error = `rsvp flow error: ${(err as Error).message}`
           console.warn('  ⚠ rsvp flow threw:', r.error)
         }
-        const ok = await page.getByText('Terima kasih!').isVisible({ timeout: 10000 })
-          .catch(() => false)
-        r.rsvpFlow = ok
-        console.log('  rsvp flow:', ok)
+        console.log('  rsvp flow:', r.rsvpFlow)
 
-        // Verify admin reflects status
+        // ─── Verify admin reflects status ──────────────────
         await page.goto('/admin/invitees')
         await page.waitForTimeout(1000)
         const adminRow = await findRow(page, c.name)
@@ -274,36 +354,34 @@ test.describe('Comprehensive guest test suite @smoke', () => {
         r.adminUpdated = badgeOk
         console.log('  admin status reflects:', badgeOk, `(expected "${expectedBadge}")`)
 
-        // QR available for confirmed guests (excludes 0-seat declines)
         if (c.guests > 0) {
           const qrBtn = adminRow.locator('button:has-text("QR")')
           r.qrAvailable = (await qrBtn.count()) > 0
         } else {
-          r.qrAvailable = true // N/A for declined — pass by default
+          r.qrAvailable = true
         }
         console.log('  qr ready:', r.qrAvailable)
       } catch (err) {
         r.error = (err as Error).message
         console.error('  ERROR:', r.error)
+      } finally {
+        verboseCase = ''
       }
     }
 
-    // ─── STEP 4: WA blast — verify recipient routing ─────────
+    // ─── STEP 3: WA blast — verify recipient routing ────────
     console.log('\n── Blast: verify "No Phone" excluded ──')
     await page.goto('/admin/messages')
     await page.waitForTimeout(1500)
-    // Fill mock tokens so both Managam and Vania buckets can dispatch
     await page.fill('input[placeholder*="Managam"]', 'MOCK_AGAM_TOKEN')
     await page.fill('input[placeholder*="Vania"]', 'MOCK_VANIA_TOKEN')
     await page.waitForTimeout(300)
-    // Filter: Konfirmasi hadir — only confirmed guests
     await page.click('label:has-text("Konfirmasi hadir")')
     await page.waitForTimeout(500)
-    // Click the send button; auto-accept the confirm dialog
     page.once('dialog', d => d.accept())
     fonnteHits.length = 0
     await page.click('button:has(span:has-text("KIRIM")), button:has-text("KIRIM")')
-    // Wait for all bulk sends to complete (1s sleep per recipient)
+      .catch(err => console.warn('  KIRIM click failed:', (err as Error).message))
     await page.waitForTimeout(15000)
 
     const phonesReceived = new Set(fonnteHits.map(h => h.target))
@@ -314,18 +392,16 @@ test.describe('Comprehensive guest test suite @smoke', () => {
       const c = CASES[i]
       const r = results[i]
       if (c.guests === 0) {
-        // Not in "konfirmasi hadir" filter, expected not in blast
         r.blastIncluded = !phonesReceived.has(c.phone)
       } else if (c.phone === '') {
-        r.blastIncluded = !phonesReceived.has('') // must be excluded
+        r.blastIncluded = !phonesReceived.has('')
       } else {
         r.blastIncluded = phonesReceived.has(c.phone) ||
-          // accept normalized form (e.g. leading 0 stripped)
           Array.from(phonesReceived).some(p => p.endsWith(c.phone.slice(-9)))
       }
     }
 
-    // ─── STEP 5: Print summary ──────────────────────────────
+    // ─── STEP 4: Print summary ──────────────────────────────
     console.log('\n══════════ TEST SUMMARY ══════════')
     const pad = (s: string, n: number) => (s + ' '.repeat(n)).slice(0, n)
     console.log(pad('Case', 32), 'CSV  Ref  Link Rsvp Admn QR   Blst')
@@ -351,20 +427,11 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     const total = allChecks.length
     console.log(`\n→ ${passed} / ${total} checks passed (${Math.round(100 * passed / total)}%)`)
 
-    // ─── STEP 6: Cleanup ────────────────────────────────────
+    // ─── STEP 5: Cleanup ────────────────────────────────────
     console.log('\n── Cleanup: deleting TEST entries ──')
-    await page.goto('/admin/invitees')
-    await page.waitForTimeout(1000)
-    for (const c of CASES) {
-      try {
-        await deleteRow(page, c.name)
-        console.log('  deleted:', c.name)
-      } catch (e) {
-        console.error('  cleanup failed for', c.name, (e as Error).message)
-      }
-    }
+    const postRemoved = await cleanupAllTestRows(page)
+    console.log(`  removed ${postRemoved} TEST rows`)
 
-    // Final assertion — at least imported and refs generated
     expect(results.every(r => r.csvImported)).toBeTruthy()
     expect(results.every(r => r.refGenerated)).toBeTruthy()
   })
