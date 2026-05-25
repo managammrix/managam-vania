@@ -224,22 +224,37 @@ test.describe('Full ref flow E2E @smoke', () => {
     async ({ page }) => {
     await loginAdmin(page)
 
-    // Pick the highest-numbered slot to avoid clashing with real
-    // panitia usage during testing. Assumes seed has run.
-    const SLOT_NAME = 'Undangan Fisik #38'
+    // Find the first still-anonymous physical slot via the FISIK
+    // filter. Don't hardcode #N — once identified by a previous run,
+    // the slot's name changes, so we always pick whichever one is
+    // still labeled "Undangan Fisik #*". With 38 slots this works
+    // for 38 runs before a SQL reset is needed.
+    const SLOT_PREFIX = 'Undangan Fisik'
     const TEST_GUEST = 'E2E Physical ' + Date.now()
 
     await page.goto('/admin/invitees')
     await page.fill('input[placeholder*="Cari"]', '')
     await page.waitForTimeout(500)
     await page.reload()
-    await page.waitForTimeout(1000)
-    await page.fill('input[placeholder*="Cari"]', SLOT_NAME)
-    await page.waitForTimeout(1000)
+    await page.waitForTimeout(1500)
 
-    const slotRow = page.locator('tr').filter({ hasText: SLOT_NAME })
-    await expect(slotRow).toBeVisible({ timeout: 10000 })
-    const linkBtn = slotRow.locator('button[data-ref]')
+    // Click FISIK filter so only physical slots show
+    await page.click('button:has-text("FISIK")')
+    await page.waitForTimeout(800)
+
+    const physicalRows = page.locator('tr').filter({
+      hasText: SLOT_PREFIX,
+    })
+    const anonCount = await physicalRows.count()
+    console.log('   Anonymous physical slots remaining:', anonCount)
+    expect(anonCount).toBeGreaterThan(0)
+
+    const firstRow = physicalRows.first()
+    await expect(firstRow).toBeVisible({ timeout: 10000 })
+    const slotName = await firstRow.locator('td').first().textContent()
+    console.log('   Using slot:', slotName?.trim())
+
+    const linkBtn = firstRow.locator('button[data-ref]')
     const ref = await linkBtn.getAttribute('data-ref')
     expect(ref).toBeTruthy()
     expect(ref?.length).toBe(8)
@@ -272,12 +287,12 @@ test.describe('Full ref flow E2E @smoke', () => {
     await page.waitForTimeout(1500)
     console.log('   Souvenir + lunchbox claimed')
 
-    // Reset: log in as admin and rename back to placeholder so
-    // the next run finds an unclaimed slot. Skip cleanup if the
-    // test is short on time — manual reset works too.
+    // The chosen slot is now consumed (named "TEST_GUEST", checked
+    // in, claimed). Next run will pick the next available anonymous
+    // slot. After ~38 runs, re-seed via SQL to refresh.
     console.log('\n🎉 Physical slot E2E: PASSED')
-    console.log('   Note: slot 38 is now identified as', TEST_GUEST)
-    console.log('   To reset, edit the row in /admin/invitees')
+    console.log('   Slot consumed:', slotName?.trim(), '→', TEST_GUEST)
+    console.log('   Remaining anon slots after this run:', anonCount - 1)
   })
 
   // ─── SEPARATE: CSV flow test ───────────────
