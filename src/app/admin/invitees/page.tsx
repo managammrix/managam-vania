@@ -215,7 +215,14 @@ export default function InviteesPage() {
     let skipped = 0
     for (const row of preview) {
       try {
-        await upsertInvitee(row as InviteeRow)
+        // Generate ref client-side same as manual save() does —
+        // otherwise CSV-imported rows go in with ref=null and the
+        // Link/QR features don't work for them.
+        const rowWithRef = {
+          ...row,
+          ref: row.ref || generateRef(),
+        }
+        await upsertInvitee(rowWithRef as InviteeRow)
         imported++
       } catch { skipped++ }
     }

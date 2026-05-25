@@ -150,6 +150,27 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     await page.reload()
     await page.waitForTimeout(2000)
 
+    // Wait until at least one TEST row with a data-ref attribute
+    // renders, so we know refs were generated and the table is ready.
+    await page.fill('input[placeholder*="Cari"]', CASES[0].name)
+    await page.waitForTimeout(800)
+    await page.waitForSelector(
+      `tr:has-text("${CASES[0].name}") button[data-ref]`,
+      { state: 'attached', timeout: 10000 }
+    ).catch(() => null)
+
+    // Debug — dump first TEST row's HTML so future ref-extraction
+    // failures are diagnosable in CI logs.
+    const firstRowHtml = await page.locator('tr')
+      .filter({ hasText: CASES[0].name })
+      .first()
+      .innerHTML()
+      .catch(() => '(row not found)')
+    console.log('   First TEST row HTML (first 500 chars):')
+    console.log('  ', firstRowHtml.slice(0, 500))
+    await page.fill('input[placeholder*="Cari"]', '')
+    await page.waitForTimeout(400)
+
     // ─── STEP 3: Per-guest verification ──────────────────────
     for (let i = 0; i < CASES.length; i++) {
       const c = CASES[i]
