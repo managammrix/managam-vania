@@ -7,8 +7,7 @@ type TestCase = {
   label: string
   name: string
   phone: string
-  guests: number
-  max_guests: number
+  guests: number  // doubles as invited count + RSVP seat limit
   notes: string
   sender: 'agam' | 'vania'
 }
@@ -16,18 +15,18 @@ type TestCase = {
 const PHONE = '6281263387707'
 
 const CASES: TestCase[] = [
-  { label: '1. Normal 2pax',         name: 'TEST - Normal 2pax',         phone: PHONE,             guests: 2,  max_guests: 2,  notes: 'normal 2pax',         sender: 'agam' },
-  { label: '2. Normal 1pax',         name: 'TEST - Normal 1pax',         phone: PHONE,             guests: 1,  max_guests: 1,  notes: 'normal 1pax',         sender: 'agam' },
-  { label: '3. Normal 3pax',         name: 'TEST - Normal 3pax',         phone: PHONE,             guests: 3,  max_guests: 3,  notes: 'normal 3pax',         sender: 'agam' },
-  { label: '4. Group 20pax',         name: 'TEST - Group 20pax',         phone: PHONE,             guests: 20, max_guests: 20, notes: 'group 20pax',         sender: 'agam' },
-  { label: '5. Digital Only 0pax',   name: 'TEST - Digital Only 0pax',   phone: PHONE,             guests: 0,  max_guests: 0,  notes: 'digital only',        sender: 'agam' },
-  { label: '6. No Phone',            name: 'TEST - No Phone',            phone: '',                guests: 2,  max_guests: 2,  notes: 'no phone',            sender: 'agam' },
-  { label: '7. Overseas AU +61',     name: 'TEST - Overseas AU +61',     phone: '61412345678',     guests: 2,  max_guests: 2,  notes: 'overseas AU',         sender: 'vania' },
-  { label: '8. Overseas SG +65',     name: 'TEST - Overseas SG +65',     phone: '6591234567',      guests: 2,  max_guests: 2,  notes: 'overseas SG',         sender: 'vania' },
-  { label: '9. Overseas US +1',      name: 'TEST - Overseas US +1',      phone: '14155551234',     guests: 2,  max_guests: 2,  notes: 'overseas US',         sender: 'vania' },
-  { label: '10. Long Number',        name: 'TEST - Long Number',         phone: '62895805222125',  guests: 2,  max_guests: 2,  notes: 'long number',         sender: 'agam' },
-  { label: '11. PIC Proxy',          name: 'TEST - PIC Proxy',           phone: PHONE,             guests: 0,  max_guests: 0,  notes: 'pic proxy',           sender: 'agam' },
-  { label: '12. 4pax',               name: 'TEST - 4pax',                phone: PHONE,             guests: 4,  max_guests: 4,  notes: '4pax',                sender: 'agam' },
+  { label: '1. Normal 2pax',         name: 'TEST - Normal 2pax',         phone: PHONE,             guests: 2,  notes: 'normal 2pax',         sender: 'agam' },
+  { label: '2. Normal 1pax',         name: 'TEST - Normal 1pax',         phone: PHONE,             guests: 1,  notes: 'normal 1pax',         sender: 'agam' },
+  { label: '3. Normal 3pax',         name: 'TEST - Normal 3pax',         phone: PHONE,             guests: 3,  notes: 'normal 3pax',         sender: 'agam' },
+  { label: '4. Group 20pax',         name: 'TEST - Group 20pax',         phone: PHONE,             guests: 20, notes: 'group 20pax',         sender: 'agam' },
+  { label: '5. Digital Only 0pax',   name: 'TEST - Digital Only 0pax',   phone: PHONE,             guests: 0,  notes: 'digital only',        sender: 'agam' },
+  { label: '6. No Phone',            name: 'TEST - No Phone',            phone: '',                guests: 2,  notes: 'no phone',            sender: 'agam' },
+  { label: '7. Overseas AU +61',     name: 'TEST - Overseas AU +61',     phone: '61412345678',     guests: 2,  notes: 'overseas AU',         sender: 'vania' },
+  { label: '8. Overseas SG +65',     name: 'TEST - Overseas SG +65',     phone: '6591234567',      guests: 2,  notes: 'overseas SG',         sender: 'vania' },
+  { label: '9. Overseas US +1',      name: 'TEST - Overseas US +1',      phone: '14155551234',     guests: 2,  notes: 'overseas US',         sender: 'vania' },
+  { label: '10. Long Number',        name: 'TEST - Long Number',         phone: '62895805222125',  guests: 2,  notes: 'long number',         sender: 'agam' },
+  { label: '11. PIC Proxy',          name: 'TEST - PIC Proxy',           phone: PHONE,             guests: 0,  notes: 'pic proxy',           sender: 'agam' },
+  { label: '12. 4pax',               name: 'TEST - 4pax',                phone: PHONE,             guests: 4,  notes: '4pax',                sender: 'agam' },
 ]
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -40,9 +39,9 @@ async function loginAdmin(page: Page) {
 }
 
 function buildCsv(rows: TestCase[]): string {
-  const header = 'name,phone,guests,max_guests,notes,sender'
+  const header = 'name,phone,guests,notes,sender'
   const body = rows
-    .map(r => `${r.name},${r.phone},${r.guests},${r.max_guests},${r.notes},${r.sender}`)
+    .map(r => `${r.name},${r.phone},${r.guests},${r.notes},${r.sender}`)
     .join('\n')
   return header + '\n' + body
 }
@@ -190,13 +189,13 @@ test.describe('Comprehensive guest test suite @smoke', () => {
         if (c.guests > 0) {
           await page.click('#hadir-btn', { force: true })
           await page.waitForTimeout(700)
-          // Seat selector should reflect this invitee's max_guests
-          // (set per-row via CSV). Assert option count matches.
+          // Seat selector should reflect this invitee's `guests` value
+          // (which doubles as the per-row seat limit).
           const selectEl = page.locator('#seat-selector')
           const optionCount = await selectEl.locator('option').count()
-          if (optionCount !== c.max_guests) {
-            r.error = `seat selector has ${optionCount} options, expected max_guests=${c.max_guests}`
-            console.warn('  ⚠ seat options mismatch:', optionCount, 'vs', c.max_guests)
+          if (optionCount !== c.guests) {
+            r.error = `seat selector has ${optionCount} options, expected guests=${c.guests}`
+            console.warn('  ⚠ seat options mismatch:', optionCount, 'vs', c.guests)
           }
           await selectEl.selectOption(String(c.guests))
         } else {

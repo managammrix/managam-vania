@@ -59,12 +59,13 @@ drop policy if exists "Public access on message_log" on public.message_log;
 drop policy if exists "Auth users only on message_log" on public.message_log;
 -- No policies → anon denied. service_role bypasses RLS.
 
--- ── INVITEES — unique ref links, max guests, opened tracking ─────
+-- ── INVITEES — unique ref links + opened tracking ─────────────────
+-- NB: per-invitee seat limit is the `guests` column itself; the
+-- separate `max_guests` column has been removed (dropped at the
+-- bottom of this file). `default_max_guests` in settings is the
+-- fallback when an invitee's `guests` is null/0.
 alter table public.invitees
   add column if not exists ref text unique;
-
-alter table public.invitees
-  add column if not exists max_guests integer;
 
 alter table public.invitees
   add column if not exists opened_at timestamptz;
@@ -86,7 +87,6 @@ returns table (
   name text,
   phone text,
   ref text,
-  max_guests integer,
   opened_at timestamptz,
   sender text,
   guests integer,
@@ -106,7 +106,7 @@ begin
   return query
     select
       i.id, i.name, i.phone, i.ref,
-      i.max_guests, i.opened_at, i.sender,
+      i.opened_at, i.sender,
       i.guests, i.rsvp_status, i.type
     from public.invitees i
     where i.ref = p_ref
@@ -352,13 +352,12 @@ do $$
 declare i int;
 begin
   for i in 1..38 loop
-    insert into public.invitees (name, phone, type, ref, max_guests, guests, rsvp_status)
+    insert into public.invitees (name, phone, type, ref, guests, rsvp_status)
     select
       'Undangan Fisik #' || i,
       null,
       'physical',
       substr(md5(random()::text || i::text), 1, 8),
-      2,
       2,
       'pending'
     where not exists (
@@ -452,3 +451,11 @@ begin
 end;
 $$;
 grant execute on function public.identify_physical_guest(text, text, text, integer, boolean) to anon;
+
+-- ──────────────────────────────────────────────────────────────────
+-- Drop the deprecated max_guests column. Per-invitee seat limit is
+-- now just `guests`. Must run AFTER get_invitee_by_ref above has
+-- been redefined to no longer reference it (otherwise the function
+-- definition would dangle).
+-- ──────────────────────────────────────────────────────────────────
+alter table public.invitees drop column if exists max_guests;

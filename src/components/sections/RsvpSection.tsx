@@ -33,7 +33,11 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
     setPhone(isAnonPhysical ? '' : (guestData.phone ?? ''))
   }, [guestData])
 
-  const maxSeats = guestData?.max_guests ?? defaultMaxGuests
+  // Per-invitee seat limit is `guests` itself; fall back to the
+  // global default if the invitee row has no guests value set.
+  const maxSeats = (guestData?.guests && guestData.guests > 0)
+    ? guestData.guests
+    : defaultMaxGuests
 
   const isPhysicalAnon = !!guestData &&
     guestData.type === 'physical' &&

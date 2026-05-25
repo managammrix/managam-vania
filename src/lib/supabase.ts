@@ -34,7 +34,6 @@ export interface InviteeRow {
   notes?: string
   sender?: 'agam' | 'vania'
   ref?: string
-  max_guests?: number | null
   opened_at?: string | null
   checked_in_at?: string | null
   souvenir_claimed?: boolean

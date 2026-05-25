@@ -62,7 +62,7 @@ function CheckinContent() {
       console.log('[checkin] isAnonymousPhysical:', isAnonymousPhysical(row))
       if (isAnonymousPhysical(row)) {
         // Show form first; don't check in until usher submits
-        setFormGuests(row.max_guests ?? row.guests ?? 1)
+        setFormGuests(row.guests ?? 1)
         setNeedsIdentification(true)
         setLoading(false)
       } else {
@@ -141,7 +141,7 @@ function CheckinContent() {
 
   // ─── Anonymous physical slot — identification form ───────────────
   if (needsIdentification && invitee) {
-    const maxSeats = invitee.max_guests ?? 2
+    const maxSeats = invitee.guests && invitee.guests > 0 ? invitee.guests : 2
     return (
       <Frame>
         <div style={cardStyle}>

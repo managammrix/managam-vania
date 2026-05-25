@@ -223,7 +223,7 @@ export default function AdminCheckinPage() {
   // Pre-fill physical form when selecting a new physical anon
   useEffect(() => {
     if (selected && isAnonPhysical(selected)) {
-      setPhysGuests(selected.max_guests ?? selected.guests ?? 1)
+      setPhysGuests(selected.guests ?? 1)
     }
   }, [selected])
 
@@ -413,7 +413,7 @@ export default function AdminCheckinPage() {
                   onChange={e => setPhysGuests(Number(e.target.value))}
                   style={{ ...input, appearance: 'none' }}
                 >
-                  {Array.from({ length: selected.max_guests ?? 2 }, (_, i) => (
+                  {Array.from({ length: (selected.guests && selected.guests > 0) ? selected.guests : 2 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>{i + 1} tamu</option>
                   ))}
                 </select>

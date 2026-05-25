@@ -23,13 +23,13 @@ function getStatusBadge(inv: InviteeRow): {
 }
 
 function downloadCsvTemplate() {
-  const headers = 'name,phone,guests,max_guests,notes,sender'
+  const headers = 'name,phone,guests,notes,sender'
   const example = [
-    'Budi Santoso,628111111111,2,2,Teman kuliah,agam',
-    'Ibu Maria,628222222222,0,0,Rekan jauh (digital saja),vania',
-    'Pastor Yohanes,628333333333,1,1,,agam',
-    'Keluarga Pak Hendra,628444444444,4,6,Group besar — max 6,agam',
-    'Tante Susi (no WA),,2,2,Tidak punya WA — undangan fisik,vania',
+    'Budi Santoso,628111111111,2,Teman kuliah,agam',
+    'Ibu Maria,628222222222,0,Rekan jauh (digital saja),vania',
+    'Pastor Yohanes,628333333333,1,,agam',
+    'Keluarga Pak Hendra,628444444444,4,Group besar,agam',
+    'Tante Susi (no WA),,2,Tidak punya WA — undangan fisik,vania',
   ].join('\n')
   const content = headers + '\n' + example
   const blob = new Blob([content], { type:'text/csv;charset=utf-8;' })
@@ -60,8 +60,7 @@ export default function InviteesPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Partial<InviteeRow>>({
     name:'', phone:'', rsvp_status:'pending',
-    notes:'', sender:'agam',
-    max_guests: null as number | null,
+    guests: 2, notes:'', sender:'agam',
   })
   const [defaultMax, setDefaultMax] = useState(2)
   const [bulkProgress, setBulkProgress] = useState<{
@@ -120,7 +119,7 @@ export default function InviteesPage() {
     setShowForm(false)
     setForm({ name:'', phone:'',
       rsvp_status:'pending', notes:'', sender:'agam',
-      max_guests: defaultMaxRef.current })
+      guests: defaultMaxRef.current })
     load()
   }
 
@@ -162,8 +161,6 @@ export default function InviteesPage() {
       ['phone','telepon','hp','whatsapp','no','nomor'].includes(h))
     const guestsIdx = headers.findIndex(h =>
       ['guests','tamu','seats','kursi','jumlah'].includes(h))
-    const maxGuestsIdx = headers.findIndex(h =>
-      ['max_guests','maxguests','max','maks','maks_tamu','maksimal'].includes(h))
     const notesIdx = headers.findIndex(h =>
       ['notes','catatan','keterangan'].includes(h))
     const senderIdx = headers.findIndex(h =>
@@ -188,24 +185,15 @@ export default function InviteesPage() {
       const rawPhone = cols[phoneIdx] ?? ''
       const normalizedPhone = normalizePhone(rawPhone)
       const phoneVal: string | null = normalizedPhone || null
-      // max_guests: column present + parsed → per-row override.
-      // Otherwise null → use the global default at RSVP time.
-      let maxGuestsVal: number | null = null
-      if (maxGuestsIdx >= 0) {
-        const raw = (cols[maxGuestsIdx] ?? '').trim()
-        if (raw) {
-          const n = parseInt(raw)
-          if (!isNaN(n) && n >= 0) maxGuestsVal = n
-        }
-      }
 
       return {
         name: cols[nameIdx] ?? '',
         phone: phoneVal,
+        // `guests` doubles as both invited count and seat limit at RSVP.
+        // Blank → falls back to global default_max_guests at RSVP time.
         guests: guestsIdx >= 0
-          ? parseInt(cols[guestsIdx] ?? '1') || 0
-          : 1,
-        max_guests: maxGuestsVal,
+          ? parseInt(cols[guestsIdx] ?? '') || 0
+          : 0,
         notes: notesIdx >= 0 ? (cols[notesIdx] ?? '') : '',
         rsvp_status: 'pending' as const,
         sender: (senderIdx >= 0
@@ -336,7 +324,7 @@ export default function InviteesPage() {
               setEditing(null)
               setForm({ name:'', phone:'',
                 rsvp_status:'pending', notes:'', sender:'agam',
-                max_guests: defaultMaxRef.current })
+                guests: defaultMaxRef.current })
               setShowForm(true)
             }}
             style={{
@@ -654,13 +642,14 @@ export default function InviteesPage() {
               <option value="declined">Tidak Hadir</option>
             </select>
             <input type="number"
-              placeholder="Maks tamu (kosong = default)"
-              value={form.max_guests ?? ''}
-              min={1} max={20}
+              placeholder="Jumlah tamu (0 = digital saja / kehormatan)"
+              value={form.guests ?? ''}
+              min={0} max={50}
               onChange={e => setForm(f => ({
                 ...f,
-                max_guests: e.target.value
-                  ? Number(e.target.value) : null,
+                guests: e.target.value === ''
+                  ? undefined
+                  : Math.max(0, Number(e.target.value)),
               }))}
               style={inp} />
             <textarea placeholder="Catatan (opsional)"
@@ -761,7 +750,7 @@ export default function InviteesPage() {
               }}>
                 <thead>
                   <tr style={{background:'#f8f7f4'}}>
-                    {['Nama','Telepon','Dari','Tamu','Maks','Catatan'].map(h => (
+                    {['Nama','Telepon','Dari','Tamu','Catatan'].map(h => (
                       <th key={h} style={{
                         padding:'10px 12px', textAlign:'left',
                         fontFamily:'Cinzel,serif', fontSize:10,
@@ -807,16 +796,6 @@ export default function InviteesPage() {
                       }}>
                         {row.guests === 0
                           ? 'Kehormatan' : row.guests}
-                      </td>
-                      <td style={{
-                        padding:'10px 12px',
-                        color: row.max_guests != null
-                          ? '#1e3d2a' : '#aaa',
-                        fontSize: 12,
-                      }}>
-                        {row.max_guests != null
-                          ? row.max_guests
-                          : '(default)'}
                       </td>
                       <td style={{
                         padding:'10px 12px', color:'#888',
