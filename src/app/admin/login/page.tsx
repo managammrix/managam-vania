@@ -64,26 +64,11 @@ export default function AdminLogin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
-  const tap = (k: string) => {
-    inputRef.current?.focus()
-    if (verifying) return
-    if (k === 'BERSIH') {
-      setPin('')
-      setError(false)
-      return
-    }
-    if (k === '⌫') {
-      setPin(p => p.slice(0, -1))
-      setError(false)
-      return
-    }
-    const next = (pin + k).slice(0, PIN_LENGTH)
-    attempt(next)
-  }
+  const focusInput = () => inputRef.current?.focus()
 
   return (
     <div
-      onClick={() => inputRef.current?.focus()}
+      onClick={focusInput}
       style={{
         minHeight:'100vh',
         display:'flex',
@@ -106,12 +91,13 @@ export default function AdminLogin() {
       <div style={{
         background:'#faf6ef',
         borderRadius:20,
-        padding:'40px 32px',
+        padding:'48px 36px',
         width:360,
         maxWidth:'100%',
         textAlign:'center',
         boxShadow:'0 32px 80px rgba(0,0,0,0.4)',
         position:'relative',
+        cursor: 'pointer',
       }}>
         <div style={{
           fontFamily:'Cinzel,serif',
@@ -134,53 +120,71 @@ export default function AdminLogin() {
           color:'#9db89f',
           letterSpacing:2,
           fontFamily:'Cinzel,serif',
-          marginBottom:28,
+          marginBottom:36,
         }}>20.06.2026</div>
 
-        {/* Hidden focused input — accepts keyboard input on desktop.
-            Uppercases, caps at PIN_LENGTH, auto-attempts at full length. */}
+        {/* Hidden numeric input — triggers native 0-9 keypad on mobile.
+            type="tel" + inputMode="numeric" is the standard OTP pattern.
+            Visually invisible but focusable (no pointer-events:none). */}
         <input
           ref={inputRef}
-          type="password"
+          type="tel"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={pin}
           onChange={e => {
-            const val = e.target.value.toUpperCase().slice(0, PIN_LENGTH)
+            const val = e.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH)
             attempt(val)
           }}
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
+          autoFocus
+          autoComplete="one-time-code"
           style={{
             position: 'absolute',
             opacity: 0,
-            pointerEvents: 'none',
             width: 1,
             height: 1,
+            border: 0,
+            padding: 0,
           }}
         />
 
-        {/* Dot display */}
+        {/* OTP-style box display — tap anywhere to focus the hidden input */}
         <div
           className={shake ? 'shake' : ''}
+          onClick={focusInput}
           style={{
             display:'flex',
             justifyContent:'center',
-            gap:10,
-            marginBottom:14,
+            gap:8,
+            marginBottom:18,
             userSelect: 'none',
           }}
         >
-          {Array.from({length:PIN_LENGTH}).map((_,i) => (
-            <div key={i} style={{
-              width:12,
-              height:12,
-              borderRadius:'50%',
-              background: i < pin.length
-                ? (error ? '#c0392b' : '#1e3d2a')
-                : '#d9cdb8',
-              transition:'background 0.15s ease',
-            }}/>
-          ))}
+          {Array.from({length:PIN_LENGTH}).map((_,i) => {
+            const filled = i < pin.length
+            return (
+              <div key={i} style={{
+                width: 34,
+                height: 44,
+                borderRadius: 8,
+                border: `1px solid ${
+                  error ? '#c0392b' :
+                  filled ? '#1e3d2a' : '#d9cdb8'
+                }`,
+                background: filled ? '#1e3d2a' : 'white',
+                display:'flex',
+                alignItems:'center',
+                justifyContent:'center',
+                fontSize: 20,
+                color: filled
+                  ? (error ? '#c0392b' : '#faf6ef')
+                  : '#d9cdb8',
+                transition:'all 0.15s ease',
+              }}>
+                {filled ? '●' : ''}
+              </div>
+            )
+          })}
         </div>
 
         <div style={{
@@ -188,75 +192,15 @@ export default function AdminLogin() {
           fontSize:10,
           letterSpacing:3,
           color: error ? '#c0392b' : '#9db89f',
-          marginBottom:24,
           minHeight: 14,
           userSelect: 'none',
         }}>
           {verifying ? 'MEMVERIFIKASI...' :
-           error ? 'PIN SALAH — COBA LAGI' : 'MASUKKAN PIN'}
-        </div>
-
-        {/* On-screen keypad — for mobile / no-keyboard devices */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 10,
-          maxWidth: 260,
-          margin: '0 auto',
-        }}>
-          {['1','2','3','4','5','6','7','8','9','BERSIH','0','⌫'].map(k => (
-            <Key
-              key={k}
-              onClick={() => tap(k)}
-              disabled={verifying}
-              muted={k === 'BERSIH' || k === '⌫'}
-            >
-              {k}
-            </Key>
-          ))}
-        </div>
-
-        <div style={{
-          fontSize:10,
-          color:'#9db89f',
-          letterSpacing:2,
-          fontFamily:'Cinzel,serif',
-          marginTop:18,
-          userSelect: 'none',
-        }}>
-          Atau ketik via keyboard
+           error ? 'PIN SALAH — COBA LAGI' :
+           pin.length === 0 ? 'KETUK UNTUK MASUKKAN PIN' :
+           'MASUKKAN PIN'}
         </div>
       </div>
     </div>
-  )
-}
-
-function Key({ onClick, disabled, muted, children }: {
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
-  disabled?: boolean
-  muted?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={(e) => { e.stopPropagation(); onClick(e) }}
-      disabled={disabled}
-      style={{
-        padding: '16px 0',
-        background: muted ? 'transparent' : '#ffffff',
-        border: '0.5px solid #d9cdb8',
-        borderRadius: 12,
-        fontFamily: muted ? 'Cinzel,serif' : 'Cormorant Garamond,serif',
-        fontSize: muted ? 11 : 24,
-        letterSpacing: muted ? 2 : 0,
-        color: muted ? '#9db89f' : '#1e3d2a',
-        cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-        userSelect: 'none',
-        transition: 'background 0.15s ease',
-      }}
-    >
-      {children}
-    </button>
   )
 }
