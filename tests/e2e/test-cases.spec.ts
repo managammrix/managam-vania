@@ -192,14 +192,41 @@ test.describe('Comprehensive guest test suite @smoke', () => {
         console.log('  ref:', ref)
         if (!ref) { r.error = 'No ref generated'; continue }
 
-        // Open personal link in same page
+        // Open personal link in same page.
+        // The home page is wrapped in dynamic({ssr:false}) so the
+        // initial paint is a loading shell; the personalized envelope
+        // only renders AFTER:
+        //   1. JS bundle loads + hydrates
+        //   2. ref useEffect fires
+        //   3. get_invitee_by_ref RPC resolves
+        //   4. setGuestData triggers re-render
+        // networkidle alone can fire before the RPC completes, so we
+        // explicitly waitForSelector on the actual greeting element.
         await page.goto(`/?ref=${ref}`)
         await page.waitForLoadState('networkidle')
-        await page.waitForTimeout(2500)
-        // Envelope shows "KEPADA YTH." for ref-linked guests
-        const greetingVisible = await page.getByText('KEPADA YTH.').isVisible().catch(() => false)
+        let greetingVisible = false
+        try {
+          await page.waitForSelector('text=KEPADA YTH.', {
+            state: 'visible',
+            timeout: 12000,
+          })
+          // Also assert the personalized name is shown — proves the
+          // RPC returned the right row, not just a generic envelope.
+          await page.waitForSelector(`text=${c.name}`, {
+            state: 'visible',
+            timeout: 5000,
+          })
+          greetingVisible = true
+        } catch {
+          greetingVisible = false
+        }
         r.linkOpens = greetingVisible
         console.log('  link opens:', greetingVisible)
+        if (!greetingVisible) {
+          // Diagnostic: dump page text so we can see WHAT did render
+          const visibleText = await page.locator('body').innerText().catch(() => '')
+          console.log('  page text snippet:', visibleText.slice(0, 200).replace(/\n/g, ' | '))
+        }
 
         // RSVP flow
         await page.locator('#envelope-screen').click({ force: true }).catch(() => {})
