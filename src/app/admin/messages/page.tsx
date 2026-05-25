@@ -121,10 +121,13 @@ export default function MessagesPage() {
     setSending(true)
     setResult(null)
 
-    const agamRecipients = recipients.filter(
+    // Only invitees with a phone number can receive WhatsApp.
+    // Physical anonymous slots (phone=null) are skipped.
+    const sendable = recipients.filter(i => !!i.phone)
+    const agamRecipients = sendable.filter(
       i => (i.sender ?? 'agam') === 'agam'
     )
-    const vaniaRecipients = recipients.filter(
+    const vaniaRecipients = sendable.filter(
       i => i.sender === 'vania'
     )
 
@@ -140,7 +143,7 @@ export default function MessagesPage() {
           ? sendBulkWhatsApp(
               tokenAgam,
               agamRecipients.map(i => ({
-                name: i.name, phone: i.phone, ref: i.ref,
+                name: i.name, phone: i.phone!, ref: i.ref,
               })),
               currentMessage
             ).catch(err => {
@@ -152,7 +155,7 @@ export default function MessagesPage() {
           ? sendBulkWhatsApp(
               tokenVania,
               vaniaRecipients.map(i => ({
-                name: i.name, phone: i.phone, ref: i.ref,
+                name: i.name, phone: i.phone!, ref: i.ref,
               })),
               currentMessage
             ).catch(err => {

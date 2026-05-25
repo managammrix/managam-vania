@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Translations } from '@/lib/translations'
-import { InviteeRow, submitRsvp, updateInviteeRsvp } from '@/lib/supabase'
+import { InviteeRow, submitRsvp, updateInviteeRsvp, identifyPhysicalGuest } from '@/lib/supabase'
 import { useReveal } from '../useReveal'
 
 interface Props {
@@ -12,8 +12,11 @@ interface Props {
 
 export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) {
   const ref = useReveal()
-  const [name, setName] = useState(guestData?.name ?? '')
-  const [phone, setPhone] = useState(guestData?.phone ?? '')
+  const initialIsAnonPhysical = !!guestData &&
+    guestData.type === 'physical' &&
+    guestData.name.startsWith('Undangan Fisik')
+  const [name, setName] = useState(initialIsAnonPhysical ? '' : (guestData?.name ?? ''))
+  const [phone, setPhone] = useState(initialIsAnonPhysical ? '' : (guestData?.phone ?? ''))
   const [attending, setAttending] = useState<boolean | null>(null)
   const [guests, setGuests] = useState(1)
   const [submitted, setSubmitted] = useState(false)
@@ -21,13 +24,21 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    if (guestData) {
-      setName(guestData.name)
-      setPhone(guestData.phone ?? '')
-    }
+    if (!guestData) return
+    const isAnonPhysical = guestData.type === 'physical' &&
+      guestData.name.startsWith('Undangan Fisik')
+    // For anonymous physical slots, start with empty inputs so the
+    // guest types their real name; placeholder isn't useful as a value.
+    setName(isAnonPhysical ? '' : guestData.name)
+    setPhone(isAnonPhysical ? '' : (guestData.phone ?? ''))
   }, [guestData])
 
   const maxSeats = guestData?.max_guests ?? defaultMaxGuests
+
+  const isPhysicalAnon = !!guestData &&
+    guestData.type === 'physical' &&
+    guestData.name.startsWith('Undangan Fisik')
+  const isLocked = !!guestData && !isPhysicalAnon
 
   const handleSubmit = async () => {
     if (!name.trim()) { alert(tr.alert_name); return }
@@ -37,11 +48,17 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
     try {
       await submitRsvp({ name, phone, attending, guests: guestCount })
     } catch { /* still show success — store locally */ }
-    // If this guest came in via a personal ref link, also update
-    // the invitees row so the admin dashboard reflects their status.
+    // Sync the invitees row so the admin dashboard reflects status.
     if (guestData?.ref) {
       try {
-        await updateInviteeRsvp(guestData.ref, attending, guestCount)
+        if (isPhysicalAnon) {
+          // Physical anon slot: update name + phone too (without check-in)
+          await identifyPhysicalGuest(
+            guestData.ref, name.trim(), phone.trim(), guestCount, attending
+          )
+        } else {
+          await updateInviteeRsvp(guestData.ref, attending, guestCount)
+        }
       } catch (err) {
         console.error('[rsvp] invitee update error:', err)
       }
@@ -50,7 +67,7 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
       try {
         const { generateQRTicket } = await import('@/lib/generateQR')
         const url = await generateQRTicket({
-          name: guestData.name,
+          name: isPhysicalAnon ? name.trim() : guestData.name,
           ref: guestData.ref,
           guests: guestCount,
         })
@@ -82,26 +99,31 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
               <input
                 style={{
                   ...inputStyle,
-                  background: guestData ? 'var(--cream-warm)' : 'transparent',
-                  color: guestData ? 'var(--ink-soft)' : 'var(--ink)',
+                  background: isLocked ? 'var(--cream-warm)' : 'transparent',
+                  color: isLocked ? 'var(--ink-soft)' : 'var(--ink)',
                 }}
                 value={name}
-                onChange={e => !guestData && setName(e.target.value)}
-                readOnly={!!guestData}
-                placeholder={tr.rsvp_name_placeholder}
+                onChange={e => !isLocked && setName(e.target.value)}
+                readOnly={isLocked}
+                placeholder={isPhysicalAnon ? 'Nama lengkap Anda' : tr.rsvp_name_placeholder}
               />
+              {isPhysicalAnon && (
+                <p style={{fontSize:12,color:'var(--sage)',marginTop:4,fontStyle:'italic'}}>
+                  Silakan isi nama lengkap Anda
+                </p>
+              )}
             </div>
             <div style={{marginBottom:24}}>
               <label style={labelStyle}>{tr.rsvp_phone}</label>
               <input
                 style={{
                   ...inputStyle,
-                  background: guestData ? 'var(--cream-warm)' : 'transparent',
-                  color: guestData ? 'var(--ink-soft)' : 'var(--ink)',
+                  background: isLocked ? 'var(--cream-warm)' : 'transparent',
+                  color: isLocked ? 'var(--ink-soft)' : 'var(--ink)',
                 }}
                 value={phone}
-                onChange={e => !guestData && setPhone(e.target.value)}
-                readOnly={!!guestData}
+                onChange={e => !isLocked && setPhone(e.target.value)}
+                readOnly={isLocked}
                 placeholder="+62 ..."
               />
             </div>

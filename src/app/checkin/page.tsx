@@ -2,9 +2,12 @@
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
+  InviteeRow,
+  fetchInviteeByRef,
   checkinByRef,
   claimSouvenirByRef,
   claimLunchboxByRef,
+  updatePhysicalGuest,
   CheckinResult,
 } from '@/lib/supabase'
 
@@ -13,14 +16,24 @@ type ClaimState = {
   lunchbox: boolean
 }
 
+function isAnonymousPhysical(row: InviteeRow): boolean {
+  return row.type === 'physical' && row.name.startsWith('Undangan Fisik')
+}
+
 function CheckinContent() {
   const [loading, setLoading] = useState(true)
+  const [invitee, setInvitee] = useState<InviteeRow | null>(null)
   const [result, setResult] = useState<CheckinResult | null>(null)
   const [ref, setRef] = useState<string | null>(null)
+  const [needsIdentification, setNeedsIdentification] = useState(false)
   const [claims, setClaims] = useState<ClaimState>({ souvenir: false, lunchbox: false })
   const [claimMsg, setClaimMsg] = useState<string | null>(null)
-  const [busy, setBusy] = useState<'souvenir' | 'lunchbox' | null>(null)
+  const [busy, setBusy] = useState<'souvenir' | 'lunchbox' | 'identify' | null>(null)
+  const [formName, setFormName] = useState('')
+  const [formPhone, setFormPhone] = useState('')
+  const [formGuests, setFormGuests] = useState(1)
 
+  // Initial load — fetch invitee row first to decide flow
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const r = params.get('ref')
@@ -30,15 +43,53 @@ function CheckinContent() {
       return
     }
     setRef(r)
-    checkinByRef(r).then(res => {
-      setResult(res)
-      setClaims({
-        souvenir: !!res.souvenir_claimed,
-        lunchbox: !!res.lunchbox_claimed,
-      })
-      setLoading(false)
+    fetchInviteeByRef(r).then(row => {
+      if (!row) {
+        setResult({ success: false, error: 'Tamu tidak ditemukan' })
+        setLoading(false)
+        return
+      }
+      setInvitee(row)
+      if (isAnonymousPhysical(row)) {
+        // Show form first; don't check in until usher submits
+        setFormGuests(row.max_guests ?? row.guests ?? 1)
+        setNeedsIdentification(true)
+        setLoading(false)
+      } else {
+        // Digital OR physical-with-real-name → check in immediately
+        checkinByRef(r).then(res => {
+          setResult(res)
+          setClaims({
+            souvenir: !!res.souvenir_claimed,
+            lunchbox: !!res.lunchbox_claimed,
+          })
+          setLoading(false)
+        })
+      }
     })
   }, [])
+
+  const handleIdentify = async () => {
+    if (!ref) return
+    if (!formName.trim()) { alert('Mohon masukkan nama tamu.'); return }
+    setBusy('identify')
+    const res = await updatePhysicalGuest(ref, formName.trim(), formPhone.trim(), formGuests)
+    if (!res.success) {
+      setBusy(null)
+      alert(`Gagal: ${res.error ?? 'Unknown error'}`)
+      return
+    }
+    // After identification + atomic check-in, fetch fresh state so
+    // the success card renders souvenir/lunchbox buttons.
+    const fresh = await checkinByRef(ref)
+    setResult(fresh)
+    setClaims({
+      souvenir: !!fresh.souvenir_claimed,
+      lunchbox: !!fresh.lunchbox_claimed,
+    })
+    setNeedsIdentification(false)
+    setBusy(null)
+  }
 
   const handleClaim = async (kind: 'souvenir' | 'lunchbox') => {
     if (!ref) return
@@ -72,17 +123,98 @@ function CheckinContent() {
     return (
       <Frame>
         <div style={cardStyle}>
-          <p style={muted}>Memproses check-in...</p>
+          <p style={muted}>Memproses...</p>
         </div>
       </Frame>
     )
   }
 
+  // ─── Anonymous physical slot — identification form ───────────────
+  if (needsIdentification && invitee) {
+    const maxSeats = invitee.max_guests ?? 2
+    return (
+      <Frame>
+        <div style={cardStyle}>
+          <div style={{
+            fontFamily: 'Cinzel,serif',
+            fontSize: 10, letterSpacing: 4,
+            color: '#b8965a', marginBottom: 8,
+            textAlign: 'center',
+          }}>SLOT FISIK · {invitee.name.replace('Undangan Fisik ', '')}</div>
+          <h2 style={{
+            fontFamily: 'Cormorant Garamond,serif',
+            fontSize: 26, fontStyle: 'italic',
+            color: '#1e3d2a', textAlign: 'center',
+            marginBottom: 8,
+          }}>Identifikasi Tamu</h2>
+          <p style={{
+            textAlign: 'center', color: '#888',
+            fontSize: 13, lineHeight: 1.6,
+            marginBottom: 20,
+          }}>
+            Mohon isi nama tamu untuk slot undangan fisik ini.
+          </p>
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={formLabel}>NAMA LENGKAP</label>
+            <input
+              id="physical-name"
+              value={formName}
+              onChange={e => setFormName(e.target.value)}
+              placeholder="Nama tamu"
+              style={formInput}
+              autoFocus
+            />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={formLabel}>NO. WHATSAPP (OPSIONAL)</label>
+            <input
+              id="physical-phone"
+              value={formPhone}
+              onChange={e => setFormPhone(e.target.value)}
+              placeholder="628..."
+              style={formInput}
+            />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={formLabel}>JUMLAH TAMU</label>
+            <select
+              id="physical-guests"
+              value={formGuests}
+              onChange={e => setFormGuests(Number(e.target.value))}
+              style={{ ...formInput, appearance: 'none' }}
+            >
+              {Array.from({ length: maxSeats }, (_, i) => (
+                <option key={i + 1} value={i + 1}>{i + 1} tamu</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            id="identify-submit"
+            onClick={handleIdentify}
+            disabled={busy === 'identify'}
+            style={{
+              width: '100%', padding: '14px 18px',
+              background: '#1e3d2a', color: 'white',
+              border: 'none', borderRadius: 10,
+              fontFamily: 'Cinzel,serif',
+              fontSize: 11, letterSpacing: 3,
+              cursor: busy === 'identify' ? 'default' : 'pointer',
+              opacity: busy === 'identify' ? 0.6 : 1,
+            }}
+          >{busy === 'identify' ? 'MEMPROSES...' : 'TANDAI HADIR'}</button>
+        </div>
+      </Frame>
+    )
+  }
+
+  // ─── Error state ─────────────────────────────────────────────────
   if (!result || (!result.success && !result.already_checked_in)) {
     return (
       <Frame>
         <div style={cardStyle}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
+          <div style={{ fontSize: 40, marginBottom: 12, textAlign: 'center' }}>⚠️</div>
           <h2 style={h2}>Tidak ditemukan</h2>
           <p style={muted}>{result?.error ?? 'Ref tidak valid'}</p>
         </div>
@@ -90,6 +222,7 @@ function CheckinContent() {
     )
   }
 
+  // ─── Success / already checked in ────────────────────────────────
   const isAlready = !!result.already_checked_in
   const guests = result.guests ?? 1
 
@@ -130,6 +263,7 @@ function CheckinContent() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
           <ClaimButton
+            id="souvenir-btn"
             label="Serahkan Souvenir"
             claimed={claims.souvenir}
             busy={busy === 'souvenir'}
@@ -137,6 +271,7 @@ function CheckinContent() {
             color="#b8965a"
           />
           <ClaimButton
+            id="lunchbox-btn"
             label="Serahkan Lunchbox"
             claimed={claims.lunchbox}
             busy={busy === 'lunchbox'}
@@ -169,7 +304,8 @@ function CheckinContent() {
   )
 }
 
-function ClaimButton({ label, claimed, busy, onClick, color }: {
+function ClaimButton({ id, label, claimed, busy, onClick, color }: {
+  id?: string
   label: string
   claimed: boolean
   busy: boolean
@@ -178,6 +314,7 @@ function ClaimButton({ label, claimed, busy, onClick, color }: {
 }) {
   return (
     <button
+      id={id}
       onClick={onClick}
       disabled={claimed || busy}
       style={{
@@ -222,6 +359,18 @@ const h2: React.CSSProperties = {
 const muted: React.CSSProperties = {
   fontSize: 14, color: '#888',
   textAlign: 'center',
+}
+const formLabel: React.CSSProperties = {
+  fontFamily: 'Cinzel,serif', fontSize: 9,
+  letterSpacing: 2, color: '#6b8f71',
+  display: 'block', marginBottom: 6,
+}
+const formInput: React.CSSProperties = {
+  width: '100%', padding: '10px 12px',
+  border: '0.5px solid #d9cdb8',
+  borderRadius: 8, fontSize: 14,
+  outline: 'none', fontFamily: 'inherit',
+  background: 'white', color: '#1e3d2a',
 }
 
 export default dynamic(() => Promise.resolve(CheckinContent), {

@@ -53,7 +53,7 @@ export default function InviteesPage() {
   const [invitees, setInvitees] = useState<InviteeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all'|'pending'|'confirmed'|'declined'|'agam_only'|'vania_only'>('all')
+  const [filter, setFilter] = useState<'all'|'pending'|'confirmed'|'declined'|'agam_only'|'vania_only'|'fisik'>('all')
   const [editing, setEditing] = useState<InviteeRow | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Partial<InviteeRow>>({
@@ -62,6 +62,9 @@ export default function InviteesPage() {
     max_guests: null as number | null,
   })
   const [defaultMax, setDefaultMax] = useState(2)
+  const [bulkProgress, setBulkProgress] = useState<{
+    current: number; total: number
+  } | null>(null)
   const defaultMaxRef = useRef(2)
 
   useEffect(() => {
@@ -93,7 +96,7 @@ export default function InviteesPage() {
   const filtered = invitees.filter(i => {
     const matchSearch = i.name.toLowerCase()
       .includes(search.toLowerCase()) ||
-      i.phone.includes(search)
+      (i.phone ?? '').includes(search)
     const matchFilter =
       filter === 'all' ? true :
       filter === 'pending' ? i.rsvp_status === 'pending' :
@@ -101,6 +104,7 @@ export default function InviteesPage() {
       filter === 'declined' ? i.rsvp_status === 'declined' :
       filter === 'agam_only' ? (i.sender ?? 'agam') === 'agam' :
       filter === 'vania_only' ? i.sender === 'vania' :
+      filter === 'fisik' ? i.type === 'physical' :
       true
     return matchSearch && matchFilter
   })
@@ -260,6 +264,50 @@ export default function InviteesPage() {
             IMPORT CSV
           </label>
           <button
+            onClick={async () => {
+              const targets = filtered.filter(i =>
+                i.ref && (i.rsvp_status === 'confirmed' || i.type === 'physical')
+              )
+              if (targets.length === 0) {
+                alert('Tidak ada tamu dengan QR untuk diunduh.')
+                return
+              }
+              if (!confirm(`Unduh ${targets.length} QR? Tunggu hingga selesai.`)) return
+              setBulkProgress({ current: 0, total: targets.length })
+              for (let i = 0; i < targets.length; i++) {
+                const inv = targets[i]
+                try {
+                  await downloadQRTicket({
+                    name: inv.name,
+                    ref: inv.ref!,
+                    guests: inv.guests ?? 1,
+                  })
+                } catch (e) {
+                  console.error('[bulk-qr] error for', inv.name, e)
+                }
+                setBulkProgress({ current: i + 1, total: targets.length })
+                if (i < targets.length - 1) {
+                  await new Promise(r => setTimeout(r, 800))
+                }
+              }
+              setBulkProgress(null)
+            }}
+            disabled={!!bulkProgress}
+            style={{
+              padding:'10px 16px',
+              border:'0.5px solid #b8965a',
+              borderRadius:8, cursor: bulkProgress ? 'default' : 'pointer',
+              fontFamily:'Cinzel,serif', fontSize:10,
+              letterSpacing:2, color:'#b8965a',
+              background:'white',
+              opacity: bulkProgress ? 0.6 : 1,
+            }}
+          >
+            {bulkProgress
+              ? `MENGUNDUH ${bulkProgress.current} / ${bulkProgress.total}...`
+              : 'UNDUH SEMUA QR'}
+          </button>
+          <button
             onClick={() => {
               setEditing(null)
               setForm({ name:'', phone:'',
@@ -324,7 +372,7 @@ export default function InviteesPage() {
             fontSize:14, outline:'none',
           }}
         />
-        {(['all','pending','confirmed','declined','agam_only','vania_only'] as const).map(f => (
+        {(['all','pending','confirmed','declined','agam_only','vania_only','fisik'] as const).map(f => (
           <button key={f}
             onClick={() => setFilter(f)}
             style={{
@@ -340,7 +388,8 @@ export default function InviteesPage() {
              f==='pending' ? 'PENDING' :
              f==='confirmed' ? 'HADIR' :
              f==='declined' ? 'TIDAK' :
-             f==='agam_only' ? 'MANAGAM' : 'VANIA'}
+             f==='agam_only' ? 'MANAGAM' :
+             f==='vania_only' ? 'VANIA' : 'FISIK'}
           </button>
         ))}
       </div>

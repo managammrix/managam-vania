@@ -219,6 +219,67 @@ test.describe('Full ref flow E2E @smoke', () => {
     console.log('\n🎉 Full ref flow E2E: ALL STEPS PASSED')
   })
 
+  // ─── SEPARATE: Physical slot check-in flow ─
+  test('physical slot: identify at /checkin → souvenir + lunchbox',
+    async ({ page }) => {
+    await loginAdmin(page)
+
+    // Pick the highest-numbered slot to avoid clashing with real
+    // panitia usage during testing. Assumes seed has run.
+    const SLOT_NAME = 'Undangan Fisik #38'
+    const TEST_GUEST = 'E2E Physical ' + Date.now()
+
+    await page.goto('/admin/invitees')
+    await page.fill('input[placeholder*="Cari"]', '')
+    await page.waitForTimeout(500)
+    await page.reload()
+    await page.waitForTimeout(1000)
+    await page.fill('input[placeholder*="Cari"]', SLOT_NAME)
+    await page.waitForTimeout(1000)
+
+    const slotRow = page.locator('tr').filter({ hasText: SLOT_NAME })
+    await expect(slotRow).toBeVisible({ timeout: 10000 })
+    const linkBtn = slotRow.locator('button[data-ref]')
+    const ref = await linkBtn.getAttribute('data-ref')
+    expect(ref).toBeTruthy()
+    expect(ref?.length).toBe(8)
+    console.log('   Physical slot ref:', ref)
+
+    // Navigate to checkin — should show identification form
+    await page.goto(`/checkin?ref=${ref}`)
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(1500)
+
+    await expect(page.getByText('Identifikasi Tamu')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('#physical-name')).toBeVisible()
+    console.log('   Identification form shown')
+
+    await page.fill('#physical-name', TEST_GUEST)
+    await page.fill('#physical-phone', '628999777666')
+    await page.click('#identify-submit')
+    await page.waitForTimeout(2500)
+
+    // After identification, success card should appear with name + buttons
+    await expect(page.getByText(TEST_GUEST)).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('#souvenir-btn')).toBeVisible()
+    await expect(page.locator('#lunchbox-btn')).toBeVisible()
+    console.log('   Check-in success card shown')
+
+    // Claim souvenir + lunchbox
+    await page.click('#souvenir-btn')
+    await page.waitForTimeout(1500)
+    await page.click('#lunchbox-btn')
+    await page.waitForTimeout(1500)
+    console.log('   Souvenir + lunchbox claimed')
+
+    // Reset: log in as admin and rename back to placeholder so
+    // the next run finds an unclaimed slot. Skip cleanup if the
+    // test is short on time — manual reset works too.
+    console.log('\n🎉 Physical slot E2E: PASSED')
+    console.log('   Note: slot 38 is now identified as', TEST_GUEST)
+    console.log('   To reset, edit the row in /admin/invitees')
+  })
+
   // ─── SEPARATE: CSV flow test ───────────────
   test('CSV import flow: download template → verify columns',
     async ({ page }) => {

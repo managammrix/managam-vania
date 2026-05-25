@@ -27,7 +27,7 @@ export interface InviteeRow {
   id?: string
   created_at?: string
   name: string
-  phone: string
+  phone: string | null
   rsvp_status: 'pending' | 'confirmed' | 'declined'
   attending?: boolean | null
   guests?: number
@@ -39,6 +39,7 @@ export interface InviteeRow {
   checked_in_at?: string | null
   souvenir_claimed?: boolean
   lunchbox_claimed?: boolean
+  type?: 'digital' | 'physical'
 }
 
 export interface MessageLogRow {
@@ -107,6 +108,45 @@ export async function claimSouvenirByRef(ref: string): Promise<CheckinResult> {
 export async function claimLunchboxByRef(ref: string): Promise<CheckinResult> {
   const { data, error } = await supabase
     .rpc('claim_lunchbox_by_ref', { p_ref: ref })
+  if (error) return { success: false, error: error.message }
+  return (data ?? { success: false, error: 'No response' }) as CheckinResult
+}
+
+// Physical-slot identification — used by /checkin (atomic check-in)
+export async function updatePhysicalGuest(
+  ref: string,
+  name: string,
+  phone: string,
+  guests: number
+): Promise<CheckinResult> {
+  const { data, error } = await supabase
+    .rpc('update_physical_guest', {
+      p_ref: ref,
+      p_name: name,
+      p_phone: phone,
+      p_guests: guests,
+    })
+  if (error) return { success: false, error: error.message }
+  return (data ?? { success: false, error: 'No response' }) as CheckinResult
+}
+
+// Physical-slot identification — used by RsvpSection pre-wedding
+// (sets name/phone/guests/attending without touching checked_in_at)
+export async function identifyPhysicalGuest(
+  ref: string,
+  name: string,
+  phone: string,
+  guests: number,
+  attending: boolean
+): Promise<CheckinResult> {
+  const { data, error } = await supabase
+    .rpc('identify_physical_guest', {
+      p_ref: ref,
+      p_name: name,
+      p_phone: phone,
+      p_guests: guests,
+      p_attending: attending,
+    })
   if (error) return { success: false, error: error.message }
   return (data ?? { success: false, error: 'No response' }) as CheckinResult
 }

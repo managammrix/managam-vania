@@ -318,3 +318,129 @@ insert into public.settings (key, value)
 update public.invitees
   set ref = substr(md5(random()::text), 1, 8)
   where ref is null;
+
+-- ══════════════════════════════════════════════════════════════════
+-- PHYSICAL INVITATION SLOTS
+-- 38 anonymous slots for printed cards. Guests at the door scan the
+-- QR on their card, fill in name + phone + party size on /checkin,
+-- and are checked in atomically by update_physical_guest.
+-- ══════════════════════════════════════════════════════════════════
+
+-- Allow NULL phone for anonymous slots
+alter table public.invitees
+  alter column phone drop not null;
+
+-- Type discriminator: 'digital' (default) or 'physical'
+alter table public.invitees
+  add column if not exists type text default 'digital';
+alter table public.invitees
+  drop constraint if exists invitees_type_check;
+alter table public.invitees
+  add constraint invitees_type_check
+  check (type in ('digital','physical'));
+
+-- Seed 38 physical slots (idempotent — only inserts missing #N)
+do $$
+declare i int;
+begin
+  for i in 1..38 loop
+    insert into public.invitees (name, phone, type, ref, max_guests, guests, rsvp_status)
+    select
+      'Undangan Fisik #' || i,
+      null,
+      'physical',
+      substr(md5(random()::text || i::text), 1, 8),
+      2,
+      2,
+      'pending'
+    where not exists (
+      select 1 from public.invitees where name = 'Undangan Fisik #' || i
+    );
+  end loop;
+end $$;
+
+-- RPC: update_physical_guest — identifies + checks in atomically.
+-- Used by /checkin when an anonymous slot scans at the door.
+create or replace function public.update_physical_guest(
+  p_ref text,
+  p_name text,
+  p_phone text,
+  p_guests integer
+)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.invitees%rowtype;
+begin
+  select * into v_row from public.invitees where ref = p_ref limit 1;
+
+  if not found then
+    return json_build_object('success', false, 'error', 'Tamu tidak ditemukan');
+  end if;
+
+  if v_row.type <> 'physical' then
+    return json_build_object('success', false, 'error', 'Bukan slot fisik');
+  end if;
+
+  update public.invitees
+    set name = p_name,
+        phone = p_phone,
+        guests = p_guests,
+        rsvp_status = 'confirmed',
+        attending = true,
+        checked_in_at = coalesce(checked_in_at, now())
+    where ref = p_ref;
+
+  return json_build_object(
+    'success', true,
+    'name', p_name,
+    'guests', p_guests
+  );
+end;
+$$;
+grant execute on function public.update_physical_guest(text, text, text, integer) to anon;
+
+-- RPC: identify_physical_guest — same as above WITHOUT checked_in_at.
+-- Used by RsvpSection on /?ref=xxx for pre-wedding RSVP. Lets a
+-- physical-slot guest fill in their real name early without being
+-- prematurely marked as having arrived at the venue.
+create or replace function public.identify_physical_guest(
+  p_ref text,
+  p_name text,
+  p_phone text,
+  p_guests integer,
+  p_attending boolean
+)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.invitees%rowtype;
+begin
+  select * into v_row from public.invitees where ref = p_ref limit 1;
+
+  if not found then
+    return json_build_object('success', false, 'error', 'Tamu tidak ditemukan');
+  end if;
+
+  if v_row.type <> 'physical' then
+    return json_build_object('success', false, 'error', 'Bukan slot fisik');
+  end if;
+
+  update public.invitees
+    set name = p_name,
+        phone = p_phone,
+        guests = p_guests,
+        attending = p_attending,
+        rsvp_status = case when p_attending then 'confirmed' else 'declined' end
+    where ref = p_ref;
+
+  return json_build_object('success', true, 'name', p_name);
+end;
+$$;
+grant execute on function public.identify_physical_guest(text, text, text, integer, boolean) to anon;
