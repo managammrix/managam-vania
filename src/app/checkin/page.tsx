@@ -17,7 +17,13 @@ type ClaimState = {
 }
 
 function isAnonymousPhysical(row: InviteeRow): boolean {
-  return row.type === 'physical' && row.name.startsWith('Undangan Fisik')
+  // Primary signal: type === 'physical'. Fallback: name pattern —
+  // protects against a stale get_invitee_by_ref RPC that doesn't yet
+  // return the type column.
+  const nameLooksPhysical = row.name.startsWith('Undangan Fisik')
+  if (row.type === 'physical') return nameLooksPhysical
+  if (row.type === undefined && nameLooksPhysical) return true
+  return false
 }
 
 function CheckinContent() {
@@ -44,12 +50,16 @@ function CheckinContent() {
     }
     setRef(r)
     fetchInviteeByRef(r).then(row => {
+      console.log('[checkin] fetched data:', row)
+      console.log('[checkin] type:', row?.type)
+      console.log('[checkin] name:', row?.name)
       if (!row) {
         setResult({ success: false, error: 'Tamu tidak ditemukan' })
         setLoading(false)
         return
       }
       setInvitee(row)
+      console.log('[checkin] isAnonymousPhysical:', isAnonymousPhysical(row))
       if (isAnonymousPhysical(row)) {
         // Show form first; don't check in until usher submits
         setFormGuests(row.max_guests ?? row.guests ?? 1)

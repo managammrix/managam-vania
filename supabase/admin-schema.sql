@@ -75,6 +75,11 @@ alter table public.invitees
 drop policy if exists "Anon read invitee by ref" on public.invitees;
 drop policy if exists "Anon update opened_at" on public.invitees;
 
+-- Drop required because postgres can't change a function's return
+-- type via CREATE OR REPLACE — must drop first when the table shape
+-- (and thus the returns table (...) signature) changes.
+drop function if exists public.get_invitee_by_ref(text);
+
 create or replace function public.get_invitee_by_ref(p_ref text)
 returns table (
   id uuid,
@@ -85,7 +90,8 @@ returns table (
   opened_at timestamptz,
   sender text,
   guests integer,
-  rsvp_status text
+  rsvp_status text,
+  type text
 )
 language plpgsql
 security definer
@@ -101,12 +107,14 @@ begin
     select
       i.id, i.name, i.phone, i.ref,
       i.max_guests, i.opened_at, i.sender,
-      i.guests, i.rsvp_status
+      i.guests, i.rsvp_status, i.type
     from public.invitees i
     where i.ref = p_ref
     limit 1;
 end;
 $$;
+
+grant execute on function public.get_invitee_by_ref(text) to anon;
 
 grant execute on function public.get_invitee_by_ref(text) to anon;
 
