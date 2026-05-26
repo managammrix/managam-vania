@@ -5,6 +5,7 @@ import { fetchInvitees, logMessage, InviteeRow }
 import { sendBulkWhatsApp } from '@/lib/fonnte'
 import { useAdminAuth } from '@/lib/adminAuth'
 import { TEMPLATES, Template } from '@/lib/templates'
+import { toast } from '@/components/admin/ToastHost'
 
 const RECOMMENDED_TEMPLATE: Record<string,string> = {
   pending:  'Undangan Awal',
@@ -140,7 +141,7 @@ export default function MessagesPage() {
 
   const send = async () => {
     if (!tokenAgam && !tokenVania) {
-      alert('Masukkan minimal satu Fonnte token.')
+      toast.error('Masukkan minimal satu Fonnte token.')
       return
     }
     if (!currentMessage) return
@@ -222,6 +223,14 @@ export default function MessagesPage() {
           ? 'Berhasil'
           : `${totalSent} berhasil, ${totalFailed} gagal`,
       }, ...l])
+
+      if (totalFailed === 0 && totalSent > 0) {
+        toast.success(`✓ ${totalSent} pesan terkirim`)
+      } else if (totalSent > 0) {
+        toast.warn(`${totalSent} terkirim, ${totalFailed} gagal`)
+      } else if (totalFailed > 0) {
+        toast.error(`Gagal mengirim ${totalFailed} pesan`)
+      }
     } finally { setSending(false) }
   }
 
@@ -240,7 +249,7 @@ export default function MessagesPage() {
         color:'#1e3d2a', marginBottom:32,
       }}>Kirim Pesan</h1>
 
-      <div style={{
+      <div className="admin-grid-1col-mobile" style={{
         display:'grid',
         gridTemplateColumns:'1fr 1fr', gap:24,
       }}>
@@ -317,6 +326,7 @@ export default function MessagesPage() {
             </div>
           </div>
           <textarea
+            className="admin-msg-textarea"
             value={currentMessage}
             onChange={e => updateMessage(e.target.value)}
             rows={12}
@@ -346,15 +356,17 @@ export default function MessagesPage() {
         <div style={{display:'flex',flexDirection:'column',
           gap:20}}>
 
-          <div style={{
+          <details style={{
             background:'white', borderRadius:12,
-            padding:'24px', border:'0.5px solid #ede5d4',
+            padding:'16px 24px', border:'0.5px solid #ede5d4',
           }}>
-            <div style={{
+            <summary style={{
               fontFamily:'Cinzel,serif', fontSize:10,
               letterSpacing:3, color:'#6b8f71',
-              marginBottom:16,
-            }}>FONNTE API TOKEN</div>
+              cursor:'pointer', padding:'4px 0',
+              listStyle:'revert',
+            }}>FONNTE API TOKEN {(tokenAgam || tokenVania) && <span style={{color:'#2d5a3d', marginLeft:8}}>✓</span>}</summary>
+            <div style={{marginTop:16}}>
 
             {/* Managam token */}
             <div style={{marginBottom:16}}>
@@ -435,7 +447,8 @@ export default function MessagesPage() {
                 )}
               </div>
             </div>
-          </div>
+            </div>
+          </details>
 
           <div style={{
             background:'white', borderRadius:12,
@@ -546,8 +559,9 @@ export default function MessagesPage() {
               )}
               {searchResults.length > 0 && (
                 <div data-testid="manual-results" style={{
-                  marginTop:8, maxHeight:240, overflowY:'auto',
+                  marginTop:8, maxHeight:'min(40vh, 240px)', overflowY:'auto',
                   border:'0.5px solid #ede5d4', borderRadius:8,
+                  WebkitOverflowScrolling:'touch',
                 }}>
                   {searchResults.map(i => {
                     const checked = !!i.id && manualIds.has(i.id)
@@ -641,11 +655,13 @@ export default function MessagesPage() {
             <strong>Token Vania</strong> → tamu dengan sender Vania
           </div>
 
+          <div className="admin-sticky-send">
           <button
             onClick={send}
             disabled={sending || recipients.length===0}
             data-testid="kirim-button"
             style={{
+              width:'100%',
               padding:'16px', background:'#1e3d2a',
               color:'white', border:'none', borderRadius:12,
               fontFamily:'Cinzel,serif', fontSize:11,
@@ -671,6 +687,7 @@ export default function MessagesPage() {
                 })()
             }
           </button>
+          </div>
 
           {result && (
             <div style={{
