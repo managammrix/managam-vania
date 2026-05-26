@@ -24,6 +24,8 @@ export default function MessagesPage() {
     useState<Record<string, string>>({})
   const [recipientFilter, setRecipientFilter] =
     useState<'all'|'pending'|'confirmed'|'honored'>('all')
+  const [manualSearch, setManualSearch] = useState('')
+  const [manualIds, setManualIds] = useState<Set<string>>(new Set())
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{
     sent:number; failed:number
@@ -84,21 +86,51 @@ export default function MessagesPage() {
     localStorage.removeItem('mv_template_edits')
   }
 
-  const recipients: InviteeRow[] = invitees.filter(i => {
-    if (recipientFilter === 'honored')
-      return i.guests === 0
-    // For every non-honored bucket, defensively exclude:
-    //  - honored guests (guests=0) — they have their own template/bucket
-    //  - explicit declines (rsvp_status='declined')
-    // so an accidental filter mismatch can never blast them.
-    if (i.guests === 0) return false
-    if (i.rsvp_status === 'declined') return false
-    if (recipientFilter === 'pending')
-      return i.rsvp_status === 'pending'
-    if (recipientFilter === 'confirmed')
-      return i.attending === true
-    return true
-  })
+  const manualMode = manualIds.size > 0
+  const searchQ = manualSearch.trim().toLowerCase()
+  // Search by name (case-insensitive) OR phone (digits/raw substring).
+  // Cap to 50 results so the dropdown stays usable.
+  const searchResults: InviteeRow[] = searchQ
+    ? invitees
+        .filter(i =>
+          i.name.toLowerCase().includes(searchQ) ||
+          (i.phone ?? '').toLowerCase().includes(searchQ)
+        )
+        .slice(0, 50)
+    : []
+
+  const toggleManualId = (id: string) => {
+    setManualIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+  const clearManual = () => {
+    setManualIds(new Set())
+    setManualSearch('')
+  }
+
+  const recipients: InviteeRow[] = manualMode
+    // Manual override — exactly the rows the user ticked, untouched
+    // by the radio filter. Phone-less rows are still dropped at send
+    // time in `sendable` below.
+    ? invitees.filter(i => !!i.id && manualIds.has(i.id))
+    : invitees.filter(i => {
+        if (recipientFilter === 'honored')
+          return i.guests === 0
+        // For every non-honored bucket, defensively exclude:
+        //  - honored guests (guests=0) — they have their own template/bucket
+        //  - explicit declines (rsvp_status='declined')
+        // so an accidental filter mismatch can never blast them.
+        if (i.guests === 0) return false
+        if (i.rsvp_status === 'declined') return false
+        if (recipientFilter === 'pending')
+          return i.rsvp_status === 'pending'
+        if (recipientFilter === 'confirmed')
+          return i.attending === true
+        return true
+      })
 
   const send = async () => {
     if (!tokenAgam && !tokenVania) {
@@ -411,10 +443,11 @@ export default function MessagesPage() {
             {(['all','pending','confirmed','honored'] as const).map(f => (
               <label key={f} style={{
                 display:'flex', alignItems:'center',
-                gap:10, marginBottom:10, cursor:'pointer',
-                fontSize:14,
+                gap:10, marginBottom:10, cursor: manualMode ? 'not-allowed' : 'pointer',
+                fontSize:14, opacity: manualMode ? 0.45 : 1,
               }}>
                 <input type="radio" name="filter"
+                  disabled={manualMode}
                   checked={recipientFilter===f}
                   onChange={() => setRecipientFilter(f)}
                 />
@@ -434,6 +467,103 @@ export default function MessagesPage() {
                 }
               </label>
             ))}
+
+            {/* ── Manual recipient picker ─────────────────────── */}
+            <div style={{
+              marginTop:14, paddingTop:14,
+              borderTop:'0.5px solid #ede5d4',
+            }} data-testid="manual-selector">
+              <div style={{
+                display:'flex', justifyContent:'space-between',
+                alignItems:'center', marginBottom:8,
+              }}>
+                <span style={{
+                  fontFamily:'Cinzel,serif', fontSize:10,
+                  letterSpacing:2, color:'#6b8f71',
+                }}>
+                  PILIH MANUAL {manualMode && (
+                    <span data-testid="manual-count" style={{color:'#1e3d2a'}}>
+                      ({manualIds.size})
+                    </span>
+                  )}
+                </span>
+                {manualMode && (
+                  <button
+                    onClick={clearManual}
+                    data-testid="manual-clear"
+                    style={{
+                      padding:'4px 10px',
+                      border:'0.5px solid #f5c6c6',
+                      borderRadius:6, background:'white',
+                      fontSize:10, cursor:'pointer',
+                      color:'#c0392b',
+                      fontFamily:'Cinzel,serif', letterSpacing:1,
+                    }}
+                  >HAPUS PILIHAN</button>
+                )}
+              </div>
+              <input
+                type="text"
+                placeholder="Cari nama atau nomor..."
+                value={manualSearch}
+                onChange={e => setManualSearch(e.target.value)}
+                data-testid="manual-search-input"
+                style={{
+                  width:'100%', padding:'9px 12px',
+                  border:'0.5px solid #d9cdb8',
+                  borderRadius:8, fontSize:13, outline:'none',
+                }}
+              />
+              {searchQ && searchResults.length === 0 && (
+                <div data-testid="manual-empty" style={{
+                  marginTop:8, padding:'10px 12px',
+                  fontSize:12, color:'#999',
+                  background:'#faf6ec', borderRadius:6,
+                  fontStyle:'italic',
+                }}>
+                  Tidak ada hasil untuk &quot;{manualSearch}&quot;
+                </div>
+              )}
+              {searchResults.length > 0 && (
+                <div data-testid="manual-results" style={{
+                  marginTop:8, maxHeight:240, overflowY:'auto',
+                  border:'0.5px solid #ede5d4', borderRadius:8,
+                }}>
+                  {searchResults.map(i => {
+                    const checked = !!i.id && manualIds.has(i.id)
+                    const noPhone = !i.phone
+                    return (
+                      <label
+                        key={i.id ?? i.ref ?? i.name}
+                        data-testid={`manual-result-${i.id ?? ''}`}
+                        style={{
+                          display:'flex', alignItems:'center', gap:10,
+                          padding:'8px 12px',
+                          borderBottom:'0.5px solid #f4eede',
+                          cursor: i.id ? 'pointer' : 'not-allowed',
+                          background: checked ? '#f4f7f0' : 'white',
+                          fontSize:13,
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={!i.id}
+                          onChange={() => i.id && toggleManualId(i.id)}
+                          data-testid={`manual-checkbox-${i.id ?? ''}`}
+                        />
+                        <span style={{flex:1}}>{i.name}</span>
+                        <span style={{
+                          fontSize:11, color: noPhone ? '#c0392b' : '#888',
+                        }}>
+                          {noPhone ? '(tanpa nomor)' : i.phone}
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {recipientFilter !== 'all' &&
@@ -494,6 +624,7 @@ export default function MessagesPage() {
           <button
             onClick={send}
             disabled={sending || recipients.length===0}
+            data-testid="kirim-button"
             style={{
               padding:'16px', background:'#1e3d2a',
               color:'white', border:'none', borderRadius:12,
