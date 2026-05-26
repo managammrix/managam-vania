@@ -91,25 +91,69 @@ export default function AdminCheckinPage() {
 
   async function startScanner() {
     setScanError(null)
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setScanError('Kamera tidak tersedia — gunakan pencarian nama')
+    if (!window.isSecureContext) {
+      setScanError('Kamera butuh HTTPS — gunakan pencarian nama')
       return
     }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      })
-      streamRef.current = stream
-      const video = videoRef.current
-      if (!video) return
-      video.srcObject = stream
-      video.setAttribute('playsinline', 'true')
-      await video.play()
-      tickScan()
-    } catch (e) {
-      console.error('[scan] camera error', e)
-      setScanError('Kamera tidak tersedia — gunakan pencarian nama')
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setScanError('Kamera tidak tersedia di browser ini — gunakan pencarian nama')
+      return
     }
+
+    // iOS Safari quirks:
+    //  - { facingMode: { exact: 'environment' } } throws OverconstrainedError
+    //    on front-camera-only devices, so we never use `exact`.
+    //  - Some iOS versions fail the environment hint entirely and need
+    //    a bare { video: true } fallback to grant permission at all.
+    const attempts: MediaStreamConstraints[] = [
+      { video: { facingMode: 'environment' } },
+      { video: { facingMode: { ideal: 'environment' } } },
+      { video: true },
+    ]
+
+    let stream: MediaStream | null = null
+    let lastErr: unknown = null
+    for (const constraints of attempts) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints)
+        console.log('[scan] camera granted with', constraints)
+        break
+      } catch (e) {
+        lastErr = e
+        console.warn('[scan] getUserMedia failed for', constraints, e)
+      }
+    }
+
+    if (!stream) {
+      const err = lastErr as { name?: string; message?: string } | null
+      const name = err?.name ?? ''
+      console.error('[scan] all camera attempts failed', name, err?.message, err)
+      if (name === 'NotAllowedError' || name === 'SecurityError') {
+        setScanError('Izin kamera ditolak — aktifkan di Settings › Safari › Camera, lalu reload')
+      } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+        setScanError('Kamera tidak ditemukan — gunakan pencarian nama')
+      } else if (name === 'NotReadableError') {
+        setScanError('Kamera sedang dipakai aplikasi lain — tutup dulu lalu coba lagi')
+      } else {
+        setScanError(`Kamera gagal dibuka (${name || 'unknown'}) — gunakan pencarian nama`)
+      }
+      return
+    }
+
+    streamRef.current = stream
+    const video = videoRef.current
+    if (!video) return
+    video.srcObject = stream
+    video.setAttribute('playsinline', 'true')
+    video.muted = true
+    try {
+      await video.play()
+    } catch (e) {
+      console.error('[scan] video.play() failed', e)
+      setScanError('Video tidak bisa diputar — ketuk layar lalu coba lagi')
+      return
+    }
+    tickScan()
   }
 
   function stopScanner() {
