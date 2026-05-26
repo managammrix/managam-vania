@@ -42,6 +42,12 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
     // guest types their real name; placeholder isn't useful as a value.
     setName(isAnonPhysical ? '' : guestData.name)
     setPhone(isAnonPhysical ? '' : (guestData.phone ?? ''))
+    // Pre-select the seat count to the invitee's full allotment.
+    // Most parties just want the max; this saves them a tap. They
+    // can still drop it down before submitting.
+    if (guestData.guests && guestData.guests > 0) {
+      setGuests(guestData.guests)
+    }
   }, [guestData])
 
   // Hydrate from server-side RSVP status. If the guest already
