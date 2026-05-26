@@ -242,8 +242,8 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     for (let i = 0; i < CASES.length; i++) {
       const c = CASES[i]
       const r = results[i]
-      // Verbose for cases 1, 6 (No Phone), 8 (Overseas SG)
-      const verbose = i === 0 || i === 5 || i === 7
+      // Verbose for cases 1, 6 (No Phone), 8 (Overseas SG), 12 (4pax)
+      const verbose = i === 0 || i === 5 || i === 7 || i === 11
       verboseCase = verbose ? c.label : ''
       console.log(`\n── ${c.label} (${c.name}) ──`)
       const log = (...args: unknown[]) => {
@@ -314,10 +314,19 @@ test.describe('Comprehensive guest test suite @smoke', () => {
             await page.waitForTimeout(900)
 
             await page.waitForSelector('#seat-selector', {
-              state: 'visible', timeout: 5000,
+              state: 'visible', timeout: 10000,
             })
             const selectEl = page.locator('#seat-selector')
-            const optionCount = await selectEl.locator('option').count()
+            // The selector initially renders with `defaultMaxGuests` (typically
+            // 2) before the per-invitee RPC settles. Poll until the option
+            // count matches `c.guests`, up to ~8s, before reading it.
+            const expectedOpts = c.guests
+            const deadline = Date.now() + 8000
+            let optionCount = await selectEl.locator('option').count()
+            while (optionCount !== expectedOpts && Date.now() < deadline) {
+              await page.waitForTimeout(250)
+              optionCount = await selectEl.locator('option').count()
+            }
             log('seat selector option count:', optionCount)
             if (verbose) {
               const selectorHtml = await selectEl.innerHTML().catch(() => '')
@@ -414,6 +423,11 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     await page.waitForTimeout(15000)
 
     const phonesReceived = new Set(fonnteHits.map(h => h.target))
+    // Several cases share the same phone (PHONE), so phone alone can't tell
+    // us *which* invitee was blasted. The Fonnte payload's message body has
+    // `{name}` substituted, so we match by name instead.
+    const nameWasBlasted = (name: string) =>
+      fonnteHits.some(h => h.message.includes(name))
     console.log('  fonnte calls intercepted:', fonnteHits.length)
     console.log('  unique recipient phones:', Array.from(phonesReceived))
 
@@ -421,12 +435,14 @@ test.describe('Comprehensive guest test suite @smoke', () => {
       const c = CASES[i]
       const r = results[i]
       if (c.guests === 0) {
-        r.blastIncluded = !phonesReceived.has(c.phone)
+        // Honored/digital-only: must NOT be in the blast.
+        r.blastIncluded = !nameWasBlasted(c.name)
       } else if (c.phone === '') {
-        r.blastIncluded = !phonesReceived.has('')
+        // No Phone: must NOT be in the blast.
+        r.blastIncluded = !nameWasBlasted(c.name) && !phonesReceived.has('')
       } else {
-        r.blastIncluded = phonesReceived.has(c.phone) ||
-          Array.from(phonesReceived).some(p => p.endsWith(c.phone.slice(-9)))
+        // Confirmed attendees: must be in the blast.
+        r.blastIncluded = nameWasBlasted(c.name)
       }
     }
 

@@ -99,12 +99,18 @@ export default function MessagesPage() {
   }
 
   const recipients: InviteeRow[] = invitees.filter(i => {
+    if (recipientFilter === 'honored')
+      return i.guests === 0
+    // For every non-honored bucket, defensively exclude:
+    //  - honored guests (guests=0) — they have their own template/bucket
+    //  - explicit declines (rsvp_status='declined')
+    // so an accidental filter mismatch can never blast them.
+    if (i.guests === 0) return false
+    if (i.rsvp_status === 'declined') return false
     if (recipientFilter === 'pending')
       return i.rsvp_status === 'pending'
     if (recipientFilter === 'confirmed')
       return i.attending === true
-    if (recipientFilter === 'honored')
-      return i.guests === 0
     return true
   })
 
