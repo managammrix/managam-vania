@@ -1,6 +1,8 @@
 'use client'
 import { usePathname } from 'next/navigation'
 import { signOutAdmin } from '@/lib/adminAuth'
+import MobileBottomNav from '@/components/admin/MobileBottomNav'
+import ToastHost from '@/components/admin/ToastHost'
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: '◎' },
@@ -27,7 +29,7 @@ export default function AdminLayout({
       fontFamily:'var(--font-sans, system-ui)',
       background:'#f8f7f4',
     }}>
-      <aside style={{
+      <aside className="admin-sidebar-mobile-hide" style={{
         width:220, background:'#1e3d2a',
         display:'flex', flexDirection:'column',
         padding:'32px 0', flexShrink:0,
@@ -90,12 +92,14 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      <main style={{
+      <main className="admin-pad-tight-mobile admin-pad-bottom-nav" style={{
         flex:1, padding:'40px 48px',
         overflowY:'auto',
       }}>
         {children}
       </main>
+      <MobileBottomNav />
+      <ToastHost />
     </div>
   )
 }
