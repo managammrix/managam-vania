@@ -72,6 +72,33 @@ export async function fetchDefaultMaxGuests(): Promise<number> {
   return parseInt(data?.value ?? '2')
 }
 
+export interface RsvpNotifyConfig {
+  token: string | null
+  targets: string[]
+}
+
+// Reads the three keys needed for RSVP admin notifications:
+//   fonnte_token_agam — Managam's Fonnte API token
+//   notify_managam    — Managam's WA number
+//   notify_vania      — Vania's WA number
+// Returns null token when not configured; callers must treat that as
+// "skip notification" rather than as an error.
+export async function fetchRsvpNotifyConfig(): Promise<RsvpNotifyConfig> {
+  const { data } = await supabase
+    .from('settings')
+    .select('key,value')
+    .in('key', ['fonnte_token_agam', 'notify_managam', 'notify_vania'])
+  const map = new Map(
+    (data ?? []).map((r: { key: string; value: string }) => [r.key, r.value])
+  )
+  const token = map.get('fonnte_token_agam') || null
+  const targets = [
+    map.get('notify_managam'),
+    map.get('notify_vania'),
+  ].filter((v): v is string => !!v && v.length > 0)
+  return { token, targets }
+}
+
 export function generateRef(): string {
   return Math.random().toString(36).substring(2, 10)
 }

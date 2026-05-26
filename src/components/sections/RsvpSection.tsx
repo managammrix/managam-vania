@@ -1,7 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { Translations } from '@/lib/translations'
-import { InviteeRow, submitRsvp, updateInviteeRsvp, identifyPhysicalGuest } from '@/lib/supabase'
+import {
+  InviteeRow, submitRsvp, updateInviteeRsvp,
+  identifyPhysicalGuest, fetchRsvpNotifyConfig,
+} from '@/lib/supabase'
+import {
+  sendRsvpAdminNotifications, buildRsvpNotification,
+} from '@/lib/fonnte'
 import { useReveal } from '../useReveal'
 
 interface Props {
@@ -118,6 +124,31 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
         console.error('[rsvp] invitee update error:', err)
       }
     }
+    // Fire-and-forget admin WA notification (Managam + Vania).
+    // Errors here must never block the success UI for the guest.
+    if (guestData?.ref) {
+      const guestRef = guestData.ref
+      const displayName = isPhysicalAnon ? name.trim() : guestData.name
+      void (async () => {
+        try {
+          const cfg = await fetchRsvpNotifyConfig()
+          if (!cfg.token || cfg.targets.length === 0) return
+          await sendRsvpAdminNotifications({
+            token: cfg.token,
+            targets: cfg.targets,
+            message: buildRsvpNotification({
+              attending: attending === true,
+              guestName: displayName,
+              guests: guestCount,
+              ref: guestRef,
+            }),
+          })
+        } catch (e) {
+          console.error('[rsvp] notify error:', e)
+        }
+      })()
+    }
+
     if (attending && guestData?.ref) {
       try {
         const { generateQRTicket } = await import('@/lib/generateQR')

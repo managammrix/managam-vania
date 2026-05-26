@@ -30,6 +30,55 @@ export interface Recipient {
   ref?: string
 }
 
+// Fire-and-forget admin notification when any guest submits an RSVP.
+// Sends one message per target phone using Managam's Fonnte token.
+// Failures are swallowed — never block the guest's confirmation UI.
+export async function sendRsvpAdminNotifications(args: {
+  token: string
+  targets: string[]
+  message: string
+}): Promise<void> {
+  const { token, targets, message } = args
+  if (!token || targets.length === 0 || !message) return
+  await Promise.all(
+    targets.filter(Boolean).map(async target => {
+      try {
+        await sendWhatsApp(token, { target, message })
+      } catch (e) {
+        console.error('[rsvp-notify] error sending to', target, e)
+      }
+    })
+  )
+}
+
+export function buildRsvpNotification(args: {
+  attending: boolean
+  guestName: string
+  guests: number
+  ref: string
+}): string {
+  const { attending, guestName, guests, ref } = args
+  if (attending) {
+    return [
+      '🎉 *Konfirmasi Hadir!*',
+      '',
+      `*${guestName}* telah mengkonfirmasi kehadiran`,
+      `👥 Jumlah tamu: *${guests} orang*`,
+      `📋 Ref: ${ref}`,
+      '',
+      '_#BuildingMANAGAMVANturesWithGod_ 🌿',
+    ].join('\n')
+  }
+  return [
+    '😔 *Tidak Bisa Hadir*',
+    '',
+    `*${guestName}* menyampaikan tidak bisa hadir`,
+    `📋 Ref: ${ref}`,
+    '',
+    '_#BuildingMANAGAMVANturesWithGod_ 🌿',
+  ].join('\n')
+}
+
 export async function sendBulkWhatsApp(
   token: string,
   recipients: Recipient[],
