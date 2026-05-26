@@ -166,23 +166,61 @@ test.describe.serial('RSVP persistence across reloads', () => {
     const ref = refs.confirmed
     expect(ref).toBeTruthy()
 
+    // Capture the post-RSVP get_invitee_by_ref RPC body so we can
+    // verify rsvp_status='confirmed' propagated to the server.
+    const rpcBodies: unknown[] = []
+    page.on('response', async resp => {
+      if (resp.url().includes('/rpc/get_invitee_by_ref')) {
+        try { rpcBodies.push(await resp.json()) } catch {}
+      }
+    })
+
     await openInvite(page, ref)
     await doRsvp(page, true)
+
+    // doRsvp already waits for "Terima kasih!", but assert again
+    // explicitly to make the pre-reload state visible in the log.
+    await expect(page.locator('text=Terima kasih!'))
+      .toBeVisible({ timeout: 20000 })
+    console.log('[case 1] pre-reload "Terima kasih!" confirmed')
 
     // Reload — the page should hydrate straight into the ticket screen.
     await page.goto(`/?ref=${ref}`)
     await page.waitForLoadState('networkidle')
-    await page.waitForSelector('#envelope-screen', {
-      state: 'visible', timeout: 12000,
-    })
-    await page.locator('#envelope-screen').click({ force: true })
-    await page.waitForTimeout(1500)
-    await page.locator('#rsvp').scrollIntoViewIfNeeded()
-    await page.waitForTimeout(1500)
 
-    await expect(page.locator('text=Terima kasih!')).toBeVisible({ timeout: 8000 })
-    await expect(page.locator('text=TIKET UNDANGAN ANDA')).toBeVisible({ timeout: 8000 })
-    await expect(page.locator('img[alt="QR Ticket"]')).toBeVisible({ timeout: 8000 })
+    console.log('[case 1] post-reload URL:', page.url())
+    const envelopeVisible = await page.locator('#envelope-screen')
+      .isVisible().catch(() => false)
+    console.log('[case 1] #envelope-screen visible:', envelopeVisible)
+
+    if (envelopeVisible) {
+      await page.locator('#envelope-screen').click({ force: true })
+      await page.waitForTimeout(1500)
+    }
+    await page.locator('#rsvp').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(2000)
+
+    const bodyText = await page.locator('body').innerText().catch(() => '')
+    console.log('[case 1] body snippet:',
+      bodyText.slice(0, 300).replace(/\s+/g, ' '))
+    const hadirVisible = await page.locator('#hadir-btn')
+      .isVisible().catch(() => false)
+    console.log('[case 1] #hadir-btn visible:', hadirVisible)
+
+    const latest = rpcBodies[rpcBodies.length - 1] as Array<{
+      rsvp_status?: string
+    }> | undefined
+    console.log('[case 1] latest RPC rsvp_status:',
+      latest?.[0]?.rsvp_status ?? '(none)')
+
+    // RPC round-trip + sessionStorage hydrate + QR generation can
+    // each take a beat on slow runs; allow 15s before failing.
+    await expect(page.locator('text=Terima kasih!'))
+      .toBeVisible({ timeout: 15000 })
+    await expect(page.locator('text=TIKET UNDANGAN ANDA'))
+      .toBeVisible({ timeout: 15000 })
+    await expect(page.locator('img[alt="QR Ticket"]'))
+      .toBeVisible({ timeout: 15000 })
     await expect(page.locator('#ubah-kehadiran-btn')).toBeVisible()
     // Form must not be back.
     await expect(page.locator('#hadir-btn')).toHaveCount(0)

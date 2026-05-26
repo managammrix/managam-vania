@@ -124,6 +124,30 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
         console.error('[rsvp] invitee update error:', err)
       }
     }
+    // Refresh the sessionStorage cache that page.tsx reads on next
+    // load. Without this, a reload within the same browser session
+    // still sees `rsvp_status: 'pending'` from the pre-RSVP cache,
+    // so the hydration effect would never flip into the ticket/
+    // decline screen. Keys must stay aligned with `guest_${ref}`
+    // in src/app/page.tsx.
+    if (guestData?.ref && typeof window !== 'undefined') {
+      try {
+        const key = `guest_${guestData.ref}`
+        const raw = sessionStorage.getItem(key)
+        const cached = raw ? JSON.parse(raw) : { ...guestData }
+        cached.rsvp_status = attending ? 'confirmed' : 'declined'
+        cached.attending = attending
+        cached.guests = guestCount
+        if (isPhysicalAnon) {
+          cached.name = name.trim()
+          cached.phone = phone.trim() || null
+        }
+        sessionStorage.setItem(key, JSON.stringify(cached))
+      } catch (e) {
+        console.error('[rsvp] cache refresh error:', e)
+      }
+    }
+
     // Fire-and-forget admin WA notification (Managam + Vania).
     // Errors here must never block the success UI for the guest.
     if (guestData?.ref) {
