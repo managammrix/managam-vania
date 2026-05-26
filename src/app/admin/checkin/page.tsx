@@ -9,6 +9,7 @@ import {
   InviteeRow,
 } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
+import { toast } from '@/components/admin/ToastHost'
 
 type Mode = 'search' | 'scan'
 
@@ -17,6 +18,27 @@ function isAnonPhysical(i: InviteeRow): boolean {
   if (i.type === 'physical') return looksPhysical
   if (i.type === undefined && looksPhysical) return true
   return false
+}
+
+function successFeedback() {
+  try { navigator.vibrate?.(40) } catch { /* ignore */ }
+  try {
+    const AC = (window as any).AudioContext || (window as any).webkitAudioContext
+    if (!AC) return
+    const ctx = new AC()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.value = 880
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.2)
+    osc.onended = () => ctx.close().catch(() => {})
+  } catch { /* ignore */ }
 }
 
 export default function AdminCheckinPage() {
@@ -175,11 +197,18 @@ export default function AdminCheckinPage() {
     const res = await checkinByRef(selected.ref)
     setActionBusy(null)
     if (res.success) {
-      setActionMsg(`✓ ${res.name} berhasil check-in`)
+      const msg = `✓ ${res.name} berhasil check-in`
+      setActionMsg(msg)
+      toast.success(msg)
+      successFeedback()
     } else if (res.already_checked_in) {
-      setActionMsg(`⚠ ${res.name} sudah check-in sebelumnya`)
+      const msg = `⚠ ${res.name} sudah check-in sebelumnya`
+      setActionMsg(msg)
+      toast.warn(msg)
     } else {
-      setActionMsg(`✗ ${res.error ?? 'Gagal check-in'}`)
+      const msg = `✗ ${res.error ?? 'Gagal check-in'}`
+      setActionMsg(msg)
+      toast.error(msg)
     }
     await refreshAndKeepSelected()
   }
@@ -192,19 +221,27 @@ export default function AdminCheckinPage() {
       ? await claimSouvenirByRef(selected.ref)
       : await claimLunchboxByRef(selected.ref)
     setActionBusy(null)
+    const label = kind === 'souvenir' ? 'Souvenir' : 'Lunchbox'
     if (res.success) {
-      setActionMsg(`✓ ${kind === 'souvenir' ? 'Souvenir' : 'Lunchbox'} diserahkan`)
+      const msg = `✓ ${label} diserahkan`
+      setActionMsg(msg)
+      toast.success(msg)
+      successFeedback()
     } else if (res.already_claimed) {
-      setActionMsg(`⚠ Sudah pernah diserahkan`)
+      const msg = `⚠ ${label} sudah pernah diserahkan`
+      setActionMsg(msg)
+      toast.warn(msg)
     } else {
-      setActionMsg(`✗ ${res.error ?? 'Gagal'}`)
+      const msg = `✗ ${res.error ?? 'Gagal'}`
+      setActionMsg(msg)
+      toast.error(msg)
     }
     await refreshAndKeepSelected()
   }
 
   const handleIdentifyPhysical = async () => {
     if (!selected?.ref) return
-    if (!physName.trim()) { alert('Masukkan nama tamu'); return }
+    if (!physName.trim()) { toast.warn('Masukkan nama tamu'); return }
     setActionBusy('identify')
     setActionMsg(null)
     const res = await updatePhysicalGuest(
@@ -212,10 +249,15 @@ export default function AdminCheckinPage() {
     )
     setActionBusy(null)
     if (res.success) {
-      setActionMsg(`✓ ${res.name} teridentifikasi & check-in`)
+      const msg = `✓ ${res.name} teridentifikasi & check-in`
+      setActionMsg(msg)
+      toast.success(msg)
+      successFeedback()
       setPhysName(''); setPhysPhone(''); setPhysGuests(1)
     } else {
-      setActionMsg(`✗ ${res.error ?? 'Gagal'}`)
+      const msg = `✗ ${res.error ?? 'Gagal'}`
+      setActionMsg(msg)
+      toast.error(msg)
     }
     await refreshAndKeepSelected()
   }
@@ -332,6 +374,7 @@ export default function AdminCheckinPage() {
             <>
               <video
                 ref={videoRef}
+                className="admin-scanner-fullwidth"
                 style={{
                   width: '100%', maxWidth: 420,
                   borderRadius: 12, background: '#000',
@@ -354,7 +397,7 @@ export default function AdminCheckinPage() {
 
       {/* ─── ACTION PANEL ─────────────────────────── */}
       {selected && (
-        <div style={{ ...panel, borderColor: '#6b8f71', marginTop: 14 }}>
+        <div className="admin-sticky-action" style={{ ...panel, borderColor: '#6b8f71', marginTop: 14 }}>
           <div style={{
             display: 'flex', alignItems: 'baseline',
             justifyContent: 'space-between', marginBottom: 10,
@@ -475,7 +518,7 @@ export default function AdminCheckinPage() {
       )}
 
       {/* ─── DASHBOARD STATS ──────────────────────── */}
-      <div style={{
+      <div className="admin-grid-4col" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)', gap: 14,
         margin: '24px 0 16px',
@@ -520,7 +563,7 @@ export default function AdminCheckinPage() {
         border: '0.5px solid #ede5d4', overflow: 'hidden',
       }}>
         <div style={{ padding: '14px 18px', borderBottom: '0.5px solid #ede5d4' }}>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div className="admin-pill-row" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {(['all', 'checked', 'pending', 'souvenir', 'lunchbox'] as const).map(f => (
               <button key={f} onClick={() => setTableFilter(f)}
                 style={{
@@ -530,6 +573,7 @@ export default function AdminCheckinPage() {
                   color: tableFilter === f ? 'white' : '#888',
                   fontSize: 11, cursor: 'pointer',
                   fontFamily: 'Cinzel,serif', letterSpacing: 1,
+                  whiteSpace: 'nowrap',
                 }}>
                 {f === 'all' ? `SEMUA (${confirmed.length})` :
                   f === 'checked' ? `HADIR (${checkedIn.length})` :
@@ -543,55 +587,99 @@ export default function AdminCheckinPage() {
         {loading ? (
           <p style={{ padding: 20, color: '#888', fontSize: 13 }}>Memuat...</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#f8f7f4', borderBottom: '0.5px solid #ede5d4' }}>
-                {['Nama', 'Tamu', 'Check-in', 'Souvenir', 'Lunchbox'].map(h => (
-                  <th key={h} style={{
-                    padding: '10px 14px', textAlign: 'left',
-                    fontFamily: 'Cinzel,serif', fontSize: 10,
-                    letterSpacing: 2, color: '#6b8f71', fontWeight: 500,
-                  }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tableRows.map(inv => (
-                <tr key={inv.id}
-                  onClick={() => { setSelectedId(inv.id ?? null); setActionMsg(null) }}
-                  style={{
-                    borderBottom: '0.5px solid #f0ece4',
-                    cursor: 'pointer',
-                    background: selectedId === inv.id ? '#f0f7f1' : 'transparent',
-                  }}>
-                  <td style={{ padding: '10px 14px', fontWeight: 500 }}>
-                    {inv.name}
-                    <div style={{ fontSize: 10, color: '#aaa', fontFamily: 'monospace' }}>
-                      {inv.ref}
+          <>
+            <div className="admin-hide-md">
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#f8f7f4', borderBottom: '0.5px solid #ede5d4' }}>
+                    {['Nama', 'Tamu', 'Check-in', 'Souvenir', 'Lunchbox'].map(h => (
+                      <th key={h} style={{
+                        padding: '10px 14px', textAlign: 'left',
+                        fontFamily: 'Cinzel,serif', fontSize: 10,
+                        letterSpacing: 2, color: '#6b8f71', fontWeight: 500,
+                      }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableRows.map(inv => (
+                    <tr key={inv.id}
+                      onClick={() => { setSelectedId(inv.id ?? null); setActionMsg(null) }}
+                      style={{
+                        borderBottom: '0.5px solid #f0ece4',
+                        cursor: 'pointer',
+                        background: selectedId === inv.id ? '#f0f7f1' : 'transparent',
+                      }}>
+                      <td style={{ padding: '10px 14px', fontWeight: 500 }}>
+                        {inv.name}
+                        <div style={{ fontSize: 10, color: '#aaa', fontFamily: 'monospace' }}>
+                          {inv.ref}
+                        </div>
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>{inv.guests ?? 1}</td>
+                      <td style={{ padding: '10px 14px' }}>
+                        {inv.checked_in_at
+                          ? <span style={pill('#e8f5e9', '#2d5a3d')}>
+                              ✓ {new Date(inv.checked_in_at).toLocaleTimeString('id', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          : <span style={{ color: '#aaa', fontSize: 11 }}>—</span>}
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>
+                        {inv.souvenir_claimed
+                          ? <span style={pill('#fff8ec', '#b8965a')}>✓</span>
+                          : <span style={{ color: '#aaa', fontSize: 11 }}>—</span>}
+                      </td>
+                      <td style={{ padding: '10px 14px' }}>
+                        {inv.lunchbox_claimed
+                          ? <span style={pill('#fbeaf0', '#993556')}>✓</span>
+                          : <span style={{ color: '#aaa', fontSize: 11 }}>—</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="admin-show-md" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {tableRows.length === 0 && (
+                <p style={{ color: '#888', fontSize: 13, padding: 8 }}>Tidak ada data.</p>
+              )}
+              {tableRows.map(inv => {
+                const isSel = selectedId === inv.id
+                return (
+                  <button
+                    key={inv.id}
+                    onClick={() => { setSelectedId(inv.id ?? null); setActionMsg(null) }}
+                    style={{
+                      textAlign: 'left',
+                      padding: 12,
+                      border: `0.5px solid ${isSel ? '#6b8f71' : '#ede5d4'}`,
+                      borderRadius: 10,
+                      background: isSel ? '#f0f7f1' : 'white',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                      minHeight: 44,
+                    }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                      <div style={{ fontWeight: 500, fontSize: 14, color: '#1e3d2a' }}>{inv.name}</div>
+                      <div style={{ fontSize: 11, color: '#888' }}>{inv.guests ?? 1} tamu</div>
                     </div>
-                  </td>
-                  <td style={{ padding: '10px 14px' }}>{inv.guests ?? 1}</td>
-                  <td style={{ padding: '10px 14px' }}>
-                    {inv.checked_in_at
-                      ? <span style={pill('#e8f5e9', '#2d5a3d')}>
-                          ✓ {new Date(inv.checked_in_at).toLocaleTimeString('id', { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      : <span style={{ color: '#aaa', fontSize: 11 }}>—</span>}
-                  </td>
-                  <td style={{ padding: '10px 14px' }}>
-                    {inv.souvenir_claimed
-                      ? <span style={pill('#fff8ec', '#b8965a')}>✓</span>
-                      : <span style={{ color: '#aaa', fontSize: 11 }}>—</span>}
-                  </td>
-                  <td style={{ padding: '10px 14px' }}>
-                    {inv.lunchbox_claimed
-                      ? <span style={pill('#fbeaf0', '#993556')}>✓</span>
-                      : <span style={{ color: '#aaa', fontSize: 11 }}>—</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                      {inv.checked_in_at
+                        ? <span style={pill('#e8f5e9', '#2d5a3d')}>
+                            ✓ {new Date(inv.checked_in_at).toLocaleTimeString('id', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        : <span style={pill('#f0ece4', '#888')}>BELUM</span>}
+                      {inv.souvenir_claimed && <span style={pill('#fff8ec', '#b8965a')}>SOUVENIR ✓</span>}
+                      {inv.lunchbox_claimed && <span style={pill('#fbeaf0', '#993556')}>LUNCHBOX ✓</span>}
+                    </div>
+                    <div style={{ fontSize: 10, color: '#aaa', fontFamily: 'monospace' }}>{inv.ref}</div>
+                  </button>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
