@@ -98,13 +98,19 @@ async function cleanupRows(page: Page): Promise<number> {
   return removed
 }
 
+// Anon SELECT on `invitees` is denied by RLS. The only anon-callable
+// path that exposes the row's phone is the security-definer RPC
+// get_invitee_by_ref, which returns the full row by ref.
 async function readInviteePhone(ref: string): Promise<string | null> {
-  const { data } = await supabase
-    .from('invitees')
-    .select('phone')
-    .eq('ref', ref)
-    .maybeSingle()
-  return (data?.phone as string | undefined) ?? null
+  const { data, error } = await supabase.rpc('get_invitee_by_ref', {
+    p_ref: ref,
+  })
+  if (error) {
+    console.error('[readInviteePhone] rpc error:', error)
+    return null
+  }
+  const row = (data as Array<{ phone: string | null }> | null)?.[0]
+  return row?.phone ?? null
 }
 
 // Drives a guest page from /?ref=<…> through the envelope to the
@@ -147,7 +153,19 @@ test.describe.serial('RSVP PIC proxy + helper texts + ticket claim info', () => 
       const ref = await getRef(page, r.name)
       if (!ref) throw new Error(`No ref for ${r.name}`)
       refs[r.tag] = ref
-      console.log(`[setup] ${r.name} → ref=${ref}`)
+      // Read back the stored phone via the same RPC the form uses
+      // so the test log shows whether normalizePhone or any other
+      // step dropped the value before we even reach case 2.
+      const storedPhone = await readInviteePhone(ref)
+      console.log(
+        `[setup] ${r.name} → ref=${ref} stored phone=${storedPhone}`
+      )
+      if (storedPhone !== r.phone) {
+        console.warn(
+          `[setup] ⚠ phone mismatch for ${r.name}: ` +
+          `expected="${r.phone}" stored="${storedPhone}"`
+        )
+      }
     }
     await ctx.close()
   })
