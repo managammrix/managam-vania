@@ -25,3 +25,7 @@ npm-debug.log*
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# TypeScript incremental build cache
+tsconfig.tsbuildinfo
+
