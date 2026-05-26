@@ -4,17 +4,13 @@ import { fetchInvitees, logMessage, InviteeRow }
   from '@/lib/supabase'
 import { sendBulkWhatsApp } from '@/lib/fonnte'
 import { useAdminAuth } from '@/lib/adminAuth'
-import { TEMPLATES, Template, TemplateVersion } from '@/lib/templates'
+import { TEMPLATES, Template } from '@/lib/templates'
 
 const RECOMMENDED_TEMPLATE: Record<string,string> = {
   pending:  'Undangan Awal',
   confirmed: 'H-7',
   honored:  'Tamu Kehormatan',
   all:      '',
-}
-
-function templateKey(label: string, version: string): string {
-  return `${label}__${version}`
 }
 
 export default function MessagesPage() {
@@ -24,8 +20,6 @@ export default function MessagesPage() {
   const [tokenVania, setTokenVania] = useState('')
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template>(TEMPLATES[0])
-  const [selectedVersion, setSelectedVersion] =
-    useState<TemplateVersion>(TEMPLATES[0].versions[0])
   const [editedTemplates, setEditedTemplates] =
     useState<Record<string, string>>({})
   const [recipientFilter, setRecipientFilter] =
@@ -54,23 +48,15 @@ export default function MessagesPage() {
     }
   }, [])
 
-  const currentKey = templateKey(
-    selectedTemplate.label,
-    selectedVersion.label
-  )
+  const currentKey = selectedTemplate.label
   const currentMessage =
-    editedTemplates[currentKey] ?? selectedVersion.message
+    editedTemplates[currentKey] ?? selectedTemplate.message
   const isEdited =
     editedTemplates[currentKey] !== undefined &&
-    editedTemplates[currentKey] !== selectedVersion.message
+    editedTemplates[currentKey] !== selectedTemplate.message
 
   const selectTemplate = (tmpl: Template) => {
     setSelectedTemplate(tmpl)
-    setSelectedVersion(tmpl.versions[0])
-  }
-
-  const selectVersion = (ver: TemplateVersion) => {
-    setSelectedVersion(ver)
   }
 
   const updateMessage = (val: string) => {
@@ -248,27 +234,12 @@ export default function MessagesPage() {
           </div>
 
           <div style={{
-            display:'flex', gap:6, marginTop:8,
+            display:'flex', gap:6, marginTop:12,
             marginBottom:16,
           }}>
-            {selectedTemplate.versions.map(ver => (
-              <button key={ver.label}
-                onClick={() => selectVersion(ver)}
-                style={{
-                  padding:'4px 12px', borderRadius:4,
-                  border:'0.5px solid #d9cdb8',
-                  background: selectedVersion.label===ver.label
-                    ? '#6b8f71' : 'white',
-                  color: selectedVersion.label===ver.label
-                    ? 'white' : '#888',
-                  fontSize:11, cursor:'pointer',
-                  fontFamily:'Cinzel,serif',
-                  letterSpacing:1,
-                }}>{ver.label}</button>
-            ))}
             <span style={{
               fontSize:11, color:'#aaa',
-              alignSelf:'center', marginLeft:4,
+              alignSelf:'center',
             }}>
               {currentMessage.length} karakter
             </span>
