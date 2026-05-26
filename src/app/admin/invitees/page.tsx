@@ -7,6 +7,9 @@ import {
 } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
 import { downloadQRTicket } from '@/lib/generateQR'
+import ResponsiveModal from '@/components/admin/ResponsiveModal'
+import InviteeCard from '@/components/admin/InviteeCard'
+import { toast } from '@/components/admin/ToastHost'
 
 function getStatusBadge(inv: InviteeRow): {
   label: string; bg: string; color: string
@@ -146,7 +149,7 @@ export default function InviteesPage() {
       .map(l => l.trim())
       .filter(Boolean)
     if (lines.length < 2) {
-      alert('File CSV kosong atau tidak ada data.')
+      toast.error('File CSV kosong atau tidak ada data.')
       e.target.value = ''
       return
     }
@@ -167,12 +170,12 @@ export default function InviteesPage() {
       ['sender','dari','pengirim'].includes(h))
 
     if (nameIdx === -1) {
-      alert('CSV harus punya kolom nama.')
+      toast.error('CSV harus punya kolom nama.')
       e.target.value = ''
       return
     }
     if (phoneIdx === -1) {
-      alert('CSV harus punya kolom phone/telepon (boleh kosong per baris).')
+      toast.error('CSV harus punya kolom phone/telepon (boleh kosong per baris).')
       e.target.value = ''
       return
     }
@@ -229,7 +232,11 @@ export default function InviteesPage() {
     setShowPreview(false)
     setPreview([])
     setImporting(false)
-    alert(`${imported} tamu diimport, ${skipped} dilewati.`)
+    if (skipped > 0) {
+      toast.warn(`${imported} tamu diimport, ${skipped} dilewati.`)
+    } else {
+      toast.success(`${imported} tamu diimport.`)
+    }
     load()
   }
 
@@ -251,7 +258,7 @@ export default function InviteesPage() {
           fontFamily:'Cormorant Garamond,serif',
           fontSize:32, fontStyle:'italic', color:'#1e3d2a',
         }}>Daftar Tamu</h1>
-        <div style={{display:'flex', gap:8, alignItems:'center'}}>
+        <div className="admin-pill-row" style={{display:'flex', gap:8, alignItems:'center', flexWrap:'wrap'}}>
           <button
             onClick={downloadCsvTemplate}
             style={{
@@ -288,7 +295,7 @@ export default function InviteesPage() {
                 i.ref && (i.rsvp_status === 'confirmed' || i.type === 'physical')
               )
               if (targets.length === 0) {
-                alert('Tidak ada tamu dengan QR untuk diunduh.')
+                toast.warn('Tidak ada tamu dengan QR untuk diunduh.')
                 return
               }
               if (!confirm(`Unduh ${targets.length} QR? Tunggu hingga selesai.`)) return
@@ -378,7 +385,7 @@ export default function InviteesPage() {
         </span>
       </div>
 
-      <div style={{
+      <div className="admin-stack-mobile" style={{
         display:'flex', gap:12, marginBottom:20,
       }}>
         <input
@@ -391,26 +398,29 @@ export default function InviteesPage() {
             fontSize:14, outline:'none',
           }}
         />
-        {(['all','pending','confirmed','declined','agam_only','vania_only','fisik'] as const).map(f => (
-          <button key={f}
-            onClick={() => setFilter(f)}
-            style={{
-              padding:'10px 16px', borderRadius:8,
-              border:'0.5px solid #d9cdb8',
-              background: filter===f ? '#1e3d2a' : 'white',
-              color: filter===f ? 'white' : '#888',
-              fontSize:12, cursor:'pointer',
-              fontFamily:'Cinzel,serif', letterSpacing:1,
-            }}
-          >
-            {f==='all' ? 'SEMUA' :
-             f==='pending' ? 'PENDING' :
-             f==='confirmed' ? 'HADIR' :
-             f==='declined' ? 'TIDAK' :
-             f==='agam_only' ? 'MANAGAM' :
-             f==='vania_only' ? 'VANIA' : 'FISIK'}
-          </button>
-        ))}
+        <div className="admin-pill-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {(['all','pending','confirmed','declined','agam_only','vania_only','fisik'] as const).map(f => (
+            <button key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                padding:'10px 16px', borderRadius:8,
+                border:'0.5px solid #d9cdb8',
+                background: filter===f ? '#1e3d2a' : 'white',
+                color: filter===f ? 'white' : '#888',
+                fontSize:12, cursor:'pointer',
+                fontFamily:'Cinzel,serif', letterSpacing:1,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {f==='all' ? 'SEMUA' :
+               f==='pending' ? 'PENDING' :
+               f==='confirmed' ? 'HADIR' :
+               f==='declined' ? 'TIDAK' :
+               f==='agam_only' ? 'MANAGAM' :
+               f==='vania_only' ? 'VANIA' : 'FISIK'}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div style={{
@@ -448,7 +458,36 @@ export default function InviteesPage() {
           Memuat...
         </p>
       ) : (
-        <div style={{
+      <>
+        <div className="admin-show-md" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.length === 0 && (
+            <div style={{
+              padding: '32px', textAlign: 'center',
+              color: '#888', fontSize: 14,
+              background: 'white', border: '0.5px solid #ede5d4', borderRadius: 12,
+            }}>
+              {search ? 'Tidak ada tamu yang cocok.' : 'Belum ada tamu. Tambahkan tamu pertama.'}
+            </div>
+          )}
+          {filtered.map(inv => (
+            <InviteeCard
+              key={inv.id}
+              invitee={inv}
+              onEdit={edit}
+              onDelete={remove}
+              onCopyLink={(i) => {
+                const url = `https://managamvania.mrix.ai?ref=${i.ref}`
+                navigator.clipboard.writeText(url).then(() => toast.success('Link disalin'))
+              }}
+              onDownloadQR={(i) => downloadQRTicket({
+                name: i.name,
+                ref: i.ref!,
+                guests: i.guests ?? 1,
+              })}
+            />
+          ))}
+        </div>
+        <div className="admin-hide-md" style={{
           background:'white', borderRadius:12,
           border:'0.5px solid #ede5d4', overflow:'hidden',
         }}>
@@ -609,27 +648,18 @@ export default function InviteesPage() {
             </div>
           )}
         </div>
+      </>
       )}
 
-      {showForm && (
-        <div style={{
-          position:'fixed', inset:0,
-          background:'rgba(0,0,0,0.5)',
-          display:'flex', alignItems:'center',
-          justifyContent:'center', zIndex:500,
-        }}>
-          <div style={{
-            background:'white', borderRadius:16,
-            padding:'32px', width:420,
-            boxShadow:'0 24px 64px rgba(0,0,0,0.2)',
+      <ResponsiveModal open={showForm} onClose={() => setShowForm(false)} maxWidth={420}>
+        <>
+          <h2 style={{
+            fontFamily:'Cormorant Garamond,serif',
+            fontSize:24, fontStyle:'italic',
+            color:'#1e3d2a', marginBottom:24,
           }}>
-            <h2 style={{
-              fontFamily:'Cormorant Garamond,serif',
-              fontSize:24, fontStyle:'italic',
-              color:'#1e3d2a', marginBottom:24,
-            }}>
-              {editing ? 'Edit Tamu' : 'Tambah Tamu'}
-            </h2>
+            {editing ? 'Edit Tamu' : 'Tambah Tamu'}
+          </h2>
             <input placeholder="Nama lengkap"
               value={form.name ?? ''} style={inp}
               onChange={e => setForm(f =>
@@ -719,28 +749,16 @@ export default function InviteesPage() {
                   fontSize:10, letterSpacing:2,
                 }}>SIMPAN</button>
             </div>
-          </div>
-        </div>
-      )}
+        </>
+      </ResponsiveModal>
 
-      {showPreview && (
-        <div style={{
-          position:'fixed', inset:0,
-          background:'rgba(0,0,0,0.5)',
-          display:'flex', alignItems:'center',
-          justifyContent:'center', zIndex:500,
-        }}>
-          <div style={{
-            background:'white', borderRadius:16,
-            padding:'32px', width:'90%', maxWidth:640,
-            maxHeight:'80vh', overflow:'hidden',
-            display:'flex', flexDirection:'column',
-          }}>
-            <h2 style={{
-              fontFamily:'Cormorant Garamond,serif',
-              fontSize:24, fontStyle:'italic',
-              color:'#1e3d2a', marginBottom:8,
-            }}>Preview Import</h2>
+      <ResponsiveModal open={showPreview} onClose={() => { setShowPreview(false); setPreview([]) }} maxWidth={640}>
+        <>
+          <h2 style={{
+            fontFamily:'Cormorant Garamond,serif',
+            fontSize:24, fontStyle:'italic',
+            color:'#1e3d2a', marginBottom:8,
+          }}>Preview Import</h2>
             <p style={{
               fontSize:13, color:'#888', marginBottom:16,
             }}>
@@ -843,9 +861,8 @@ export default function InviteesPage() {
                   : `IMPORT ${preview.length} TAMU`}
               </button>
             </div>
-          </div>
-        </div>
-      )}
+        </>
+      </ResponsiveModal>
     </div>
   )
 }
