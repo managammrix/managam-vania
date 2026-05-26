@@ -186,13 +186,16 @@ export async function submitRsvp(data: Omit<RsvpRow, 'id' | 'created_at'>) {
 export async function updateInviteeRsvp(
   ref: string,
   attending: boolean,
-  guests: number
+  guests: number,
+  phone?: string | null,
 ): Promise<boolean> {
   const { data, error } = await supabase
     .rpc('submit_rsvp_by_ref', {
       p_ref: ref,
       p_attending: attending,
       p_guests: guests,
+      // RPC treats blank/null as "leave existing phone alone".
+      p_phone: phone && phone.trim().length > 0 ? phone.trim() : null,
     })
   if (error) {
     console.error('[rsvp] update error:', error)

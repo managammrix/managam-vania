@@ -124,7 +124,11 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
             guestData.ref, name.trim(), phone.trim(), guestCount, attending
           )
         } else {
-          await updateInviteeRsvp(guestData.ref, attending, guestCount)
+          // Pass the typed phone so a PIC submitting on someone
+          // else's behalf can overwrite the stored number.
+          await updateInviteeRsvp(
+            guestData.ref, attending, guestCount, phone,
+          )
         }
       } catch (err) {
         console.error('[rsvp] invitee update error:', err)
@@ -144,9 +148,13 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
         cached.rsvp_status = attending ? 'confirmed' : 'declined'
         cached.attending = attending
         cached.guests = guestCount
+        // Phone is now editable for everyone (PIC proxy use case);
+        // a blank submission leaves the previously cached value
+        // untouched, matching the RPC's coalesce(nullif(...), phone).
+        const typedPhone = phone.trim()
+        if (typedPhone) cached.phone = typedPhone
         if (isPhysicalAnon) {
           cached.name = name.trim()
-          cached.phone = phone.trim() || null
         }
         sessionStorage.setItem(key, JSON.stringify(cached))
       } catch (e) {
@@ -288,20 +296,40 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
                   Silakan isi nama lengkap Anda
                 </p>
               )}
+              <p
+                data-testid="helper-name"
+                style={{
+                  fontSize:12, color:'var(--sage)',
+                  marginTop:6, fontStyle:'italic',
+                  lineHeight:1.5,
+                }}
+              >
+                Pastikan nama Anda sudah benar — nama ini akan
+                tertera di tiket undangan Anda 🌿
+              </p>
             </div>
             <div style={{marginBottom:24}}>
               <label style={labelStyle}>{tr.rsvp_phone}</label>
               <input
-                style={{
-                  ...inputStyle,
-                  background: isLocked ? 'var(--cream-warm)' : 'transparent',
-                  color: isLocked ? 'var(--ink-soft)' : 'var(--ink)',
-                }}
+                // Phone is always editable — a PIC submitting on
+                // someone else's behalf needs to overwrite the
+                // pre-filled number. Name stays locked above.
+                style={inputStyle}
                 value={phone}
-                onChange={e => !isLocked && setPhone(e.target.value)}
-                readOnly={isLocked}
+                onChange={e => setPhone(e.target.value)}
                 placeholder="+62 ..."
               />
+              <p
+                data-testid="helper-phone"
+                style={{
+                  fontSize:12, color:'var(--sage)',
+                  marginTop:6, fontStyle:'italic',
+                  lineHeight:1.5,
+                }}
+              >
+                Pastikan nomor WhatsApp Anda aktif — kami akan
+                mengirimkan konfirmasi &amp; pengingat ke nomor ini 📱
+              </p>
             </div>
             <div style={{marginBottom:24}}>
               <label style={labelStyle}>{tr.rsvp_attendance}</label>
@@ -360,7 +388,22 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
                     </option>
                   ))}
                 </select>
-                <p style={{fontSize:12,color:'var(--sage)',marginTop:4}}>
+                <p
+                  data-testid="helper-seats"
+                  style={{
+                    fontSize:12, color:'var(--sage)',
+                    marginTop:6, fontStyle:'italic',
+                    lineHeight:1.5,
+                  }}
+                >
+                  Jumlah tamu menentukan jumlah kotak makan yang
+                  Anda terima setelah pemberkatan nikah. Souvenir
+                  dapat diambil saat check-in (1 per undangan) 🎁
+                </p>
+                <p style={{
+                  fontSize:11, color:'var(--sage)',
+                  marginTop:4, opacity:0.7,
+                }}>
                   Maksimal {maxSeats} tamu untuk undangan ini
                 </p>
               </div>
@@ -445,6 +488,33 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
                   Screenshot tiket ini dan tunjukkan<br/>
                   kepada panitia saat tiba di venue.
                 </p>
+                <div
+                  data-testid="ticket-claim-info"
+                  style={{
+                    padding:'14px 18px',
+                    marginBottom:16,
+                    border:'0.5px solid var(--cream-deep)',
+                    borderRadius:10,
+                    background:'var(--cream-warm)',
+                    fontFamily:'EB Garamond,serif',
+                    fontSize:13,
+                    color:'var(--ink)',
+                    lineHeight:1.7,
+                    textAlign:'left',
+                  }}
+                >
+                  <div>
+                    🎁 <strong>Souvenir:</strong> 1 per undangan ·
+                    claim saat check-in
+                  </div>
+                  <div>
+                    🍱 <strong>Kotak makan:</strong>{' '}
+                    <span data-testid="ticket-lunchbox-count">
+                      {guests}
+                    </span>{' '}
+                    kotak · claim setelah pemberkatan nikah
+                  </div>
+                </div>
                 <button
                   onClick={() => {
                     const a = document.createElement('a')
