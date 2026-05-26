@@ -10,6 +10,11 @@ interface Props {
   defaultMaxGuests: number
 }
 
+// RSVP edits accepted until end-of-day Jakarta time on 14 June 2026.
+// After this, the form is locked and the "Ubah kehadiran" link is
+// hidden from the persisted ticket / decline screens.
+const RSVP_DEADLINE_MS = new Date('2026-06-14T23:59:59+07:00').getTime()
+
 export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) {
   const ref = useReveal()
   const initialIsAnonPhysical = !!guestData &&
@@ -32,6 +37,52 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
     setName(isAnonPhysical ? '' : guestData.name)
     setPhone(isAnonPhysical ? '' : (guestData.phone ?? ''))
   }, [guestData])
+
+  // Hydrate from server-side RSVP status. If the guest already
+  // confirmed or declined in a previous visit, skip the form and
+  // show the appropriate persistent screen (ticket / soft thanks).
+  // For anonymous physical slots we never auto-skip — they always
+  // need to identify themselves first.
+  useEffect(() => {
+    if (!guestData) return
+    if (initialIsAnonPhysical) return
+    if (guestData.rsvp_status === 'confirmed') {
+      setAttending(true)
+      setGuests(guestData.guests && guestData.guests > 0 ? guestData.guests : 1)
+      setSubmitted(true)
+    } else if (guestData.rsvp_status === 'declined') {
+      setAttending(false)
+      setSubmitted(true)
+    }
+  }, [guestData, initialIsAnonPhysical])
+
+  // Regenerate the QR ticket on revisit so refreshed-confirmed
+  // guests still see their ticket without needing to re-submit.
+  useEffect(() => {
+    if (!guestData) return
+    if (guestData.rsvp_status !== 'confirmed') return
+    if (qrDataUrl) return
+    const guestRef = guestData.ref
+    if (!guestRef) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { generateQRTicket } = await import('@/lib/generateQR')
+        const url = await generateQRTicket({
+          name: guestData.name,
+          ref: guestRef,
+          guests: guestData.guests && guestData.guests > 0
+            ? guestData.guests : 1,
+        })
+        if (!cancelled) setQrDataUrl(url)
+      } catch (err) {
+        console.error('[rsvp] qr regen error:', err)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [guestData, qrDataUrl])
+
+  const canEdit = Date.now() < RSVP_DEADLINE_MS
 
   // Per-invitee seat limit is `guests` itself; fall back to the
   // global default if the invitee row has no guests value set.
@@ -216,7 +267,9 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
             textAlign:'center',
             padding:'48px 24px',
           }}>
-            <div style={{fontSize:40, marginBottom:16}}>🌿</div>
+            <div style={{fontSize:40, marginBottom:16}}>
+              {attending === false ? '🙏' : '🌿'}
+            </div>
             <h3 style={{
               fontFamily:'Cormorant Garamond,serif',
               fontSize:28, fontStyle:'italic',
@@ -227,8 +280,17 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
               fontSize:16, color:'var(--ink-soft)',
               lineHeight:1.7, marginBottom:8,
             }}>
-              Kami sangat bersukacita menantikan<br/>
-              kehadiran Anda pada hari yang penuh berkat.
+              {attending === false ? (
+                <>
+                  Terima kasih telah memberitahu kami.<br/>
+                  Doa dan restu Anda tetap berarti bagi kami.
+                </>
+              ) : (
+                <>
+                  Kami sangat bersukacita menantikan<br/>
+                  kehadiran Anda pada hari yang penuh berkat.
+                </>
+              )}
             </p>
             <p style={{
               fontFamily:'Cinzel,serif', fontSize:10,
@@ -237,7 +299,7 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
             }}>
               #BuildingMANAGAMVANturesWithGod
             </p>
-            {qrDataUrl && (
+            {attending !== false && qrDataUrl && (
               <div style={{marginTop:24, textAlign:'center'}}>
                 <p style={{
                   fontFamily:'Cinzel,serif', fontSize:10,
@@ -280,6 +342,21 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
                   }}
                 >UNDUH TIKET</button>
               </div>
+            )}
+            {canEdit && (
+              <button
+                id="ubah-kehadiran-btn"
+                onClick={() => setSubmitted(false)}
+                style={{
+                  marginTop:28,
+                  background:'transparent', border:'none',
+                  padding:0, cursor:'pointer',
+                  fontFamily:'Cinzel,serif', fontSize:10,
+                  letterSpacing:2, color:'var(--sage)',
+                  textDecoration:'underline',
+                  textUnderlineOffset:4,
+                }}
+              >Ubah kehadiran</button>
             )}
           </div>
         )}
