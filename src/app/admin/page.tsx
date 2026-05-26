@@ -84,7 +84,7 @@ export default function AdminDashboard() {
         fontSize:13, color:'#888', marginBottom:32,
       }}>Managam & Vania · 20 Juni 2026</p>
 
-      <div style={{
+      <div className="admin-grid-4col" style={{
         display:'grid',
         gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',
         gap:16,
@@ -92,13 +92,13 @@ export default function AdminDashboard() {
         {cards.map(card => (
           <div key={card.label} style={{
             background:'white', borderRadius:12,
-            padding:'24px 20px',
+            padding:'20px 16px',
             border:'0.5px solid #ede5d4',
           }}>
-            <div style={{
+            <div className="admin-stat-label-mobile" style={{
               fontSize:13, color:'#888', marginBottom:8,
             }}>{card.label}</div>
-            <div style={{
+            <div className="admin-stat-font-mobile" style={{
               fontSize:36, fontWeight:500,
               color:card.color, lineHeight:1,
             }}>{card.value}</div>

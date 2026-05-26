@@ -41,26 +41,28 @@ export default function WishesAdminPage() {
 
   return (
     <div>
-      <div style={{
+      <div className="admin-stack-mobile" style={{
         display:'flex', alignItems:'center',
         justifyContent:'space-between', marginBottom:24,
+        gap:12,
       }}>
         <h1 style={{
           fontFamily:'Cormorant Garamond,serif',
           fontSize:32, fontStyle:'italic', color:'#1e3d2a',
         }}>Ucapan</h1>
-        <div style={{display:'flex', gap:8}}>
+        <div className="admin-pill-row" style={{display:'flex', gap:8}}>
           {(['all','approved','pending'] as const).map(f => (
             <button key={f}
               onClick={() => setFilter(f)}
               style={{
-                padding:'8px 16px', borderRadius:8,
+                padding:'10px 16px', borderRadius:8,
                 border:'0.5px solid #d9cdb8',
                 background: filter===f
                   ? '#1e3d2a' : 'white',
                 color: filter===f ? 'white' : '#888',
                 fontSize:11, cursor:'pointer',
                 fontFamily:'Cinzel,serif', letterSpacing:1,
+                whiteSpace:'nowrap', minHeight:44,
               }}>
               {f==='all' ? 'SEMUA' :
                f==='approved' ? 'TAMPIL' : 'PENDING'}
@@ -76,7 +78,7 @@ export default function WishesAdminPage() {
           display:'flex', flexDirection:'column', gap:12,
         }}>
           {filtered.map(w => (
-            <div key={w.id} style={{
+            <div key={w.id} className="admin-stack-mobile" style={{
               background:'white', borderRadius:12,
               padding:'20px 24px',
               border:`0.5px solid ${
@@ -121,28 +123,32 @@ export default function WishesAdminPage() {
                 </div>
               </div>
               <div style={{
-                display:'flex', gap:8, flexShrink:0,
+                display:'flex', gap:8, flexShrink:0, flexWrap:'wrap',
               }}>
                 <button onClick={() => toggle(w)}
                   style={{
-                    padding:'8px 14px',
+                    padding:'12px 18px',
                     border:`0.5px solid ${
                       w.approved ? '#f5c6c6' : '#c8e6c9'
                     }`,
                     borderRadius:8, background:'white',
-                    fontSize:11, cursor:'pointer',
+                    fontSize:12, cursor:'pointer',
                     color: w.approved ? '#c0392b' : '#2d5a3d',
+                    minHeight:44,
+                    fontFamily:'Cinzel,serif', letterSpacing:1,
                   }}>
-                  {w.approved ? 'Sembunyikan' : 'Tampilkan'}
+                  {w.approved ? 'SEMBUNYIKAN' : 'TAMPILKAN'}
                 </button>
                 <button onClick={() => remove(w.id!)}
                   style={{
-                    padding:'8px 14px',
+                    padding:'12px 18px',
                     border:'0.5px solid #f5c6c6',
                     borderRadius:8, background:'white',
-                    fontSize:11, cursor:'pointer',
+                    fontSize:12, cursor:'pointer',
                     color:'#c0392b',
-                  }}>Hapus</button>
+                    minHeight:44,
+                    fontFamily:'Cinzel,serif', letterSpacing:1,
+                  }}>HAPUS</button>
               </div>
             </div>
           ))}
