@@ -105,20 +105,34 @@ async function cleanupRows(page: Page): Promise<number> {
 }
 
 async function setToken(value: string) {
-  const { error } = await supabase
+  const { error, data } = await supabase
     .from('settings')
     .update({ value })
     .eq('key', 'fonnte_token_agam')
+    .select()
   if (error) throw error
+  // Anon UPDATE with a non-existent key silently affects 0 rows.
+  // Surface that loudly so the suite doesn't proceed thinking the
+  // token is set when it isn't.
+  if (!data || data.length === 0) {
+    throw new Error(
+      'fonnte_token_agam row missing in settings — apply ' +
+      'supabase/migrations/002_rsvp_notifications.sql first.'
+    )
+  }
 }
 
-async function readToken(): Promise<string | null> {
+async function readSetting(key: string): Promise<string | null> {
   const { data } = await supabase
     .from('settings')
     .select('value')
-    .eq('key', 'fonnte_token_agam')
-    .single()
+    .eq('key', key)
+    .maybeSingle()
   return (data?.value as string | undefined) ?? null
+}
+
+async function readToken(): Promise<string | null> {
+  return readSetting('fonnte_token_agam')
 }
 
 async function openAndRsvp(page: Page, ref: string, hadir: boolean) {
@@ -154,12 +168,40 @@ async function openAndRsvp(page: Page, ref: string, hadir: boolean) {
 
 test.describe.serial('RSVP admin WA notifications', () => {
   test.beforeAll(async ({ browser }) => {
+    // Sanity: notify_managam / notify_vania / fonnte_token_agam
+    // must all exist in `settings`. If any are missing, the runtime
+    // path bails before sending and we'd silently get 0 hits.
+    const seeded = {
+      notify_managam:    await readSetting('notify_managam'),
+      notify_vania:      await readSetting('notify_vania'),
+      fonnte_token_agam: await readSetting('fonnte_token_agam'),
+    }
+    console.log('[setup] settings rows:', seeded)
+    if (
+      seeded.notify_managam !== NOTIFY_NUMBERS.managam ||
+      seeded.notify_vania   !== NOTIFY_NUMBERS.vania ||
+      seeded.fonnte_token_agam === null
+    ) {
+      throw new Error(
+        'Settings not seeded. Apply ' +
+        'supabase/migrations/002_rsvp_notifications.sql ' +
+        'to the test database first.'
+      )
+    }
+
     // Stash the real token so we can restore it in afterAll.
     priorToken = await readToken()
     await setToken(MOCK_TOKEN)
-    console.log(`[setup] swapped fonnte_token_agam (was ${
-      priorToken ? '<set>' : '<empty>'
-    } → mock)`)
+    const verify = await readToken()
+    if (verify !== MOCK_TOKEN) {
+      throw new Error(
+        `Token did not persist (read back "${verify}"). RLS policy ` +
+        'on settings may not allow anon UPDATE of fonnte_token_agam.'
+      )
+    }
+    console.log(`[setup] swapped fonnte_token_agam (was "${
+      priorToken ?? ''
+    }" → "${MOCK_TOKEN}")`)
 
     const ctx = await browser.newContext()
     const page = await ctx.newPage()
@@ -192,6 +234,26 @@ test.describe.serial('RSVP admin WA notifications', () => {
   test('1. Hadir RSVP fires admin notifications to both numbers',
     async ({ page, context }) => {
       const hits: { target: string; message: string }[] = []
+      // Catch-all logger so we can see every fonnte attempt
+      // regardless of whether the intercept rule below matches.
+      const fonnteRequestUrls: string[] = []
+      page.on('request', req => {
+        if (req.url().includes('fonnte.com')) {
+          fonnteRequestUrls.push(`${req.method()} ${req.url()}`)
+        }
+      })
+      // Surface browser console errors (e.g. "[rsvp] notify error").
+      page.on('console', msg => {
+        const txt = msg.text()
+        if (
+          txt.includes('rsvp') ||
+          txt.includes('fonnte') ||
+          msg.type() === 'error'
+        ) {
+          console.log(`  [browser:${msg.type()}]`, txt)
+        }
+      })
+
       await context.route('https://api.fonnte.com/**', async (route, req) => {
         try {
           const body = req.postDataJSON()
@@ -199,7 +261,10 @@ test.describe.serial('RSVP admin WA notifications', () => {
             target: body.target ?? '',
             message: body.message ?? '',
           })
-        } catch {}
+          console.log('  [intercept] fonnte hit →', body.target)
+        } catch (e) {
+          console.warn('  [intercept] body parse failed:', (e as Error).message)
+        }
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -208,9 +273,28 @@ test.describe.serial('RSVP admin WA notifications', () => {
       })
 
       await openAndRsvp(page, refs.hadir, true)
-      await expect(page.locator('text=Terima kasih!')).toBeVisible({ timeout: 20000 })
-      // Give the fire-and-forget notification a moment to land.
-      await page.waitForTimeout(2000)
+      // Wait for the success UI first — the fire-and-forget notify
+      // dispatch happens inside the same handler that flips
+      // `submitted = true`, so once we see "Terima kasih!" the
+      // fetch() has at least been kicked off.
+      await expect(page.locator('text=Terima kasih!'))
+        .toBeVisible({ timeout: 20000 })
+      console.log('[case 1] "Terima kasih!" visible')
+
+      // Wait explicitly for the first fonnte hit, then a beat more
+      // so the second (concurrent) call also lands.
+      try {
+        await page.waitForRequest(
+          req => req.url().includes('api.fonnte.com'),
+          { timeout: 10000 }
+        )
+        await page.waitForTimeout(2000)
+      } catch {
+        console.warn('[case 1] never saw a request to api.fonnte.com')
+      }
+
+      console.log('[case 1] all fonnte requests seen:', fonnteRequestUrls)
+      console.log('[case 1] intercepted hit count:', hits.length)
 
       const managam = hits.find(h => h.target === NOTIFY_NUMBERS.managam)
       const vania   = hits.find(h => h.target === NOTIFY_NUMBERS.vania)
