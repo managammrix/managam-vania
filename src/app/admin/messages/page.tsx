@@ -23,7 +23,9 @@ export default function MessagesPage() {
   const [editedTemplates, setEditedTemplates] =
     useState<Record<string, string>>({})
   const [recipientFilter, setRecipientFilter] =
-    useState<'all'|'pending'|'confirmed'|'honored'>('all')
+    useState<
+      'all'|'pending'|'confirmed'|'honored'|'agam'|'vania'
+    >('all')
   const [manualSearch, setManualSearch] = useState('')
   const [manualIds, setManualIds] = useState<Set<string>>(new Set())
   const [sending, setSending] = useState(false)
@@ -129,6 +131,10 @@ export default function MessagesPage() {
           return i.rsvp_status === 'pending'
         if (recipientFilter === 'confirmed')
           return i.attending === true
+        if (recipientFilter === 'agam')
+          return (i.sender ?? 'agam') === 'agam'
+        if (recipientFilter === 'vania')
+          return i.sender === 'vania'
         return true
       })
 
@@ -440,12 +446,18 @@ export default function MessagesPage() {
               letterSpacing:3, color:'#6b8f71',
               marginBottom:12,
             }}>PENERIMA</div>
-            {(['all','pending','confirmed','honored'] as const).map(f => (
-              <label key={f} style={{
-                display:'flex', alignItems:'center',
-                gap:10, marginBottom:10, cursor: manualMode ? 'not-allowed' : 'pointer',
-                fontSize:14, opacity: manualMode ? 0.45 : 1,
-              }}>
+            {(
+              ['all','pending','confirmed','honored','agam','vania'] as const
+            ).map(f => (
+              <label
+                key={f}
+                data-testid={`filter-radio-${f}`}
+                style={{
+                  display:'flex', alignItems:'center',
+                  gap:10, marginBottom:10,
+                  cursor: manualMode ? 'not-allowed' : 'pointer',
+                  fontSize:14, opacity: manualMode ? 0.45 : 1,
+                }}>
                 <input type="radio" name="filter"
                   disabled={manualMode}
                   checked={recipientFilter===f}
@@ -461,8 +473,16 @@ export default function MessagesPage() {
                   `Konfirmasi hadir (${invitees.filter(
                     i=>i.attending
                   ).length})` :
+                 f==='honored' ?
                   `Tamu Kehormatan (${invitees.filter(
                     i=>i.guests===0
+                  ).length})` :
+                 f==='agam' ?
+                  `Tamu Managam (${invitees.filter(
+                    i=>(i.sender ?? 'agam')==='agam'
+                  ).length})` :
+                  `Tamu Vania (${invitees.filter(
+                    i=>i.sender==='vania'
                   ).length})`
                 }
               </label>

@@ -204,6 +204,66 @@ export default function RsvpSection({ tr, guestData, defaultMaxGuests }: Props) 
 
   return (
     <section id="rsvp" ref={ref} style={{background:'var(--parchment)',padding:'80px 40px',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      {loading && (
+        <div
+          id="rsvp-loading-overlay"
+          data-testid="rsvp-loading-overlay"
+          style={{
+            position:'fixed', inset:0, zIndex:9999,
+            background:'rgba(30, 61, 42, 0.94)',
+            backdropFilter:'blur(6px)',
+            display:'flex', flexDirection:'column',
+            alignItems:'center', justifyContent:'center',
+            padding:'32px',
+          }}
+        >
+          <div
+            className="rsvp-loading-monogram"
+            style={{
+              fontFamily:'Cormorant Garamond,serif',
+              fontSize:88, fontStyle:'italic', fontWeight:300,
+              color:'var(--cream)', letterSpacing:6,
+              lineHeight:1, marginBottom:32,
+            }}
+          >
+            M <span style={{
+              fontFamily:'Cinzel,serif', fontSize:32,
+              verticalAlign:'middle', opacity:0.7,
+            }}>&amp;</span> V
+          </div>
+          <p style={{
+            fontFamily:'Cormorant Garamond,serif',
+            fontSize:22, fontStyle:'italic',
+            color:'var(--cream-warm)',
+            textAlign:'center', marginBottom:14,
+            maxWidth:360, lineHeight:1.5,
+          }}>
+            Sedang mempersiapkan undangan Anda… 🌿
+          </p>
+          <p style={{
+            fontFamily:'Cinzel,serif', fontSize:10,
+            letterSpacing:3,
+            color:'var(--sage-light, #b7c8b7)',
+            textAlign:'center', marginBottom:28,
+            opacity:0.8,
+          }}>
+            MOHON TUNGGU SEBENTAR
+          </p>
+          <div style={{display:'flex', gap:8}}>
+            {[0,1,2].map(i => (
+              <span
+                key={i}
+                className="rsvp-loading-dot"
+                style={{
+                  width:8, height:8, borderRadius:'50%',
+                  background:'var(--cream)',
+                  display:'inline-block',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       <div style={{maxWidth:520,width:'100%',textAlign:'center'}}>
         <h2 className="reveal" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(28px,5vw,44px)',fontStyle:'italic',fontWeight:300,color:'var(--forest-deep)',textAlign:'center',marginBottom:10}}>{tr.rsvp_heading}</h2>
         <p className="reveal reveal-d1" style={{fontFamily:'Cinzel,serif',fontSize:10,letterSpacing:4,color:'var(--sage)',textAlign:'center',marginBottom:0}}>{tr.rsvp_sub}</p>
