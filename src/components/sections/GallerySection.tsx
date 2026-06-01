@@ -145,7 +145,18 @@ export default function GallerySection({ tr }: { tr: Translations }) {
             alt="Pre-wedding photo"
             onLoad={() => setImgLoading(false)}
             onError={() => setImgLoading(false)}
-            style={{maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',borderRadius:4,pointerEvents:'none',opacity:imgLoading?0:1,transition:'opacity 0.25s ease'}}
+            style={{
+              maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',
+              borderRadius:4,pointerEvents:'none',
+              // Blur-reveal: the photo fades + sharpens + settles from a slight
+              // zoom once it decodes (IG-style "comes into focus"). No LQIP, so
+              // this plays on load — the spinner covers the actual download.
+              opacity: imgLoading ? 0 : 1,
+              filter: imgLoading ? 'blur(16px)' : 'blur(0px)',
+              transform: imgLoading ? 'scale(1.08)' : 'scale(1)',
+              transition: 'opacity 0.4s ease, filter 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1)',
+              willChange: 'filter, transform, opacity',
+            }}
           />
           {loaded.length > 1 && (
             <>
