@@ -62,6 +62,7 @@ export default function GallerySection({ tr }: { tr: Translations }) {
   // Navigate over the loaded photos only (the 18-slot grid contains nulls).
   const loaded = photos.filter((p): p is PhotoRow => p !== null)
   const [lightboxIdx, setLightboxIdx] = useState<number|null>(null)
+  const [imgLoading, setImgLoading] = useState(false)
 
   const closeLightbox = () => setLightboxIdx(null)
   const showNext = () =>
@@ -87,6 +88,23 @@ export default function GallerySection({ tr }: { tr: Translations }) {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
+  }, [lightboxIdx, loaded.length])
+
+  // Show a spinner until the (possibly uncached) photo decodes, and warm the
+  // adjacent photos so most prev/next clicks land instantly.
+  useEffect(() => {
+    if (lightboxIdx === null) return
+    setImgLoading(true)
+    const n = loaded.length
+    if (n > 1) {
+      const next = loaded[(lightboxIdx + 1) % n]
+      const prev = loaded[(lightboxIdx - 1 + n) % n]
+      if (next) new Image().src = next.url
+      if (prev) new Image().src = prev.url
+    }
+    // Re-run only on navigation / photo-count change, not on every render
+    // (loaded is a fresh array each render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lightboxIdx, loaded.length])
 
   // Swipe / tap handling for the overlay.
@@ -117,31 +135,35 @@ export default function GallerySection({ tr }: { tr: Translations }) {
         <div
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
-          style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',cursor:'zoom-out',touchAction:'pan-y'}}
+          style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',cursor:'zoom-out',touchAction:'none'}}
         >
+          {imgLoading && <div className="lb-spinner" />}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            key={loaded[lightboxIdx].url}
             src={loaded[lightboxIdx].url}
             alt="Pre-wedding photo"
-            style={{maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',borderRadius:4,pointerEvents:'none'}}
+            onLoad={() => setImgLoading(false)}
+            onError={() => setImgLoading(false)}
+            style={{maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',borderRadius:4,pointerEvents:'none',opacity:imgLoading?0:1,transition:'opacity 0.25s ease'}}
           />
           {loaded.length > 1 && (
             <>
               <button
                 aria-label="Sebelumnya"
-                onClick={(e) => { e.stopPropagation(); showPrev() }}
+                onPointerDown={(e) => { e.stopPropagation(); showPrev() }}
                 style={navBtnStyle('left')}
               >‹</button>
               <button
                 aria-label="Berikutnya"
-                onClick={(e) => { e.stopPropagation(); showNext() }}
+                onPointerDown={(e) => { e.stopPropagation(); showNext() }}
                 style={navBtnStyle('right')}
               >›</button>
             </>
           )}
           <button
             aria-label="Tutup"
-            onClick={(e) => { e.stopPropagation(); closeLightbox() }}
+            onPointerDown={(e) => { e.stopPropagation(); closeLightbox() }}
             style={{position:'absolute',top:24,right:24,background:'none',border:'none',color:'white',fontSize:24,cursor:'pointer',lineHeight:1,fontFamily:'Cinzel,serif',minWidth:44,minHeight:44,display:'flex',alignItems:'center',justifyContent:'center'}}
           >×</button>
         </div>
@@ -162,6 +184,8 @@ export default function GallerySection({ tr }: { tr: Translations }) {
           .g-item.tall{grid-row:span 2;aspect-ratio:1/2;}
           .g-ph{display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0.25;}
           .g-ph span{font-family:Cinzel,serif;font-size:7px;letter-spacing:2px;color:var(--sage-light);}
+          .lb-spinner{position:absolute;top:50%;left:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:3px solid rgba(237,229,212,0.25);border-top-color:var(--sage-light);animation:mv-spin 0.8s linear infinite;pointer-events:none;}
+          @keyframes mv-spin{to{transform:rotate(360deg);}}
           @media(max-width:640px){
             .gallery-grid{grid-template-columns:repeat(3,1fr);}
             .g-item.hero{grid-column:span 2;}
