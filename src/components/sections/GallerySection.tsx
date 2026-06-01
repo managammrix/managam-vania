@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Translations } from '@/lib/translations'
 import { fetchGalleryPhotos, PhotoRow } from '@/lib/supabase'
 import { useReveal } from '../useReveal'
@@ -34,10 +34,40 @@ const PlaceholderIcon = () => (
   </svg>
 )
 
+function navBtnStyle(side: 'left' | 'right'): React.CSSProperties {
+  return {
+    position: 'absolute',
+    [side]: 12,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'rgba(0,0,0,0.35)',
+    border: 'none',
+    color: 'white',
+    fontSize: 32,
+    cursor: 'pointer',
+    lineHeight: 1,
+    fontFamily: 'Cinzel,serif',
+    width: 48,
+    height: 48,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+}
+
 export default function GallerySection({ tr }: { tr: Translations }) {
   const ref = useReveal()
   const [photos, setPhotos] = useState<(PhotoRow|null)[]>(Array(18).fill(null))
-  const [lightbox, setLightbox] = useState<string|null>(null)
+  // Navigate over the loaded photos only (the 18-slot grid contains nulls).
+  const loaded = photos.filter((p): p is PhotoRow => p !== null)
+  const [lightboxIdx, setLightboxIdx] = useState<number|null>(null)
+
+  const closeLightbox = () => setLightboxIdx(null)
+  const showNext = () =>
+    setLightboxIdx(i => i === null ? i : (i + 1) % loaded.length)
+  const showPrev = () =>
+    setLightboxIdx(i => i === null ? i : (i - 1 + loaded.length) % loaded.length)
 
   useEffect(() => {
     fetchGalleryPhotos().then(data => {
@@ -48,28 +78,70 @@ export default function GallerySection({ tr }: { tr: Translations }) {
   }, [])
 
   useEffect(() => {
+    if (lightboxIdx === null) return
+    const n = loaded.length
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(null)
+      if (e.key === 'Escape') setLightboxIdx(null)
+      else if (e.key === 'ArrowRight') setLightboxIdx(i => i === null ? i : (i + 1) % n)
+      else if (e.key === 'ArrowLeft') setLightboxIdx(i => i === null ? i : (i - 1 + n) % n)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [])
+  }, [lightboxIdx, loaded.length])
+
+  // Swipe / tap handling for the overlay.
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const onPointerDown = (e: React.PointerEvent) => {
+    touchStart.current = { x: e.clientX, y: e.clientY }
+  }
+  const onPointerUp = (e: React.PointerEvent) => {
+    const s = touchStart.current
+    touchStart.current = null
+    if (!s) return
+    const dx = e.clientX - s.x
+    const dy = e.clientY - s.y
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) showNext()
+      else showPrev()
+      return
+    }
+    // Tap on the dark background (not the image/buttons) closes the lightbox.
+    if (e.target === e.currentTarget && Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+      closeLightbox()
+    }
+  }
 
   return (
     <section id="gallery" ref={ref} style={{background:'var(--forest-deep)',padding:'80px 40px',display:'flex',alignItems:'center',justifyContent:'center'}}>
-      {lightbox && (
+      {lightboxIdx !== null && loaded[lightboxIdx] && (
         <div
-          onClick={() => setLightbox(null)}
-          style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',cursor:'zoom-out'}}
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:500,display:'flex',alignItems:'center',justifyContent:'center',cursor:'zoom-out',touchAction:'pan-y'}}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={lightbox}
+            src={loaded[lightboxIdx].url}
             alt="Pre-wedding photo"
-            style={{maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',borderRadius:4}}
+            style={{maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',borderRadius:4,pointerEvents:'none'}}
           />
+          {loaded.length > 1 && (
+            <>
+              <button
+                aria-label="Sebelumnya"
+                onClick={(e) => { e.stopPropagation(); showPrev() }}
+                style={navBtnStyle('left')}
+              >‹</button>
+              <button
+                aria-label="Berikutnya"
+                onClick={(e) => { e.stopPropagation(); showNext() }}
+                style={navBtnStyle('right')}
+              >›</button>
+            </>
+          )}
           <button
-            onClick={() => setLightbox(null)}
+            aria-label="Tutup"
+            onClick={(e) => { e.stopPropagation(); closeLightbox() }}
             style={{position:'absolute',top:24,right:24,background:'none',border:'none',color:'white',fontSize:24,cursor:'pointer',lineHeight:1,fontFamily:'Cinzel,serif',minWidth:44,minHeight:44,display:'flex',alignItems:'center',justifyContent:'center'}}
           >×</button>
         </div>
@@ -105,7 +177,11 @@ export default function GallerySection({ tr }: { tr: Translations }) {
               <div
                 key={i}
                 className={`g-item ${cls}${!photo ? ' empty' : ''}`}
-                onClick={() => photo && setLightbox(photo.url)}
+                onClick={() => {
+                  if (!photo) return
+                  const idx = loaded.findIndex(p => p.url === photo.url)
+                  if (idx >= 0) setLightboxIdx(idx)
+                }}
               >
                 {photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
