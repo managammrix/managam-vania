@@ -147,11 +147,16 @@ export default function AdminDashboard() {
           gap:16,
         }}>
           {[
-            { label:'🍱 Lunch Box', value:stats.lunchboxes,
-              claimed:stats.lunchboxes_claimed, color:'#993556' },
-            { label:'🎁 Souvenir', value:stats.souvenirs,
-              claimed:stats.souvenirs_claimed, color:'#b8965a' },
-          ].map(card => (
+            { label:'Kursi Terkonfirmasi', value:stats.lunchboxes,
+              claimed:stats.lunchboxes_claimed, color:'#993556',
+              subtext:'= Kotak Makan disiapkan 🍱' },
+            { label:'Undangan Konfirmasi', value:stats.souvenirs,
+              claimed:stats.souvenirs_claimed, color:'#b8965a',
+              subtext:'= Souvenir yang disiapkan 🎁' },
+          ].map(card => {
+            const pct = card.value > 0
+              ? Math.round((card.claimed / card.value) * 100) : 0
+            return (
             <div key={card.label} style={{
               background:'#faf7f0', borderRadius:12,
               padding:'20px 16px',
@@ -165,10 +170,14 @@ export default function AdminDashboard() {
                 color:card.color, lineHeight:1,
               }}>{card.value}</div>
               <div style={{
-                fontSize:12, color:'#aaa', marginTop:8,
-              }}>Diambil {card.claimed} / {card.value}</div>
+                fontSize:12, color:'#888', marginTop:8,
+              }}>{card.subtext}</div>
+              <div style={{
+                fontSize:12, color:'#aaa', marginTop:6,
+              }}>Diambil: {card.claimed} / {card.value} ({pct}%)</div>
             </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
