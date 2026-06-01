@@ -10,6 +10,7 @@ import { downloadQRTicket } from '@/lib/generateQR'
 import ResponsiveModal from '@/components/admin/ResponsiveModal'
 import InviteeCard from '@/components/admin/InviteeCard'
 import { toast } from '@/components/admin/ToastHost'
+import { normalizePhone } from '@/lib/phone'
 
 function getStatusBadge(inv: InviteeRow): {
   label: string; bg: string; color: string
@@ -42,15 +43,6 @@ function downloadCsvTemplate() {
   a.download = 'template_tamu_managam_vania.csv'
   a.click()
   URL.revokeObjectURL(url)
-}
-
-function normalizePhone(raw: string): string {
-  const digits = raw.replace(/\D/g, '')
-  if (digits.startsWith('0628')) return digits.slice(1)
-  if (digits.startsWith('628')) return digits
-  if (digits.startsWith('08')) return '62' + digits.slice(1)
-  if (digits.startsWith('8')) return '62' + digits
-  return digits
 }
 
 export default function InviteesPage() {

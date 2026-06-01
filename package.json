@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:ref": "playwright test tests/e2e/ref-flow.spec.ts"
@@ -28,6 +29,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "sharp": "^0.34.5",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.0"
   }
 }

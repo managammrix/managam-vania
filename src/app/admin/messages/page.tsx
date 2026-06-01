@@ -31,7 +31,7 @@ export default function MessagesPage() {
   const [manualIds, setManualIds] = useState<Set<string>>(new Set())
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{
-    sent:number; failed:number
+    sent:number; failed:number; skipped?:number
     agam: { sent:number; failed:number }
     vania: { sent:number; failed:number }
   }|null>(null)
@@ -179,9 +179,9 @@ export default function MessagesPage() {
               currentMessage
             ).catch(err => {
               console.error('[blast] agam error:', err)
-              return { sent: 0, failed: agamRecipients.length }
+              return { sent: 0, failed: agamRecipients.length, skipped: 0, skippedRecipients: [] }
             })
-          : Promise.resolve({ sent: 0, failed: 0 }),
+          : Promise.resolve({ sent: 0, failed: 0, skipped: 0, skippedRecipients: [] }),
         vaniaRecipients.length > 0 && tokenVania
           ? sendBulkWhatsApp(
               tokenVania,
@@ -191,13 +191,21 @@ export default function MessagesPage() {
               currentMessage
             ).catch(err => {
               console.error('[blast] vania error:', err)
-              return { sent: 0, failed: vaniaRecipients.length }
+              return { sent: 0, failed: vaniaRecipients.length, skipped: 0, skippedRecipients: [] }
             })
-          : Promise.resolve({ sent: 0, failed: 0 }),
+          : Promise.resolve({ sent: 0, failed: 0, skipped: 0, skippedRecipients: [] }),
       ])
 
       const totalSent = agamResult.sent + vaniaResult.sent
       const totalFailed = agamResult.failed + vaniaResult.failed
+      const totalSkipped = agamResult.skipped + vaniaResult.skipped
+      const skippedAll = [
+        ...agamResult.skippedRecipients,
+        ...vaniaResult.skippedRecipients,
+      ]
+      if (totalSkipped > 0) {
+        console.warn('[blast] skipped invalid numbers:', skippedAll)
+      }
 
       console.log('[blast] agam result:', agamResult)
       console.log('[blast] vania result:', vaniaResult)
@@ -205,6 +213,7 @@ export default function MessagesPage() {
       setResult({
         sent: totalSent,
         failed: totalFailed,
+        skipped: totalSkipped,
         agam: agamResult,
         vania: vaniaResult,
       })
@@ -224,12 +233,17 @@ export default function MessagesPage() {
           : `${totalSent} berhasil, ${totalFailed} gagal`,
       }, ...l])
 
+      const skipNote = totalSkipped > 0
+        ? `, ${totalSkipped} dilewati (nomor tidak valid)`
+        : ''
       if (totalFailed === 0 && totalSent > 0) {
-        toast.success(`✓ ${totalSent} pesan terkirim`)
+        toast.success(`✓ ${totalSent} pesan terkirim${skipNote}`)
       } else if (totalSent > 0) {
-        toast.warn(`${totalSent} terkirim, ${totalFailed} gagal`)
+        toast.warn(`${totalSent} terkirim, ${totalFailed} gagal${skipNote}`)
       } else if (totalFailed > 0) {
-        toast.error(`Gagal mengirim ${totalFailed} pesan`)
+        toast.error(`Gagal mengirim ${totalFailed} pesan${skipNote}`)
+      } else if (totalSkipped > 0) {
+        toast.warn(`${totalSkipped} nomor dilewati (tidak valid)`)
       }
     } finally { setSending(false) }
   }
