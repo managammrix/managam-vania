@@ -16,6 +16,7 @@ import CoverSection from '@/components/sections/CoverSection'
 import StorySection from '@/components/sections/StorySection'
 import CoupleSection from '@/components/sections/CoupleSection'
 import EventsSection from '@/components/sections/EventsSection'
+import SyukuranSection from '@/components/sections/SyukuranSection'
 import RsvpSection from '@/components/sections/RsvpSection'
 import GiftSection from '@/components/sections/GiftSection'
 import WishesSection from '@/components/sections/WishesSection'
@@ -42,7 +43,9 @@ function HomeContent() {
   })
   const { lang, setLang, tr } = useLang()
   const isPostWedding = new Date() > WEDDING_DATE
-  const sections = isPostWedding ? POST_SECTIONS : ALL_SECTIONS
+  // Syukuran guests: thanksgiving-service card, no RSVP, no save-the-date bar.
+  const isSyukuran = guestData?.type === 'syukuran'
+  const sections = (isPostWedding || isSyukuran) ? POST_SECTIONS : ALL_SECTIONS
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -129,13 +132,17 @@ function HomeContent() {
           <AudioPlayer play={opened} />
           <LangToggle lang={lang} setLang={(l: Lang) => setLang(l)} />
           <NavDots sections={sections as unknown as string[]} />
-          <SaveBar tr={tr} isPostWedding={isPostWedding} />
+          {!isSyukuran && <SaveBar tr={tr} isPostWedding={isPostWedding} />}
           <main>
-            <CoverSection tr={tr} isPostWedding={isPostWedding} />
+            <CoverSection
+              tr={tr}
+              isPostWedding={isPostWedding}
+              dateLabel={isSyukuran ? '21 · 06 · 2026' : undefined}
+            />
             <StorySection tr={tr} />
             <CoupleSection tr={tr} />
-            <EventsSection tr={tr} />
-            {!isPostWedding && (
+            {isSyukuran ? <SyukuranSection /> : <EventsSection tr={tr} />}
+            {!isPostWedding && !isSyukuran && (
               <RsvpSection
                 tr={tr}
                 guestData={guestData}

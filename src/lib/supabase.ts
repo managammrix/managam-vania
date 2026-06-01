@@ -38,7 +38,7 @@ export interface InviteeRow {
   checked_in_at?: string | null
   souvenir_claimed?: boolean
   lunchbox_claimed?: boolean
-  type?: 'digital' | 'physical'
+  type?: 'digital' | 'physical' | 'syukuran'
 }
 
 export interface MessageLogRow {

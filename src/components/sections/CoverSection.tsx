@@ -2,7 +2,7 @@
 import { Translations } from '@/lib/translations'
 import { useReveal } from '../useReveal'
 
-export default function CoverSection({ tr, isPostWedding = false }: { tr: Translations; isPostWedding?: boolean }) {
+export default function CoverSection({ tr, isPostWedding = false, dateLabel = '20 · 06 · 2026' }: { tr: Translations; isPostWedding?: boolean; dateLabel?: string }) {
   const ref = useReveal()
   return (
     <section id="cover" ref={ref} style={{background:'var(--parchment)',display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center'}}>
@@ -48,7 +48,7 @@ export default function CoverSection({ tr, isPostWedding = false }: { tr: Transl
         <h1 className="reveal reveal-d2" style={{fontFamily:'Cormorant Garamond,serif',fontSize:'clamp(34px,8vw,56px)',fontWeight:300,fontStyle:'italic',color:'var(--forest-deep)',lineHeight:1.1,marginBottom:16}}>
           Managam<br/><span style={{fontSize:'0.65em',color:'var(--gold)'}}>&amp;</span><br/>Vania
         </h1>
-        <div className="reveal reveal-d3" style={{fontFamily:'Cinzel,serif',fontSize:'clamp(24px,5vw,40px)',color:'var(--forest)',letterSpacing:5,margin:'18px 0 10px'}}>20 · 06 · 2026</div>
+        <div className="reveal reveal-d3" style={{fontFamily:'Cinzel,serif',fontSize:'clamp(24px,5vw,40px)',color:'var(--forest)',letterSpacing:5,margin:'18px 0 10px'}}>{dateLabel}</div>
         <p className="reveal reveal-d3" style={{fontSize:14,color:'var(--sage)',fontStyle:'italic',marginBottom:36,lineHeight:1.7}}>
           &ldquo;He who has been faithful<br/>so on will always remain faithful&rdquo;
         </p>

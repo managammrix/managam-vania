@@ -27,13 +27,14 @@ function getStatusBadge(inv: InviteeRow): {
 }
 
 function downloadCsvTemplate() {
-  const headers = 'name,phone,guests,notes,sender'
+  const headers = 'name,phone,guests,notes,sender,type'
   const example = [
-    'Budi Santoso,628111111111,2,Teman kuliah,agam',
-    'Ibu Maria,628222222222,0,Rekan jauh (digital saja),vania',
-    'Pastor Yohanes,628333333333,1,,agam',
-    'Keluarga Pak Hendra,628444444444,4,Group besar,agam',
-    'Tante Susi (no WA),,2,Tidak punya WA — undangan fisik,vania',
+    'Budi Santoso,628111111111,2,Teman kuliah,agam,digital',
+    'Ibu Maria,628222222222,0,Rekan jauh (digital saja),vania,digital',
+    'Pastor Yohanes,628333333333,1,,agam,digital',
+    'Keluarga Pak Hendra,628444444444,4,Group besar,agam,physical',
+    'Tante Susi (no WA),,2,Tidak punya WA — undangan fisik,vania,physical',
+    'Jemaat GPPS Kersana,628555555555,2,Ibadah syukur Brebes,agam,syukuran',
   ].join('\n')
   const content = headers + '\n' + example
   const blob = new Blob([content], { type:'text/csv;charset=utf-8;' })
@@ -50,7 +51,7 @@ export default function InviteesPage() {
   const [invitees, setInvitees] = useState<InviteeRow[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<'all'|'pending'|'confirmed'|'declined'|'agam_only'|'vania_only'|'fisik'>('all')
+  const [filter, setFilter] = useState<'all'|'pending'|'confirmed'|'declined'|'agam_only'|'vania_only'|'fisik'|'syukuran'>('all')
   const [editing, setEditing] = useState<InviteeRow | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<Partial<InviteeRow>>({
@@ -101,6 +102,7 @@ export default function InviteesPage() {
       filter === 'agam_only' ? (i.sender ?? 'agam') === 'agam' :
       filter === 'vania_only' ? i.sender === 'vania' :
       filter === 'fisik' ? i.type === 'physical' :
+      filter === 'syukuran' ? i.type === 'syukuran' :
       true
     return matchSearch && matchFilter
   })
@@ -160,6 +162,8 @@ export default function InviteesPage() {
       ['notes','catatan','keterangan'].includes(h))
     const senderIdx = headers.findIndex(h =>
       ['sender','dari','pengirim'].includes(h))
+    const typeIdx = headers.findIndex(h =>
+      ['type','jenis','tipe'].includes(h))
 
     if (nameIdx === -1) {
       toast.error('CSV harus punya kolom nama.')
@@ -196,6 +200,12 @@ export default function InviteesPage() {
               (cols[senderIdx] ?? '').toLowerCase()
             ) ? 'vania' : 'agam')
           : 'agam') as 'agam' | 'vania',
+        type: ((): InviteeRow['type'] => {
+          const t = (typeIdx >= 0 ? cols[typeIdx] ?? '' : '').toLowerCase()
+          if (['syukuran','s'].includes(t)) return 'syukuran'
+          if (['physical','fisik','f'].includes(t)) return 'physical'
+          return 'digital'
+        })(),
       }
     }).filter(r => !!r.name) // require name only — phone is now optional
 
@@ -391,7 +401,7 @@ export default function InviteesPage() {
           }}
         />
         <div className="admin-pill-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {(['all','pending','confirmed','declined','agam_only','vania_only','fisik'] as const).map(f => (
+          {(['all','pending','confirmed','declined','agam_only','vania_only','fisik','syukuran'] as const).map(f => (
             <button key={f}
               onClick={() => setFilter(f)}
               style={{
@@ -409,7 +419,8 @@ export default function InviteesPage() {
                f==='confirmed' ? 'HADIR' :
                f==='declined' ? 'TIDAK' :
                f==='agam_only' ? 'MANAGAM' :
-               f==='vania_only' ? 'VANIA' : 'FISIK'}
+               f==='vania_only' ? 'VANIA' :
+               f==='fisik' ? 'FISIK' : 'SYUKURAN'}
             </button>
           ))}
         </div>
