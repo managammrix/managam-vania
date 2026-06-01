@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { test, expect, Page } from '@playwright/test'
+import { gotoMessagesAndFillTokens } from './helpers'
 
 const ADMIN_PIN = process.env.ADMIN_PIN ?? '20062026'
 
@@ -409,11 +410,7 @@ test.describe('Comprehensive guest test suite @smoke', () => {
 
     // ─── STEP 3: WA blast — verify recipient routing ────────
     console.log('\n── Blast: verify "No Phone" excluded ──')
-    await page.goto('/admin/messages')
-    await page.waitForTimeout(1500)
-    await page.fill('input[placeholder*="Managam"]', 'MOCK_AGAM_TOKEN')
-    await page.fill('input[placeholder*="Vania"]', 'MOCK_VANIA_TOKEN')
-    await page.waitForTimeout(300)
+    await gotoMessagesAndFillTokens(page)
     await page.click('label:has-text("Konfirmasi hadir")')
     await page.waitForTimeout(500)
     page.once('dialog', d => d.accept())

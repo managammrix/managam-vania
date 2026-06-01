@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { test, expect, Page, BrowserContext } from '@playwright/test'
+import { gotoMessagesAndFillTokens } from './helpers'
 
 const ADMIN_PIN = process.env.ADMIN_PIN ?? '20062026'
 
@@ -80,20 +81,6 @@ async function cleanupManualRows(page: Page): Promise<number> {
     page.off('dialog', dialogHandler)
   }
   return removed
-}
-
-async function gotoMessagesAndFillTokens(page: Page) {
-  await page.goto('/admin/messages')
-  // Wait for the manual-selection picker to render before any test
-  // tries to drive it. On cold-start runs (first test in the suite),
-  // the page can take >1.5s to hydrate, which was timing out case 1.
-  await page.waitForSelector(
-    '[data-testid="manual-search-input"]',
-    { state: 'visible', timeout: 15000 }
-  )
-  await page.fill('input[placeholder*="Managam"]', 'MOCK_AGAM_TOKEN')
-  await page.fill('input[placeholder*="Vania"]', 'MOCK_VANIA_TOKEN')
-  await page.waitForTimeout(300)
 }
 
 async function setupFonnteStub(

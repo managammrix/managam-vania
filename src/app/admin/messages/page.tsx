@@ -370,11 +370,11 @@ export default function MessagesPage() {
         <div style={{display:'flex',flexDirection:'column',
           gap:20}}>
 
-          <details style={{
+          <details data-testid="fonnte-token-section" style={{
             background:'white', borderRadius:12,
             padding:'16px 24px', border:'0.5px solid #ede5d4',
           }}>
-            <summary style={{
+            <summary data-testid="fonnte-token-toggle" style={{
               fontFamily:'Cinzel,serif', fontSize:10,
               letterSpacing:3, color:'#6b8f71',
               cursor:'pointer', padding:'4px 0',
@@ -390,6 +390,7 @@ export default function MessagesPage() {
                 display:'block', marginBottom:6,
               }}>MANAGAM</label>
               <input
+                data-testid="fonnte-token-agam"
                 type="password"
                 placeholder="Token Fonnte Managam"
                 value={tokenAgam}
@@ -430,6 +431,7 @@ export default function MessagesPage() {
                 display:'block', marginBottom:6,
               }}>VANIA</label>
               <input
+                data-testid="fonnte-token-vania"
                 type="password"
                 placeholder="Token Fonnte Vania"
                 value={tokenVania}
