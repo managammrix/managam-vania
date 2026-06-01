@@ -750,6 +750,40 @@ export default function InviteesPage() {
                 ))}
               </div>
             </div>
+            <div style={{marginBottom:12}}>
+              <label style={{
+                fontFamily:'Cinzel,serif', fontSize:10,
+                letterSpacing:2, color:'#6b8f71',
+                display:'block', marginBottom:8,
+              }}>JENIS UNDANGAN</label>
+              <div style={{display:'flex', gap:8}}>
+                {[
+                  {value:'digital', label:'Digital'},
+                  {value:'physical', label:'Fisik'},
+                  {value:'syukuran', label:'Syukuran'},
+                ].map(t => {
+                  const active = (form.type ?? 'digital') === t.value
+                  return (
+                  <button key={t.value}
+                    type="button"
+                    onClick={() => setForm(f =>
+                      ({...f, type: t.value as InviteeRow['type']}))}
+                    style={{
+                      flex:1, padding:'10px',
+                      borderRadius:8,
+                      border:`0.5px solid ${
+                        active ? '#1e3d2a' : '#d9cdb8'
+                      }`,
+                      background: active ? '#1e3d2a' : 'white',
+                      color: active ? 'white' : '#888',
+                      fontSize:12, cursor:'pointer',
+                      fontFamily:'Cinzel,serif',
+                      letterSpacing:1,
+                    }}>{t.label}</button>
+                  )
+                })}
+              </div>
+            </div>
             <div style={{
               display:'flex', gap:12, marginTop:8,
             }}>
