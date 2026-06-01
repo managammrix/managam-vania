@@ -6,7 +6,7 @@ import {
   InviteeRow,
 } from '@/lib/supabase'
 import { useAdminAuth } from '@/lib/adminAuth'
-import { downloadQRTicket } from '@/lib/generateQR'
+import { downloadQRTicket, downloadInviteQR } from '@/lib/generateQR'
 import ResponsiveModal from '@/components/admin/ResponsiveModal'
 import InviteeCard from '@/components/admin/InviteeCard'
 import { toast } from '@/components/admin/ToastHost'
@@ -476,6 +476,10 @@ export default function InviteesPage() {
                 ref: i.ref!,
                 guests: i.guests ?? 1,
               })}
+              onDownloadInviteQR={(i) => downloadInviteQR({
+                name: i.name,
+                ref: i.ref!,
+              })}
             />
           ))}
         </div>
@@ -608,6 +612,20 @@ export default function InviteesPage() {
                           fontSize:11, cursor:'pointer',
                           color:'#2d5a3d',
                         }}>Link</button>
+                      {inv.ref && (
+                        <button
+                          onClick={() => downloadInviteQR({
+                            name: inv.name,
+                            ref: inv.ref!,
+                          })}
+                          style={{
+                            padding:'4px 12px',
+                            border:'0.5px solid #d9cdb8',
+                            borderRadius:6, background:'white',
+                            fontSize:11, cursor:'pointer',
+                            color:'#6b8f71',
+                          }}>Undangan</button>
+                      )}
                       {inv.rsvp_status === 'confirmed' && inv.ref && (
                         <button
                           onClick={() => downloadQRTicket({
@@ -621,7 +639,7 @@ export default function InviteesPage() {
                             borderRadius:6, background:'white',
                             fontSize:11, cursor:'pointer',
                             color:'#b8965a',
-                          }}>QR</button>
+                          }}>Tiket</button>
                       )}
                     </div>
                   </td>

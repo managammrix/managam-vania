@@ -138,3 +138,135 @@ export async function downloadQRTicket(
   a.download = `tiket-${data.name.replace(/\s+/g, '-').toLowerCase()}-mv2026.png`
   a.click()
 }
+
+// ─── Printable invitation QR ──────────────────────────────────────────
+// A branded mini-card that encodes the guest's INVITATION link
+// (managamvania.mrix.ai?ref=...) — NOT the /checkin link — for printing into
+// physical invitations. Available before RSVP. Rendered at 2× for print.
+
+export interface InviteQRData {
+  name: string
+  ref: string
+}
+
+export async function generateInviteQR(
+  data: InviteQRData
+): Promise<string> {
+  // Invitation link (opens the personalized digital invitation), not check-in.
+  const inviteUrl = `https://managamvania.mrix.ai?ref=${data.ref}`
+
+  // High error correction + ample modules so it scans reliably from print.
+  const qrDataUrl = await QRCode.toDataURL(inviteUrl, {
+    width: 600,
+    margin: 2,
+    color: {
+      dark: '#1e3d2a',
+      light: '#faf6ef',
+    },
+    errorCorrectionLevel: 'Q',
+  })
+
+  // Logical 600×760 card, drawn at 2× for crisp printing.
+  const S = 2
+  const W = 600
+  const H = 760
+  const canvas = document.createElement('canvas')
+  canvas.width = W * S
+  canvas.height = H * S
+  const ctx = canvas.getContext('2d')!
+  ctx.scale(S, S)
+
+  // Background
+  ctx.fillStyle = '#faf6ef'
+  ctx.fillRect(0, 0, W, H)
+
+  // Forest green header bar
+  ctx.fillStyle = '#1e3d2a'
+  ctx.fillRect(0, 0, W, 140)
+
+  ctx.textAlign = 'center'
+
+  // Header: M & V
+  ctx.fillStyle = '#b8965a'
+  ctx.font = '500 18px "Cinzel", serif'
+  ctx.fillText('M & V', 300, 45)
+
+  // Header: Managam & Vania
+  ctx.fillStyle = '#faf6ef'
+  ctx.font = 'italic 32px "Cormorant Garamond", serif'
+  ctx.fillText('Managam & Vania', 300, 90)
+
+  // Header: date
+  ctx.fillStyle = '#9db89f'
+  ctx.font = '400 13px "Cinzel", serif'
+  ctx.fillText('20 · 06 · 2026', 300, 125)
+
+  // QR code image
+  const qrImg = new Image()
+  await new Promise<void>((resolve) => {
+    qrImg.onload = () => resolve()
+    qrImg.src = qrDataUrl
+  })
+
+  // QR background card
+  ctx.fillStyle = '#ffffff'
+  if (typeof ctx.roundRect === 'function') {
+    ctx.beginPath()
+    ctx.roundRect(150, 170, 300, 300, 12)
+    ctx.fill()
+  } else {
+    ctx.fillRect(150, 170, 300, 300)
+  }
+
+  // Draw QR
+  ctx.drawImage(qrImg, 175, 195, 250, 250)
+
+  // Caption
+  ctx.fillStyle = '#6b8f71'
+  ctx.font = '400 12px "Cinzel", serif'
+  ctx.fillText('PINDAI UNTUK MEMBUKA UNDANGAN', 300, 510)
+
+  // Divider
+  ctx.strokeStyle = '#d9cdb8'
+  ctx.lineWidth = 0.5
+  ctx.beginPath()
+  ctx.moveTo(60, 540)
+  ctx.lineTo(540, 540)
+  ctx.stroke()
+
+  // Guest name label
+  ctx.fillStyle = '#6b8f71'
+  ctx.font = '400 11px "Cinzel", serif'
+  ctx.fillText('KEPADA', 300, 575)
+
+  // Guest name
+  ctx.fillStyle = '#1e3d2a'
+  ctx.font = 'italic 36px "Cormorant Garamond", serif'
+  ctx.fillText(data.name, 300, 625)
+
+  // Ref code
+  ctx.fillStyle = '#b8965a'
+  ctx.font = '400 11px "Cinzel", serif'
+  ctx.fillText(`REF: ${data.ref.toUpperCase()}`, 300, 665)
+
+  // Hashtag
+  ctx.fillStyle = '#9db89f'
+  ctx.font = '400 10px "Cinzel", serif'
+  ctx.fillText('#BuildingMANAGAMVANturesWithGod', 300, 720)
+
+  // Bottom accent line
+  ctx.fillStyle = '#1e3d2a'
+  ctx.fillRect(0, 740, W, 20)
+
+  return canvas.toDataURL('image/png')
+}
+
+export async function downloadInviteQR(
+  data: InviteQRData
+): Promise<void> {
+  const dataUrl = await generateInviteQR(data)
+  const a = document.createElement('a')
+  a.href = dataUrl
+  a.download = `qr-undangan-${data.name.replace(/\s+/g, '-').toLowerCase()}-mv2026.png`
+  a.click()
+}

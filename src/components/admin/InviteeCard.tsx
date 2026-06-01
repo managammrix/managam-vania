@@ -8,6 +8,7 @@ type Props = {
   onDelete: (id: string) => void
   onCopyLink: (inv: InviteeRow) => void
   onDownloadQR: (inv: InviteeRow) => void
+  onDownloadInviteQR: (inv: InviteeRow) => void
 }
 
 function statusBadge(inv: InviteeRow) {
@@ -21,10 +22,12 @@ function statusBadge(inv: InviteeRow) {
 }
 
 export default function InviteeCard({
-  invitee, onEdit, onDelete, onCopyLink, onDownloadQR,
+  invitee, onEdit, onDelete, onCopyLink, onDownloadQR, onDownloadInviteQR,
 }: Props) {
   const badge = statusBadge(invitee)
   const canQR = invitee.rsvp_status === 'confirmed' && !!invitee.ref
+  // Printable invitation QR is available for any guest with a ref (no RSVP gate).
+  const canInviteQR = !!invitee.ref
 
   return (
     <div style={{
@@ -82,8 +85,11 @@ export default function InviteeCard({
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
         <button onClick={() => onEdit(invitee)} style={btnStyle('#1e3d2a', '#d9cdb8')}>Edit</button>
         <button onClick={() => onCopyLink(invitee)} style={btnStyle('#2d5a3d', '#d9cdb8')}>Link</button>
+        {canInviteQR && (
+          <button onClick={() => onDownloadInviteQR(invitee)} style={btnStyle('#6b8f71', '#d9cdb8')}>Undangan</button>
+        )}
         {canQR && (
-          <button onClick={() => onDownloadQR(invitee)} style={btnStyle('#b8965a', '#d9cdb8')}>QR</button>
+          <button onClick={() => onDownloadQR(invitee)} style={btnStyle('#b8965a', '#d9cdb8')}>Tiket</button>
         )}
         <button onClick={() => onDelete(invitee.id!)} style={btnStyle('#c0392b', '#f5c6c6')}>Hapus</button>
       </div>
