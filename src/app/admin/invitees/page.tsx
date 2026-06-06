@@ -108,7 +108,9 @@ export default function InviteesPage() {
   })
 
   const save = async () => {
-    if (!form.name || !form.phone) return
+    if (!form.name) return
+    // Physical (Undangan Fisik) guests have no phone — only require it otherwise.
+    if (!form.phone && form.type !== 'physical') return
     const dataToSave = form.id
       ? form
       : { ...form, ref: form.ref || generateRef() }

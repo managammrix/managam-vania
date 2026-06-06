@@ -124,6 +124,14 @@ export async function checkinByRef(ref: string): Promise<CheckinResult> {
   return (data ?? { success: false, error: 'No response' }) as CheckinResult
 }
 
+// Undo an accidental check-in (admin only) — clears checked_in_at.
+export async function resetCheckinByRef(ref: string): Promise<CheckinResult> {
+  const { data, error } = await supabase
+    .rpc('reset_checkin_by_ref', { p_ref: ref })
+  if (error) return { success: false, error: error.message }
+  return (data ?? { success: false, error: 'No response' }) as CheckinResult
+}
+
 export async function claimSouvenirByRef(ref: string): Promise<CheckinResult> {
   const { data, error } = await supabase
     .rpc('claim_souvenir_by_ref', { p_ref: ref })

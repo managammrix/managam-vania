@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   fetchInvitees,
   checkinByRef,
+  resetCheckinByRef,
   claimSouvenirByRef,
   claimLunchboxByRef,
   updatePhysicalGuest,
@@ -251,6 +252,25 @@ export default function AdminCheckinPage() {
       toast.warn(msg)
     } else {
       const msg = `✗ ${res.error ?? 'Gagal check-in'}`
+      setActionMsg(msg)
+      toast.error(msg)
+    }
+    await refreshAndKeepSelected()
+  }
+
+  const handleResetCheckin = async () => {
+    if (!selected?.ref) return
+    if (!confirm(`Batalkan check-in untuk ${selected.name}?`)) return
+    setActionBusy('reset')
+    setActionMsg(null)
+    const res = await resetCheckinByRef(selected.ref)
+    setActionBusy(null)
+    if (res.success) {
+      const msg = `✓ Check-in ${res.name} dibatalkan`
+      setActionMsg(msg)
+      toast.success(msg)
+    } else {
+      const msg = `✗ ${res.error ?? 'Gagal membatalkan check-in'}`
       setActionMsg(msg)
       toast.error(msg)
     }
@@ -544,6 +564,12 @@ export default function AdminCheckinPage() {
                     label={selected.lunchbox_claimed
                       ? '✓ LUNCHBOX TELAH DISERAHKAN'
                       : (actionBusy === 'lunchbox' ? '...' : 'SERAHKAN LUNCHBOX')}
+                  />
+                  <ActionBtn
+                    color="#9a3b3b"
+                    disabled={actionBusy === 'reset'}
+                    onClick={handleResetCheckin}
+                    label={actionBusy === 'reset' ? '...' : 'BATALKAN CHECK-IN'}
                   />
                 </>
               )}

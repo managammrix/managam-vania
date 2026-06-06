@@ -32,9 +32,10 @@ function CheckinContent() {
   const [result, setResult] = useState<CheckinResult | null>(null)
   const [ref, setRef] = useState<string | null>(null)
   const [needsIdentification, setNeedsIdentification] = useState(false)
+  const [needsConfirm, setNeedsConfirm] = useState(false)
   const [claims, setClaims] = useState<ClaimState>({ souvenir: false, lunchbox: false })
   const [claimMsg, setClaimMsg] = useState<string | null>(null)
-  const [busy, setBusy] = useState<'souvenir' | 'lunchbox' | 'identify' | null>(null)
+  const [busy, setBusy] = useState<'souvenir' | 'lunchbox' | 'identify' | 'checkin' | null>(null)
   const [formName, setFormName] = useState('')
   const [formPhone, setFormPhone] = useState('')
   const [formGuests, setFormGuests] = useState(1)
@@ -66,18 +67,27 @@ function CheckinContent() {
         setNeedsIdentification(true)
         setLoading(false)
       } else {
-        // Digital OR physical-with-real-name → check in immediately
-        checkinByRef(r).then(res => {
-          setResult(res)
-          setClaims({
-            souvenir: !!res.souvenir_claimed,
-            lunchbox: !!res.lunchbox_claimed,
-          })
-          setLoading(false)
-        })
+        // Digital OR physical-with-real-name → require an usher tap
+        // before checking in, so merely opening the link doesn't mark
+        // the guest present.
+        setNeedsConfirm(true)
+        setLoading(false)
       }
     })
   }, [])
+
+  const handleConfirmCheckin = async () => {
+    if (!ref) return
+    setBusy('checkin')
+    const res = await checkinByRef(ref)
+    setResult(res)
+    setClaims({
+      souvenir: !!res.souvenir_claimed,
+      lunchbox: !!res.lunchbox_claimed,
+    })
+    setNeedsConfirm(false)
+    setBusy(null)
+  }
 
   const handleIdentify = async () => {
     if (!ref) return
@@ -214,6 +224,55 @@ function CheckinContent() {
               opacity: busy === 'identify' ? 0.6 : 1,
             }}
           >{busy === 'identify' ? 'MEMPROSES...' : 'TANDAI HADIR'}</button>
+        </div>
+      </Frame>
+    )
+  }
+
+  // ─── Confirm step — usher must tap before check-in ───────────────
+  if (needsConfirm && invitee) {
+    return (
+      <Frame>
+        <div style={cardStyle}>
+          <div style={{
+            fontFamily: 'Cinzel,serif',
+            fontSize: 10, letterSpacing: 4,
+            color: '#b8965a', marginBottom: 8,
+            textAlign: 'center',
+          }}>KONFIRMASI KEHADIRAN</div>
+          <h2 style={{
+            fontFamily: 'Cormorant Garamond,serif',
+            fontSize: 32, fontStyle: 'italic',
+            color: '#1e3d2a', textAlign: 'center',
+            marginBottom: 6,
+          }}>{invitee.name}</h2>
+          <p style={{
+            textAlign: 'center', color: '#6b8f71',
+            fontSize: 13, marginBottom: 20,
+            fontFamily: 'Cinzel,serif', letterSpacing: 2,
+          }}>{invitee.guests ?? 1} TAMU</p>
+          {invitee.checked_in_at && (
+            <p style={{
+              textAlign: 'center', color: '#c08a3e',
+              fontSize: 12, marginBottom: 16,
+            }}>
+              ⚠ Sudah check-in pada {new Date(invitee.checked_in_at).toLocaleString('id')}
+            </p>
+          )}
+          <button
+            id="confirm-checkin"
+            onClick={handleConfirmCheckin}
+            disabled={busy === 'checkin'}
+            style={{
+              width: '100%', padding: '14px 18px',
+              background: '#1e3d2a', color: 'white',
+              border: 'none', borderRadius: 10,
+              fontFamily: 'Cinzel,serif',
+              fontSize: 11, letterSpacing: 3,
+              cursor: busy === 'checkin' ? 'default' : 'pointer',
+              opacity: busy === 'checkin' ? 0.6 : 1,
+            }}
+          >{busy === 'checkin' ? 'MEMPROSES...' : 'TANDAI HADIR'}</button>
         </div>
       </Frame>
     )

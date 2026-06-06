@@ -217,6 +217,39 @@ end;
 $$;
 grant execute on function public.checkin_by_ref(text) to anon;
 
+-- Undo an accidental check-in (admin use). Security-definer so the
+-- admin check-in UI (anon key) can clear checked_in_at without a
+-- direct UPDATE policy. Returns JSON for the same client handling.
+create or replace function public.reset_checkin_by_ref(p_ref text)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_row public.invitees%rowtype;
+begin
+  select * into v_row from public.invitees where ref = p_ref limit 1;
+
+  if not found then
+    return json_build_object(
+      'success', false,
+      'error', 'Tamu tidak ditemukan'
+    );
+  end if;
+
+  update public.invitees
+    set checked_in_at = null
+    where ref = p_ref;
+
+  return json_build_object(
+    'success', true,
+    'name', v_row.name
+  );
+end;
+$$;
+grant execute on function public.reset_checkin_by_ref(text) to anon;
+
 create or replace function public.claim_souvenir_by_ref(p_ref text)
 returns json
 language plpgsql
