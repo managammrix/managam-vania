@@ -17,13 +17,13 @@ export const metadata: Metadata = {
     description: 'Undangan Pernikahan · 20 Juni 2026 · Jakarta',
     type: 'website',
     url: 'https://managamvania.mrix.ai',
-    images: [{ url: 'https://bawnvpgjpueqdebjqcjp.supabase.co/storage/v1/object/public/prewedding/03.jpg', width: 1200, height: 630, alt: 'Managam & Vania — 20.06.2026' }],
+    images: [{ url: '/prewedding/03.jpg', width: 1200, height: 630, alt: 'Managam & Vania — 20.06.2026' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Managam & Vania — 20.06.2026',
     description: '#BuildingMANAGAMVANturesWithGod',
-    images: ['https://bawnvpgjpueqdebjqcjp.supabase.co/storage/v1/object/public/prewedding/03.jpg'],
+    images: ['/prewedding/03.jpg'],
   },
   icons: {
     icon: [

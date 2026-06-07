@@ -139,28 +139,40 @@ export default function MessagesPage() {
         return true
       })
 
+  // ── Who will actually receive ────────────────────────────────────
+  // Only rows with a phone number can get a WhatsApp. Everything below
+  // (counts, token relevance, KIRIM state) is derived from `sendable`
+  // so the UI shows the *real* number, not the raw filter total.
+  const sendable = recipients.filter(i => !!i.phone)
+  const noPhoneCount = recipients.length - sendable.length
+  const agamSendable = sendable.filter(i => (i.sender ?? 'agam') === 'agam')
+  const vaniaSendable = sendable.filter(i => i.sender === 'vania')
+  const needAgam = agamSendable.length > 0
+  const needVania = vaniaSendable.length > 0
+  const missingTokenBlocksSend =
+    (needAgam && !tokenAgam) || (needVania && !tokenVania)
+
   const send = async () => {
     if (!tokenAgam && !tokenVania) {
       toast.error('Masukkan minimal satu Fonnte token.')
       return
     }
     if (!currentMessage) return
+    if (missingTokenBlocksSend) {
+      toast.error('Token untuk sisi yang dipilih belum diisi.')
+      return
+    }
     if (!confirm(
-      `Kirim ke ${recipients.length} penerima?`
+      `Kirim ke ${sendable.length} penerima?`
     )) return
 
     setSending(true)
     setResult(null)
 
-    // Only invitees with a phone number can receive WhatsApp.
-    // Physical anonymous slots (phone=null) are skipped.
-    const sendable = recipients.filter(i => !!i.phone)
-    const agamRecipients = sendable.filter(
-      i => (i.sender ?? 'agam') === 'agam'
-    )
-    const vaniaRecipients = sendable.filter(
-      i => i.sender === 'vania'
-    )
+    // `sendable` / `agamSendable` / `vaniaSendable` are derived at
+    // component scope above (phone-less rows already dropped).
+    const agamRecipients = agamSendable
+    const vaniaRecipients = vaniaSendable
 
     console.log('[blast] agam recipients:', agamRecipients.length)
     console.log('[blast] vania recipients:', vaniaRecipients.length)
@@ -387,8 +399,20 @@ export default function MessagesPage() {
               <label style={{
                 fontFamily:'Cinzel,serif', fontSize:9,
                 letterSpacing:2, color:'#2d5a3d',
-                display:'block', marginBottom:6,
-              }}>MANAGAM</label>
+                display:'flex', alignItems:'center', gap:8,
+                marginBottom:6,
+              }}>MANAGAM
+                <span style={{
+                  fontSize:9, letterSpacing:1, padding:'1px 7px',
+                  borderRadius:4,
+                  background: needAgam ? '#e8f5e9' : '#f3f0e8',
+                  color: needAgam ? '#2d5a3d' : '#b3a98f',
+                }}>
+                  {needAgam
+                    ? `DIPERLUKAN · ${agamSendable.length}`
+                    : 'tidak diperlukan'}
+                </span>
+              </label>
               <input
                 data-testid="fonnte-token-agam"
                 type="password"
@@ -428,8 +452,20 @@ export default function MessagesPage() {
               <label style={{
                 fontFamily:'Cinzel,serif', fontSize:9,
                 letterSpacing:2, color:'#993556',
-                display:'block', marginBottom:6,
-              }}>VANIA</label>
+                display:'flex', alignItems:'center', gap:8,
+                marginBottom:6,
+              }}>VANIA
+                <span style={{
+                  fontSize:9, letterSpacing:1, padding:'1px 7px',
+                  borderRadius:4,
+                  background: needVania ? '#fbe9ef' : '#f3f0e8',
+                  color: needVania ? '#993556' : '#b3a98f',
+                }}>
+                  {needVania
+                    ? `DIPERLUKAN · ${vaniaSendable.length}`
+                    : 'tidak diperlukan'}
+                </span>
+              </label>
               <input
                 data-testid="fonnte-token-vania"
                 type="password"
@@ -658,23 +694,38 @@ export default function MessagesPage() {
             return null
           })()}
 
-          <div style={{
-            padding:'12px 14px',
+          {/* ── Live recipient breakdown ─────────────────────── */}
+          <div data-testid="recipient-summary" style={{
+            padding:'14px 16px',
             background:'#f0f7f1',
             border:'0.5px solid #6b8f71',
-            borderRadius:8, fontSize:12,
-            color:'#2d5a3d', marginBottom:12,
+            borderRadius:8, marginBottom:12,
             lineHeight:1.6,
           }}>
-            💡 Pesan akan dikirim otomatis:<br/>
-            <strong>Token Managam</strong> → tamu dengan sender Managam<br/>
-            <strong>Token Vania</strong> → tamu dengan sender Vania
+            <div style={{
+              fontSize:15, color:'#1e3d2a', fontWeight:600,
+            }}>
+              {sendable.length} tamu akan menerima
+            </div>
+            {(needAgam || needVania) && (
+              <div style={{fontSize:12, color:'#2d5a3d', marginTop:4}}>
+                {needAgam && <>Managam <strong>{agamSendable.length}</strong></>}
+                {needAgam && needVania && ' · '}
+                {needVania && <span style={{color:'#993556'}}>Vania <strong>{vaniaSendable.length}</strong></span>}
+              </div>
+            )}
+            {noPhoneCount > 0 && (
+              <div style={{fontSize:12, color:'#b8600a', marginTop:6}}>
+                {noPhoneCount} dari {recipients.length} dipilih tanpa nomor —
+                tidak dikirim.
+              </div>
+            )}
           </div>
 
           <div className="admin-sticky-send">
           <button
             onClick={send}
-            disabled={sending || recipients.length===0}
+            disabled={sending || sendable.length===0 || missingTokenBlocksSend}
             data-testid="kirim-button"
             style={{
               width:'100%',
@@ -682,19 +733,17 @@ export default function MessagesPage() {
               color:'white', border:'none', borderRadius:12,
               fontFamily:'Cinzel,serif', fontSize:11,
               letterSpacing:3, cursor:'pointer',
-              opacity: (sending||recipients.length===0)
+              opacity: (sending||sendable.length===0||missingTokenBlocksSend)
                 ? 0.6 : 1,
             }}
           >
             {sending
               ? `MENGIRIM...`
+              : missingTokenBlocksSend
+              ? `ISI TOKEN ${needAgam && !tokenAgam ? 'MANAGAM' : 'VANIA'} DULU`
               : (() => {
-                  const agam = recipients.filter(
-                    i => (i.sender ?? 'agam') === 'agam'
-                  ).length
-                  const vania = recipients.filter(
-                    i => i.sender === 'vania'
-                  ).length
+                  const agam = agamSendable.length
+                  const vania = vaniaSendable.length
                   if (agam > 0 && vania > 0)
                     return `KIRIM ${agam} (Managam) + ${vania} (Vania)`
                   if (vania > 0)

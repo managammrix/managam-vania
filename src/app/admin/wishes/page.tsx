@@ -39,6 +39,31 @@ export default function WishesAdminPage() {
     load()
   }
 
+  // Export every wish (not just the current filter) to a UTF-8 CSV so
+  // the ucapan are preserved/searchable. A styled PDF keepsake can come
+  // later once all wishes are in.
+  const exportCsv = () => {
+    const q = (v: string) => `"${(v ?? '').replace(/"/g, '""')}"`
+    const header = 'author,message,created_at,approved'
+    const rows = wishes.map(w => [
+      q(w.author),
+      q(w.message),
+      q(w.created_at ?? ''),
+      w.approved ? 'true' : 'false',
+    ].join(','))
+    // ﻿ BOM so Excel reads UTF-8 (Indonesian names) correctly.
+    const content = '﻿' + header + '\n' + rows.join('\n')
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `ucapan-managam-vania-${
+      new Date().toISOString().slice(0, 10)
+    }.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div>
       <div className="admin-stack-mobile" style={{
@@ -68,6 +93,22 @@ export default function WishesAdminPage() {
                f==='approved' ? 'TAMPIL' : 'PENDING'}
             </button>
           ))}
+          <button
+            onClick={exportCsv}
+            disabled={wishes.length === 0}
+            data-testid="export-wishes-csv"
+            style={{
+              padding:'10px 16px', borderRadius:8,
+              border:'0.5px solid #b8965a',
+              background:'white', color:'#8a6d2f',
+              fontSize:11,
+              cursor: wishes.length === 0 ? 'not-allowed' : 'pointer',
+              opacity: wishes.length === 0 ? 0.5 : 1,
+              fontFamily:'Cinzel,serif', letterSpacing:1,
+              whiteSpace:'nowrap', minHeight:44,
+            }}>
+            EXPORT CSV
+          </button>
         </div>
       </div>
 

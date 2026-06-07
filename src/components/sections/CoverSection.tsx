@@ -10,7 +10,7 @@ export default function CoverSection({ tr, isPostWedding = false, dateLabel = '2
       <div style={{position:'absolute',inset:0,zIndex:1,overflow:'hidden'}}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://bawnvpgjpueqdebjqcjp.supabase.co/storage/v1/object/public/prewedding/03.jpg"
+          src="/prewedding/03.jpg"
           alt="Managam & Vania"
           style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',opacity:0.22,mixBlendMode:'normal'}}
           loading="eager"
