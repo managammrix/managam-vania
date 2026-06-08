@@ -68,7 +68,9 @@ async function importCsv(page: Page, csv: string) {
     state: 'visible', timeout: 5000,
   })
   await page.click('button:has-text("IMPORT")')
-  page.once('dialog', d => d.accept())
+  // Note: import shows no confirm() dialog, so no dialog handler here.
+  // A page.once('dialog') that never fires would linger and collide with
+  // a later handler (e.g. the blast confirm). See STEP 3.
   await page.waitForTimeout(3000)
 }
 
@@ -394,7 +396,7 @@ test.describe('Comprehensive guest test suite @smoke', () => {
         console.log('  admin status reflects:', badgeOk, `(expected "${expectedBadge}")`)
 
         if (c.guests > 0) {
-          const qrBtn = adminRow.locator('button:has-text("QR")')
+          const qrBtn = adminRow.locator('button:has-text("Tiket")')
           r.qrAvailable = (await qrBtn.count()) > 0
         } else {
           r.qrAvailable = true
@@ -413,7 +415,10 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     await gotoMessagesAndFillTokens(page)
     await page.click('[data-testid="status-pill-confirmed"]')
     await page.waitForTimeout(500)
-    page.once('dialog', d => d.accept())
+    // Clear any dialog listener left dangling by earlier helpers, then
+    // register exactly one guarded handler for the KIRIM confirm().
+    page.removeAllListeners('dialog')
+    page.once('dialog', d => { d.accept().catch(() => {}) })
     fonnteHits.length = 0
     await page.click('button:has(span:has-text("KIRIM")), button:has-text("KIRIM")')
       .catch(err => console.warn('  KIRIM click failed:', (err as Error).message))
