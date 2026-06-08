@@ -104,23 +104,23 @@ test.describe.serial('Sender filters (Tamu Managam / Tamu Vania)', () => {
   })
 
   test('Tamu Managam filter is present with non-zero count', async ({ page }) => {
-    const radio = page.locator('[data-testid="filter-radio-agam"]')
-    await expect(radio).toBeVisible()
-    // Label format: "Tamu Managam (N)" — N must be ≥ 2 since we
+    const pill = page.locator('[data-testid="sender-pill-agam"]')
+    await expect(pill).toBeVisible()
+    // Label format: "Managam (N)" — N must be ≥ 2 since we
     // seeded two TEST Sender Agam rows above.
-    const text = await radio.innerText()
-    console.log('  agam radio label:', text)
-    const m = text.match(/Tamu Managam \((\d+)\)/)
+    const text = await pill.innerText()
+    console.log('  agam pill label:', text)
+    const m = text.match(/Managam \((\d+)\)/)
     expect(m, 'agam label has count').not.toBeNull()
     expect(Number(m![1])).toBeGreaterThanOrEqual(2)
   })
 
   test('Tamu Vania filter is present with non-zero count', async ({ page }) => {
-    const radio = page.locator('[data-testid="filter-radio-vania"]')
-    await expect(radio).toBeVisible()
-    const text = await radio.innerText()
-    console.log('  vania radio label:', text)
-    const m = text.match(/Tamu Vania \((\d+)\)/)
+    const pill = page.locator('[data-testid="sender-pill-vania"]')
+    await expect(pill).toBeVisible()
+    const text = await pill.innerText()
+    console.log('  vania pill label:', text)
+    const m = text.match(/Vania \((\d+)\)/)
     expect(m, 'vania label has count').not.toBeNull()
     expect(Number(m![1])).toBeGreaterThanOrEqual(2)
   })
@@ -143,7 +143,7 @@ test.describe.serial('Sender filters (Tamu Managam / Tamu Vania)', () => {
         })
       })
 
-      await page.locator('[data-testid="filter-radio-agam"]').click()
+      await page.locator('[data-testid="sender-pill-agam"]').click()
       await page.waitForTimeout(300)
       const label = await page.locator('[data-testid="kirim-button"]').innerText()
       expect(label).toMatch(/Managam/)
@@ -179,7 +179,7 @@ test.describe.serial('Sender filters (Tamu Managam / Tamu Vania)', () => {
         })
       })
 
-      await page.locator('[data-testid="filter-radio-vania"]').click()
+      await page.locator('[data-testid="sender-pill-vania"]').click()
       await page.waitForTimeout(300)
       const label = await page.locator('[data-testid="kirim-button"]').innerText()
       expect(label).toMatch(/Vania/)

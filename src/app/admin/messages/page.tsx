@@ -23,10 +23,10 @@ export default function MessagesPage() {
     useState<Template>(TEMPLATES[0])
   const [editedTemplates, setEditedTemplates] =
     useState<Record<string, string>>({})
-  const [recipientFilter, setRecipientFilter] =
-    useState<
-      'all'|'pending'|'confirmed'|'honored'|'agam'|'vania'
-    >('all')
+  const [statusFilter, setStatusFilter] =
+    useState<'all'|'pending'|'confirmed'|'honored'>('all')
+  const [senderFilter, setSenderFilter] =
+    useState<'both'|'agam'|'vania'>('both')
   const [manualSearch, setManualSearch] = useState('')
   const [manualIds, setManualIds] = useState<Set<string>>(new Set())
   const [sending, setSending] = useState(false)
@@ -114,28 +114,31 @@ export default function MessagesPage() {
     setManualSearch('')
   }
 
+  // Sender is an independent gate; status keeps its existing semantics.
+  const matchesSender = (i: InviteeRow) =>
+    senderFilter === 'both'  ? true :
+    senderFilter === 'agam'  ? (i.sender ?? 'agam') === 'agam' :
+                               i.sender === 'vania'
+
   const recipients: InviteeRow[] = manualMode
     // Manual override — exactly the rows the user ticked, untouched
-    // by the radio filter. Phone-less rows are still dropped at send
-    // time in `sendable` below.
+    // by the status/sender filters. Phone-less rows are still dropped
+    // at send time in `sendable` below.
     ? invitees.filter(i => !!i.id && manualIds.has(i.id))
     : invitees.filter(i => {
-        if (recipientFilter === 'honored')
+        if (!matchesSender(i)) return false
+        if (statusFilter === 'honored')
           return i.guests === 0
-        // For every non-honored bucket, defensively exclude:
+        // For every non-honored status, defensively exclude:
         //  - honored guests (guests=0) — they have their own template/bucket
         //  - explicit declines (rsvp_status='declined')
         // so an accidental filter mismatch can never blast them.
         if (i.guests === 0) return false
         if (i.rsvp_status === 'declined') return false
-        if (recipientFilter === 'pending')
+        if (statusFilter === 'pending')
           return i.rsvp_status === 'pending'
-        if (recipientFilter === 'confirmed')
+        if (statusFilter === 'confirmed')
           return i.attending === true
-        if (recipientFilter === 'agam')
-          return (i.sender ?? 'agam') === 'agam'
-        if (recipientFilter === 'vania')
-          return i.sender === 'vania'
         return true
       })
 
@@ -511,47 +514,68 @@ export default function MessagesPage() {
               letterSpacing:3, color:'#6b8f71',
               marginBottom:12,
             }}>PENERIMA</div>
-            {(
-              ['all','pending','confirmed','honored','agam','vania'] as const
-            ).map(f => (
-              <label
-                key={f}
-                data-testid={`filter-radio-${f}`}
-                style={{
-                  display:'flex', alignItems:'center',
-                  gap:10, marginBottom:10,
-                  cursor: manualMode ? 'not-allowed' : 'pointer',
-                  fontSize:14, opacity: manualMode ? 0.45 : 1,
-                }}>
-                <input type="radio" name="filter"
+            {/* Row 1 — STATUS (what state?) */}
+            <div style={{
+              fontFamily:'Cinzel,serif', fontSize:9,
+              letterSpacing:2, color:'#6b8f71', marginBottom:8,
+            }}>STATUS</div>
+            <div className="admin-pill-row" style={{
+              display:'flex', flexWrap:'wrap', gap:8, marginBottom:16,
+            }}>
+              {([
+                ['all','Semua', invitees.length],
+                ['pending','Belum RSVP', invitees.filter(i=>i.rsvp_status==='pending').length],
+                ['confirmed','Hadir', invitees.filter(i=>i.attending).length],
+                ['honored','Kehormatan', invitees.filter(i=>i.guests===0).length],
+              ] as const).map(([key,label,count]) => (
+                <button key={key}
+                  data-testid={`status-pill-${key}`}
                   disabled={manualMode}
-                  checked={recipientFilter===f}
-                  onChange={() => setRecipientFilter(f)}
-                />
-                {f==='all' ?
-                  `Semua tamu (${invitees.length})` :
-                 f==='pending' ?
-                  `Belum RSVP (${invitees.filter(
-                    i=>i.rsvp_status==='pending'
-                  ).length})` :
-                 f==='confirmed' ?
-                  `Konfirmasi hadir (${invitees.filter(
-                    i=>i.attending
-                  ).length})` :
-                 f==='honored' ?
-                  `Tamu Kehormatan (${invitees.filter(
-                    i=>i.guests===0
-                  ).length})` :
-                 f==='agam' ?
-                  `Tamu Managam (${invitees.filter(
-                    i=>(i.sender ?? 'agam')==='agam'
-                  ).length})` :
-                  `Tamu Vania (${invitees.filter(
-                    i=>i.sender==='vania'
-                  ).length})`
-                }
-              </label>
-            ))}
+                  onClick={() => setStatusFilter(key)}
+                  style={{
+                    padding:'10px 16px', borderRadius:8,
+                    border:'0.5px solid #d9cdb8',
+                    background: statusFilter===key ? '#1e3d2a' : 'white',
+                    color: statusFilter===key ? 'white' : '#888',
+                    fontSize:12, fontFamily:'inherit', whiteSpace:'nowrap',
+                    cursor: manualMode ? 'not-allowed' : 'pointer',
+                    opacity: manualMode ? 0.45 : 1,
+                  }}>
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
+
+            {/* Row 2 — DARI (whose guests?) */}
+            <div style={{
+              fontFamily:'Cinzel,serif', fontSize:9,
+              letterSpacing:2, color:'#6b8f71', marginBottom:8,
+            }}>DARI</div>
+            <div className="admin-pill-row" style={{
+              display:'flex', flexWrap:'wrap', gap:8,
+            }}>
+              {([
+                ['both','Keduanya', invitees.length],
+                ['agam','Managam', invitees.filter(i=>(i.sender ?? 'agam')==='agam').length],
+                ['vania','Vania', invitees.filter(i=>i.sender==='vania').length],
+              ] as const).map(([key,label,count]) => (
+                <button key={key}
+                  data-testid={`sender-pill-${key}`}
+                  disabled={manualMode}
+                  onClick={() => setSenderFilter(key)}
+                  style={{
+                    padding:'10px 16px', borderRadius:8,
+                    border:'0.5px solid #d9cdb8',
+                    background: senderFilter===key ? '#1e3d2a' : 'white',
+                    color: senderFilter===key ? 'white' : '#888',
+                    fontSize:12, fontFamily:'inherit', whiteSpace:'nowrap',
+                    cursor: manualMode ? 'not-allowed' : 'pointer',
+                    opacity: manualMode ? 0.45 : 1,
+                  }}>
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
 
             {/* ── Manual recipient picker ─────────────────────── */}
             <div style={{
@@ -652,9 +676,9 @@ export default function MessagesPage() {
             </div>
           </div>
 
-          {recipientFilter !== 'all' &&
-           RECOMMENDED_TEMPLATE[recipientFilter] &&
-           selectedTemplate.label !== RECOMMENDED_TEMPLATE[recipientFilter] && (
+          {statusFilter !== 'all' &&
+           RECOMMENDED_TEMPLATE[statusFilter] &&
+           selectedTemplate.label !== RECOMMENDED_TEMPLATE[statusFilter] && (
             <div style={{
               padding:'12px 16px',
               background:'#fff8ec',
@@ -666,7 +690,7 @@ export default function MessagesPage() {
             }}>
               ⚠️ Template yang dipilih tidak sesuai dengan
               filter penerima. Disarankan:
-              <strong> {RECOMMENDED_TEMPLATE[recipientFilter]}</strong>
+              <strong> {RECOMMENDED_TEMPLATE[statusFilter]}</strong>
             </div>
           )}
 
