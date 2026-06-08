@@ -411,7 +411,7 @@ test.describe('Comprehensive guest test suite @smoke', () => {
     // ─── STEP 3: WA blast — verify recipient routing ────────
     console.log('\n── Blast: verify "No Phone" excluded ──')
     await gotoMessagesAndFillTokens(page)
-    await page.click('label:has-text("Konfirmasi hadir")')
+    await page.click('[data-testid="status-pill-confirmed"]')
     await page.waitForTimeout(500)
     page.once('dialog', d => d.accept())
     fonnteHits.length = 0
