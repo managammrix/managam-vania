@@ -4,6 +4,7 @@ import {
   fetchAllWishes, updateWishApproval, deleteWish,
   WishRow,
 } from '@/lib/supabase'
+import { exportWishesPptx, exportWishesPdf, printWishes } from '@/lib/wishExports'
 import { useAdminAuth } from '@/lib/adminAuth'
 
 export default function WishesAdminPage() {
@@ -11,6 +12,7 @@ export default function WishesAdminPage() {
   const [wishes, setWishes] = useState<WishRow[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all'|'approved'|'pending'>('all')
+  const [exporting, setExporting] = useState<null|'pptx'|'pdf'>(null)
 
   const load = async () => {
     setLoading(true)
@@ -64,6 +66,23 @@ export default function WishesAdminPage() {
     URL.revokeObjectURL(url)
   }
 
+  // PPTX/PDF keepsakes also use every wish (consistent with the CSV), not the
+  // on-screen filter. Generation can take a few seconds, so the triggering
+  // button shows a busy state and both export buttons disable meanwhile.
+  const runExport = async (kind: 'pptx'|'pdf') => {
+    if (exporting || wishes.length === 0) return
+    setExporting(kind)
+    try {
+      if (kind === 'pptx') await exportWishesPptx(wishes)
+      else await exportWishesPdf(wishes)
+    } catch (e) {
+      console.error(e)
+      alert('Gagal membuat file. Coba lagi.')
+    } finally {
+      setExporting(null)
+    }
+  }
+
   return (
     <div>
       <div className="admin-stack-mobile" style={{
@@ -108,6 +127,54 @@ export default function WishesAdminPage() {
               whiteSpace:'nowrap', minHeight:44,
             }}>
             EXPORT CSV
+          </button>
+          <button
+            onClick={() => runExport('pptx')}
+            disabled={wishes.length === 0 || exporting !== null}
+            data-testid="export-wishes-pptx"
+            style={{
+              padding:'10px 16px', borderRadius:8,
+              border:'0.5px solid #b8965a',
+              background:'white', color:'#8a6d2f',
+              fontSize:11,
+              cursor: (wishes.length === 0 || exporting) ? 'not-allowed' : 'pointer',
+              opacity: (wishes.length === 0 || exporting) ? 0.5 : 1,
+              fontFamily:'Cinzel,serif', letterSpacing:1,
+              whiteSpace:'nowrap', minHeight:44,
+            }}>
+            {exporting === 'pptx' ? 'MEMBUAT...' : 'EXPORT PPTX'}
+          </button>
+          <button
+            onClick={() => runExport('pdf')}
+            disabled={wishes.length === 0 || exporting !== null}
+            data-testid="export-wishes-pdf"
+            style={{
+              padding:'10px 16px', borderRadius:8,
+              border:'0.5px solid #b8965a',
+              background:'white', color:'#8a6d2f',
+              fontSize:11,
+              cursor: (wishes.length === 0 || exporting) ? 'not-allowed' : 'pointer',
+              opacity: (wishes.length === 0 || exporting) ? 0.5 : 1,
+              fontFamily:'Cinzel,serif', letterSpacing:1,
+              whiteSpace:'nowrap', minHeight:44,
+            }}>
+            {exporting === 'pdf' ? 'MEMBUAT...' : 'EXPORT PDF'}
+          </button>
+          <button
+            onClick={() => printWishes(wishes)}
+            disabled={wishes.length === 0 || exporting !== null}
+            data-testid="print-wishes"
+            style={{
+              padding:'10px 16px', borderRadius:8,
+              border:'0.5px solid #b8965a',
+              background:'white', color:'#8a6d2f',
+              fontSize:11,
+              cursor: (wishes.length === 0 || exporting) ? 'not-allowed' : 'pointer',
+              opacity: (wishes.length === 0 || exporting) ? 0.5 : 1,
+              fontFamily:'Cinzel,serif', letterSpacing:1,
+              whiteSpace:'nowrap', minHeight:44,
+            }}>
+            PRINT
           </button>
         </div>
       </div>
