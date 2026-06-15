@@ -1,10 +1,43 @@
 // Keepsake exports for the wedding ucapan/wishes.
 //
 // Three formats share one content structure: a cover, a grid of all guest
-// names, then one slide/page per ucapan. Heavy libs (pptxgenjs, jsPDF) are
-// dynamically imported so they stay out of the initial admin bundle and only
-// load when an admin actually clicks an export button.
+// names, then one slide/page per ucapan. Heavy libs are loaded only when an
+// admin actually clicks an export button. jsPDF is dynamically imported, but
+// pptxgenjs imports Node built-ins (node:fs, node:https) that webpack cannot
+// bundle for a static/browser build, so we load its prebuilt browser bundle
+// from a CDN at runtime instead (exposes window.PptxGenJS).
 import type { WishRow } from './supabase'
+
+const PPTXGENJS_CDN =
+  'https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.bundle.js'
+
+// Load a classic <script> once, resolving when it's ready. Re-uses an existing
+// tag (and its in-flight load) so repeated exports don't refetch.
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      `script[data-src="${src}"]`,
+    )
+    if (existing) {
+      if (existing.dataset.loaded === 'true') return resolve()
+      existing.addEventListener('load', () => resolve())
+      existing.addEventListener('error', () =>
+        reject(new Error(`Failed to load ${src}`)))
+      return
+    }
+    const el = document.createElement('script')
+    el.src = src
+    el.async = true
+    el.dataset.src = src
+    el.addEventListener('load', () => {
+      el.dataset.loaded = 'true'
+      resolve()
+    })
+    el.addEventListener('error', () =>
+      reject(new Error(`Failed to load ${src}`)))
+    document.head.appendChild(el)
+  })
+}
 
 // Wedding palette (hex without '#', the form pptxgenjs wants; jsPDF gets RGB).
 const FOREST = '1E3D2A'
@@ -33,7 +66,9 @@ const fmtDate = (iso?: string) =>
 // ───────────────────────── PPTX ─────────────────────────
 
 export async function exportWishesPptx(wishes: WishRow[]) {
-  const PptxGenJS = (await import('pptxgenjs')).default
+  await loadScript(PPTXGENJS_CDN)
+  const PptxGenJS = (window as unknown as { PptxGenJS?: any }).PptxGenJS
+  if (!PptxGenJS) throw new Error('PptxGenJS failed to load')
   const pptx = new PptxGenJS()
   pptx.defineLayout({ name: 'WIDE', width: 13.333, height: 7.5 })
   pptx.layout = 'WIDE'
